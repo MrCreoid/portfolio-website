@@ -80,3 +80,102 @@
   resizeCanvas();
   animate();
 })();
+
+//Object chasing mouse cursor
+
+const cursorChar = document.querySelector(".cursor-char");
+
+let mouseX = 0,
+  mouseY = 0;
+let charX = 0,
+  charY = 0;
+const chaseSpeed = 0.08; // Chase speed
+
+// let orbitAngle = 0;
+// const orbitRadius = 30;
+// const orbitSpeed = 0.03;
+
+let spinAngle = 0;
+const spinSpeed = 5;
+
+document.addEventListener("mousemove", (e) => {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+});
+
+function animateCursor() {
+  charX += (mouseX - charX) * chaseSpeed;
+  charY += (mouseY - charY) * chaseSpeed;
+
+  //revolution
+  // orbitAngle += orbitSpeed;
+  // const offsetX = Math.cos(orbitAngle) * orbitRadius;
+  // const offsetY = Math.sin(orbitAngle) * orbitRadius;
+
+  const offsetX = 0;
+  const offsetY = 0;
+
+  //rotate
+  spinAngle = (spinAngle + spinSpeed) % 360;
+
+  cursorChar.style.left = charX + offsetX + "px";
+  cursorChar.style.top = charY + offsetY + "px";
+  cursorChar.style.transform = `translate(-25%, -25%) rotate(${spinAngle}deg)`;
+
+  requestAnimationFrame(animateCursor);
+}
+
+animateCursor();
+
+const icons = document.querySelectorAll(".icon");
+const speeds = [];
+const positions = [];
+
+icons.forEach((icon) => {
+  // Random initial position for each icon
+  const x = Math.random() * (window.innerWidth - icon.offsetWidth);
+  const y = Math.random() * (window.innerHeight - icon.offsetHeight);
+
+  positions.push({ x, y });
+  speeds.push({ x: (Math.random() - 0.5) * 2, y: (Math.random() - 0.5) * 2 });
+
+  icon.style.left = `${x}px`;
+  icon.style.top = `${y}px`;
+
+  icon.addEventListener("mouseenter", () => {
+    icon.classList.add("vibrate");
+    speeds[Array.from(icons).indexOf(icon)] = { x: 0, y: 0 }; // stop moving
+  });
+
+  icon.addEventListener("mouseleave", () => {
+    icon.classList.remove("vibrate");
+    // Resume movement
+    speeds[Array.from(icons).indexOf(icon)] = {
+      x: (Math.random() - 0.5) * 2,
+      y: (Math.random() - 0.5) * 2,
+    };
+  });
+});
+
+function animateIcons() {
+  icons.forEach((icon, i) => {
+    let pos = positions[i];
+    let speed = speeds[i];
+
+    // Update pos
+    pos.x += speed.x;
+    pos.y += speed.y;
+
+    // Bounce screen
+    if (pos.x <= 0 || pos.x + icon.offsetWidth >= window.innerWidth)
+      speed.x *= -1;
+    if (pos.y <= 0 || pos.y + icon.offsetHeight >= window.innerHeight)
+      speed.y *= -1;
+
+    // Apply position to icon
+    icon.style.left = `${pos.x}px`;
+    icon.style.top = `${pos.y}px`;
+  });
+  requestAnimationFrame(animateIcons);
+}
+animateIcons();
