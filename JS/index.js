@@ -2,8 +2,8 @@
   const canvas = document.getElementById("grid");
   const ctx = canvas.getContext("2d");
 
-  const gridSize = 120;
-  const lineColor = "rgba(255,255,255,0.22)";
+  const gridSize = 115;
+  const lineColor = "rgba(255, 255, 255, 0.25)";
   let mouse = { x: null, y: null };
   let dpr = window.devicePixelRatio || 1;
 
@@ -172,10 +172,96 @@ function animateIcons() {
     if (pos.y <= 0 || pos.y + icon.offsetHeight >= window.innerHeight)
       speed.y *= -1;
 
-    // Apply position to icon
     icon.style.left = `${pos.x}px`;
     icon.style.top = `${pos.y}px`;
   });
   requestAnimationFrame(animateIcons);
 }
 animateIcons();
+
+// Fixed Sliding glass selector with proper home default
+document.addEventListener("DOMContentLoaded", function () {
+  const navLinks = document.querySelectorAll(".nav .outerbox a.nav-link");
+  const selector = document.querySelector(".nav .innerbox");
+
+  function updateSelector(activeLink) {
+    const li = activeLink.parentElement;
+    const leftPosition = li.offsetLeft;
+    const width = li.offsetWidth;
+
+    // Update selector position and size
+    selector.style.left = leftPosition + "px";
+    selector.style.width = width + "px";
+  }
+
+  function setInitialActive() {
+    const currentPath = window.location.pathname;
+    let activeLink = null;
+
+    navLinks.forEach((link) => link.classList.remove("active"));
+
+    // Check for specific page matches
+    navLinks.forEach((link) => {
+      const linkHref = link.getAttribute("href");
+
+      // Check for home page matches
+      if (
+        (currentPath === "/" ||
+          currentPath.includes("index.html") ||
+          currentPath === "") &&
+        (linkHref === "./index.html" ||
+          linkHref === "index.html" ||
+          linkHref === "/" ||
+          link.textContent.trim().toLowerCase() === "home")
+      ) {
+        activeLink = link;
+      }
+      else if (
+        currentPath.includes("about.html") &&
+        linkHref.includes("about.html")
+      ) {
+        activeLink = link;
+      }
+    });
+
+    if (!activeLink) {
+      activeLink =
+        Array.from(navLinks).find(
+          (link) =>
+            link.textContent.trim().toLowerCase() === "home" ||
+            link.getAttribute("href") === "./index.html"
+        ) || navLinks[0]; // Last resort fallback
+    }
+
+    activeLink.classList.add("active");
+    updateSelector(activeLink);
+  }
+
+  // Set initial state
+  setInitialActive();
+
+  // Add click handlers
+  navLinks.forEach((link) => {
+    link.addEventListener("click", function (e) {
+      // Update active state
+      navLinks.forEach((l) => l.classList.remove("active"));
+      this.classList.add("active");
+
+      updateSelector(this);
+
+      e.preventDefault();
+      setTimeout(() => {
+        window.location.href = this.href;
+      }, 500);
+    });
+  });
+
+  window.addEventListener("resize", function () {
+    const activeLink = document.querySelector(
+      ".nav .outerbox a.nav-link.active"
+    );
+    if (activeLink) {
+      updateSelector(activeLink);
+    }
+  });
+});
