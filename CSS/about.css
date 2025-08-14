@@ -1,0 +1,17 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  height: 100vh;
+  background: #000;
+  position: relative;
+  overflow: hidden;
+  color: white;
+  font-family: sans-serif;
+  display: grid;
+  place-items: center;
+  font-family: "Inter", sans-serif;
+}

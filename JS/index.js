@@ -179,89 +179,56 @@ function animateIcons() {
 }
 animateIcons();
 
-// Fixed Sliding glass selector with proper home default
-document.addEventListener("DOMContentLoaded", function () {
+// glass selector
+// index.js
+(function () {
   const navLinks = document.querySelectorAll(".nav .outerbox a.nav-link");
   const selector = document.querySelector(".nav .innerbox");
+  const outer = document.querySelector(".nav .outerbox");
 
-  function updateSelector(activeLink) {
-    const li = activeLink.parentElement;
-    const leftPosition = li.offsetLeft;
-    const width = li.offsetWidth;
+  function updateSelector(link, instant = false) {
+    const navRect = outer.getBoundingClientRect();
+    const liRect = link.parentElement.getBoundingClientRect();
+    const leftPos = liRect.left - navRect.left;
+    const width = liRect.width;
 
-    // Update selector position and size
-    selector.style.left = leftPosition + "px";
-    selector.style.width = width + "px";
+    if (instant) selector.style.transition = "none";
+    selector.style.left = `${leftPos}px`;
+    selector.style.width = `${width}px`;
+    if (instant) {
+      requestAnimationFrame(() => {
+        selector.style.transition = "all 0.4s cubic-bezier(0.4,0,0.2,1)";
+      });
+    }
   }
 
   function setInitialActive() {
-    const currentPath = window.location.pathname;
-    let activeLink = null;
-
-    navLinks.forEach((link) => link.classList.remove("active"));
-
-    // Check for specific page matches
-    navLinks.forEach((link) => {
-      const linkHref = link.getAttribute("href");
-
-      // Check for home page matches
-      if (
-        (currentPath === "/" ||
-          currentPath.includes("index.html") ||
-          currentPath === "") &&
-        (linkHref === "./index.html" ||
-          linkHref === "index.html" ||
-          linkHref === "/" ||
-          link.textContent.trim().toLowerCase() === "home")
-      ) {
-        activeLink = link;
-      }
-      else if (
-        currentPath.includes("about.html") &&
-        linkHref.includes("about.html")
-      ) {
-        activeLink = link;
-      }
-    });
-
-    if (!activeLink) {
-      activeLink =
-        Array.from(navLinks).find(
-          (link) =>
-            link.textContent.trim().toLowerCase() === "home" ||
-            link.getAttribute("href") === "./index.html"
-        ) || navLinks[0]; // Last resort fallback
-    }
-
+    let activeLink =
+      document.querySelector(".nav .outerbox a.nav-link.active") || navLinks[0];
+    navLinks.forEach((l) => l.classList.remove("active"));
     activeLink.classList.add("active");
-    updateSelector(activeLink);
+    updateSelector(activeLink, true);
   }
 
-  // Set initial state
-  setInitialActive();
+  document.addEventListener("DOMContentLoaded", () => {
+    setInitialActive();
+    navLinks.forEach((link) => {
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        navLinks.forEach((l) => l.classList.remove("active"));
+        link.classList.add("active");
+        updateSelector(link, false);
+        setTimeout(() => {
+          window.location.href = link.href;
+        }, 400);
+      });
+    });
 
-  // Add click handlers
-  navLinks.forEach((link) => {
-    link.addEventListener("click", function (e) {
-      // Update active state
-      navLinks.forEach((l) => l.classList.remove("active"));
-      this.classList.add("active");
-
-      updateSelector(this);
-
-      e.preventDefault();
-      setTimeout(() => {
-        window.location.href = this.href;
-      }, 500);
+    window.addEventListener("resize", () => {
+      const current = document.querySelector(
+        ".nav .outerbox a.nav-link.active"
+      );
+      if (current) updateSelector(current, true);
     });
   });
-
-  window.addEventListener("resize", function () {
-    const activeLink = document.querySelector(
-      ".nav .outerbox a.nav-link.active"
-    );
-    if (activeLink) {
-      updateSelector(activeLink);
-    }
-  });
-});
+})();
