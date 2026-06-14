@@ -1,56 +1,654 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Pratyush Garg</title>
-    <link rel="stylesheet" href="./CSS/index.css" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
-    />
-  </head>
-  <body>
-    <canvas id="grid"></canvas>
-    <div class="cursor-char"><img src="./images/amogus.png" /></div>
-    <div class="floating-icons">
-      <a
-        href="https://www.linkedin.com/in/pratyushgargthegoat/"
-        target="_blank"
-        rel="noopener noreferrer"
-        ><i class="bi bi-linkedin icon"></i
-      ></a>
-      <a href="https://github.com/MrCreoid" target="_blank"
-        ><i class="bi bi-github icon"></i
-      ></a>
-    </div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Pratyush Garg — B.Tech CS student at Faculty of Technology, DU. I build things for the web.">
+  <title>Pratyush Garg — Portfolio</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0a0f'/%3E%3Ctext x='32' y='43' font-family='Arial' font-size='26' fill='%23a78bfa' text-anchor='middle' font-weight='700'%3EPG%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
 
-    <div class="nav">
-      <div class="blur"></div>
-      <div class="outerbox">
-        <div class="innerbox"></div>
-        <ul>
-          <li><a href="#" class="nav-link active">home</a></li>
-          <li><a href="./html/about.html" class="nav-link">about</a></li>
-          <li><a href="#" class="nav-link">Projects</a></li>
-          <li><a href="#" class="nav-link">contact</a></li>
-        </ul>
+  <!-- ambient layers -->
+  <div class="noise" aria-hidden="true"></div>
+  <div class="glow glow-1" aria-hidden="true"></div>
+  <div class="glow glow-2" aria-hidden="true"></div>
+  <canvas id="particles" aria-hidden="true"></canvas>
+
+  <!-- custom cursor -->
+  <div class="cursor-dot" aria-hidden="true"></div>
+  <div class="cursor-ring" aria-hidden="true"></div>
+
+
+  <!-- preloader: the crystal forge -->
+  <div class="preloader" id="preloader" aria-hidden="true">
+    <canvas id="forge"></canvas>
+    <div class="forge-name" id="forgeName">PRATYUSH&nbsp;GARG</div>
+    <div class="forge-ring" id="forgeRing"></div>
+  </div>
+
+  <!-- page transition overlay (circular wipe from the clicked link) -->
+  <div class="transition" id="transition" aria-hidden="true">
+    <div class="t-veil"></div>
+    <div class="t-logo">PG</div>
+  </div>
+
+  <!-- header -->
+  <header class="header">
+    <button class="logo magnetic" data-nav="home" aria-label="Go to home">
+      <span class="logo-mark">P<em>G</em></span>
+    </button>
+    <nav class="nav" aria-label="Main">
+      <button class="nav-link is-active" data-nav="home">Home</button>
+      <button class="nav-link" data-nav="about">About</button>
+      <button class="nav-link" data-nav="projects">Projects</button>
+      <button class="nav-link" data-nav="achievements">Achievements</button>
+      <button class="nav-link" data-nav="contact">Contact</button>
+      <span class="nav-indicator" aria-hidden="true"></span>
+    </nav>
+    <button class="burger" id="burger" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span>
+    </button>
+  </header>
+
+  <!-- mobile menu -->
+  <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
+    <button class="m-link" data-nav="home">Home</button>
+    <button class="m-link" data-nav="about">About</button>
+    <button class="m-link" data-nav="projects">Projects</button>
+    <button class="m-link" data-nav="achievements">Achievements</button>
+    <button class="m-link" data-nav="contact">Contact</button>
+  </div>
+
+  <main>
+
+    <!-- ============ HOME ============ -->
+    <section class="view is-active" id="view-home">
+      <div class="hero container">
+        <p class="eyebrow" data-reveal><span class="eyebrow-dot"></span><span class="eyebrow-swap"><span id="eyebrowLine">open to internships &amp; collabs</span></span></p>
+        <h1 class="hero-title">
+          <span class="line" data-reveal>I'm <span class="grad">Pratyush</span></span>
+          <span class="line" data-reveal><span class="grad">Garg</span><span class="hero-dot">.</span></span>
+        </h1>
+        <p class="hero-sub" data-reveal>
+          B.Tech CS student who turns curiosity into code — building&nbsp;<span class="type-wrap"><span id="typewriter"></span><span class="caret"></span></span><br>
+          one late night at a time<!--
+          sneaky resume link: the full stop below opens the résumé
+          --><a class="secret-dot" href="assets/resume.pdf" target="_blank" rel="noopener" data-cursor aria-label="Open résumé"><span class="secret-tip">psst… my résumé</span>.</a>
+        </p>
+        <div class="hero-cta" data-reveal>
+          <button class="btn btn-primary magnetic" data-nav="contact"><span>Let's connect</span></button>
+          <button class="btn btn-ghost magnetic" data-nav="achievements"><span>See achievements</span></button>
+        </div>
+        <button class="whisper-link" data-nav="about" data-reveal>
+          curious about the human behind the code? <span class="whisper-arrow">→</span>
+        </button>
+        <div class="scroll-hint" data-reveal aria-hidden="true">
+          <span class="scroll-hint-track"><span class="scroll-hint-ball"></span></span>
+          <span class="scroll-hint-label">scroll</span>
+        </div>
+
+        <!-- the crystal. it knows things. -->
+        <div class="crystal-wrap" id="crystal" aria-hidden="true">
+          <span class="crystal-shadow"></span>
+          <div class="crystal-spin">
+            <div class="crystal">
+              <i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i>
+              <i style="--i:3"></i><i style="--i:4"></i><i style="--i:5"></i>
+            </div>
+            <span class="crystal-core"></span>
+            <span class="crystal-fire"></span>
+            <span class="crystal-star"></span>
+          </div>
+          <div class="crystal-veil" id="crystalVeil"></div>
+          <div class="crystal-base">
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            <span class="base-glint"></span>
+          </div>
+          <span class="crystal-ember" style="--dx:-14px;--dur:3.4s;--dl:0s"></span>
+          <span class="crystal-ember" style="--dx:10px;--dur:4.1s;--dl:0.7s"></span>
+          <span class="crystal-ember" style="--dx:-6px;--dur:3.8s;--dl:1.4s"></span>
+          <span class="crystal-ember" style="--dx:18px;--dur:4.6s;--dl:2.1s"></span>
+          <span class="crystal-ember" style="--dx:-20px;--dur:3.2s;--dl:2.8s"></span>
+          <span class="crystal-ember" style="--dx:4px;--dur:4.3s;--dl:3.4s"></span>
+          <span class="orb-tip">back to the top ↑</span>
+        </div>
+      </div>
+
+      <!-- marquee -->
+      <div class="marquee" aria-hidden="true">
+        <div class="marquee-track">
+          <span>HTML</span><i>✦</i><span>CSS</span><i>✦</i><span>JavaScript</span><i>✦</i><span>Python</span><i>✦</i><span>NumPy</span><i>✦</i><span>Pandas</span><i>✦</i><span>C</span><i>✦</i><span>clean code</span><i>✦</i><span>dark mode enjoyer</span><i>✦</i>
+          <span>HTML</span><i>✦</i><span>CSS</span><i>✦</i><span>JavaScript</span><i>✦</i><span>Python</span><i>✦</i><span>NumPy</span><i>✦</i><span>Pandas</span><i>✦</i><span>C</span><i>✦</i><span>clean code</span><i>✦</i><span>dark mode enjoyer</span><i>✦</i>
+        </div>
+      </div>
+
+      <!-- what i do -->
+      <div class="container section">
+        <h2 class="section-title" data-reveal><span class="section-num">01</span> What I do</h2>
+        <div class="cards-3">
+          <article class="card tilt" data-reveal>
+            <div class="card-icon">⌨️</div>
+            <h3>Web experiences</h3>
+            <p>Interactive, animated websites built with hand-written HTML, CSS and JavaScript. No shortcuts — every pixel placed on purpose.</p>
+          </article>
+          <article class="card tilt" data-reveal>
+            <div class="card-icon">📊</div>
+            <h3>Data &amp; Python</h3>
+            <p>NumPy and Pandas are my playground. I like taking messy data and turning it into something that actually says something.</p>
+          </article>
+          <article class="card tilt" data-reveal>
+            <div class="card-icon">🚀</div>
+            <h3>Always learning</h3>
+            <p>Currently sharpening C and going deeper into JavaScript. Second year starts August 2026 — the roadmap only gets bigger.</p>
+          </article>
+        </div>
+      </div>
+
+      <!-- featured project teaser -->
+      <div class="container">
+        <button class="teaser" data-nav="projects" data-cursor data-reveal>
+          <span class="teaser-left">
+            <span class="b-kind">featured project</span>
+            <span class="teaser-title">This portfolio</span>
+            <span class="teaser-sub">hand-written, animated, full of secrets</span>
+          </span>
+          <span class="teaser-cta">see all projects <span class="whisper-arrow">→</span></span>
+        </button>
+      </div>
+
+      <!-- stats -->
+      <div class="container section">
+        <div class="stats" data-reveal>
+          <div class="stat"><span class="stat-num" data-count="47">0</span><span class="stat-label">tabs open right now</span></div>
+          <div class="stat"><span class="stat-num"><span data-count="12">0</span>+</span><span class="stat-label">easter eggs hidden here</span></div>
+          <div class="stat"><span class="stat-num"><span data-count="60">0</span>+</span><span class="stat-label">animations on this site</span></div>
+          <button class="stat stat-combo" id="comboStat" data-cursor aria-label="Curiosity — try clicking it a lot">
+            <span class="stat-num">∞</span><span class="stat-label">curiosity</span>
+            <span class="combo-badge" id="comboBadge" aria-hidden="true"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- bubble wrap -->
+      <div class="container section bubble-section">
+        <p class="bubble-label" data-reveal>stress-relief station <em>— free, unlimited refills · popped: <b id="popCount">0</b></em></p>
+        <div class="bubbles" id="bubbles" data-reveal aria-label="Bubble wrap. Pop them."></div>
+      </div>
+    </section>
+
+    <!-- ============ ABOUT ============ -->
+    <section class="view" id="view-about">
+      <div class="container section-top">
+        <h2 class="section-title" data-reveal><span class="section-num">02</span> About me</h2>
+
+        <div class="about-grid">
+          <div class="about-photo-col" data-reveal>
+            <div class="photo-frame" id="photoFlip" data-cursor>
+              <!-- sneaky resume #2: the paperclip pinned to the photo -->
+              <a class="paperclip" href="assets/resume.pdf" target="_blank" rel="noopener" data-cursor aria-label="Open résumé">📎<span class="paperclip-tip">there's a résumé attached</span></a>
+              <div class="flipper">
+                <div class="flip-front">
+                  <!-- ▼ Drop your photo at assets/photo.jpg — the fallback initials show until you do -->
+                  <div class="photo-fallback">PG</div>
+                  <img src="assets/photo.jpg" alt="Pratyush Garg" class="photo-img" onerror="this.remove()">
+                  <span class="flip-hint">↻ flip me</span>
+                </div>
+                <div class="flip-back">
+                  <h4>the other side</h4>
+                  <ul>
+                    <li>🎬 certified cinephile — movies &amp; series, religiously</li>
+                    <li>🍿 <a class="lb-link" href="https://letterboxd.com/MrCreoid/" target="_blank" rel="noopener" data-cursor>letterboxd · @MrCreoid&nbsp;↗</a></li>
+                    <li>🎸 plays guitar when the bugs win</li>
+                    <li>🧭 the master plan? genuinely figuring it out</li>
+                  </ul>
+                  <span class="flip-hint">↻ spin back</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="about-text-col">
+            <p class="about-lede" data-reveal>Hey, I'm <strong>Pratyush</strong> — a Computer Science undergrad at the <strong>Faculty of Technology, Delhi University</strong>.</p>
+            <p data-reveal>I've just wrapped up my first year of B.Tech and I'm heading into my second this August. Somewhere between my first <code>print("hello world")</code> and now, coding went from a subject to a genuine obsession.</p>
+            <p data-reveal>These days I split my time between building things for the web, crunching data with Python, and wrestling with C — and honestly, I enjoy all three fights.</p>
+            <div class="chips" data-reveal>
+              <span class="chip">🎓 B.Tech CS · FoT DU</span>
+              <span class="chip">📍 Delhi, India</span>
+              <span class="chip">🌙 night-owl coder</span>
+              <span class="chip">⚡ fast learner</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- journey timeline -->
+        <h2 class="section-title" data-reveal><span class="section-num">03</span> Journey</h2>
+        <div class="timeline" data-reveal>
+          <!-- ▼▼ EDIT/DUPLICATE these stops: date, title, description ▼▼ -->
+          <div class="tl-item">
+            <span class="tl-dot"></span>
+            <div class="tl-card">
+              <span class="tl-date">2024 — 2025</span>
+              <h3>Vice President — Byte Club</h3>
+              <p>Ran events and workshops, and spent a year convincing people that coding is fun. It worked on at least a few.</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-dot"></span>
+            <div class="tl-card">
+              <span class="tl-date">Aug 2025</span>
+              <h3>Started B.Tech CS — Faculty of Technology, DU</h3>
+              <p>First <code>print("hello world")</code> in a DU lab. No looking back since.</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-dot"></span>
+            <div class="tl-card">
+              <span class="tl-date">2026</span>
+              <h3>Your next milestone here</h3>
+              <p>Duplicate this block in index.html whenever something happens. Keep the flow going.</p>
+            </div>
+          </div>
+          <div class="tl-item tl-next">
+            <span class="tl-dot"></span>
+            <div class="tl-card">
+              <span class="tl-date">soon</span>
+              <h3>next stop — loading…</h3>
+            </div>
+          </div>
+        </div>
+
+        <!-- an actual guitar string. pluck it. -->
+        <div class="string-box" data-reveal aria-hidden="true">
+          <svg id="guitarString" viewBox="0 0 1000 90" preserveAspectRatio="none">
+            <path id="stringPath" d="M 0 45 Q 500 45 1000 45" fill="none"/>
+          </svg>
+          <span class="string-label">♪ this string is real — pluck it</span>
+        </div>
+
+        <!-- skills, reviewed like cinema -->
+        <h2 class="section-title skills-title" data-reveal><span class="section-num">04</span> Skills <span class="skills-note">— rated like films</span></h2>
+        <p class="film-note" data-reveal>proficiency, but make it letterboxd. every poster certified <b>RATED&nbsp;PG</b>.</p>
+
+        <div class="filmography">
+          <article class="film" data-reveal>
+            <div class="film-poster">
+              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg" alt="" loading="lazy">
+              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg" alt="" loading="lazy">
+              <span class="pg-badge">RATED PG</span>
+            </div>
+            <div class="film-info">
+              <h3>HTML &amp; CSS</h3>
+              <p class="film-review">"a timeless double feature — structure falls for style."</p>
+              <span class="film-tag">rewatched daily</span>
+            </div>
+          </article>
+
+          <article class="film" data-reveal>
+            <div class="film-poster">
+              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" alt="" loading="lazy">
+              <span class="pg-badge">RATED PG</span>
+            </div>
+            <div class="film-info">
+              <h3>JavaScript</h3>
+              <p class="film-review">"chaotic, brilliant, occasionally undefined. would import again."</p>
+              <span class="film-tag">now showing</span>
+            </div>
+          </article>
+
+          <article class="film" data-reveal>
+            <div class="film-poster">
+              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" alt="" loading="lazy">
+              <span class="pg-badge">RATED PG</span>
+            </div>
+            <div class="film-info">
+              <h3>Python</h3>
+              <p class="film-review">"elegant pacing. zero semicolon jump-scares."</p>
+              <span class="film-tag">now showing</span>
+            </div>
+          </article>
+
+          <article class="film" data-reveal>
+            <div class="film-poster">
+              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/numpy/numpy-original.svg" alt="" loading="lazy">
+              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/pandas/pandas-original.svg" alt="" loading="lazy">
+              <span class="pg-badge">RATED PG</span>
+            </div>
+            <div class="film-info">
+              <h3>NumPy &amp; Pandas</h3>
+              <p class="film-review">"a gripping documentary about taming wild data."</p>
+              <span class="film-tag">double feature</span>
+            </div>
+          </article>
+
+          <article class="film" data-reveal>
+            <div class="film-poster">
+              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg" alt="" loading="lazy">
+              <span class="pg-badge">RATED PG</span>
+            </div>
+            <div class="film-info">
+              <h3>Git &amp; GitHub</h3>
+              <p class="film-review">"a time-travel thriller. the merge-conflict scene still haunts me."</p>
+              <span class="film-tag">daily driver</span>
+            </div>
+          </article>
+
+          <article class="film" data-reveal>
+            <div class="film-poster">
+              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/c/c-original.svg" alt="" loading="lazy">
+              <span class="pg-badge">RATED PG</span>
+            </div>
+            <div class="film-info">
+              <h3>C</h3>
+              <p class="film-review">"psychological horror. pointers everywhere. 'character-building' — critics."</p>
+              <span class="film-tag">in the watchlist</span>
+            </div>
+          </article>
+
+          <article class="film" data-reveal>
+            <div class="film-poster">
+              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vscode/vscode-original.svg" alt="" loading="lazy">
+              <span class="pg-badge">RATED PG</span>
+            </div>
+            <div class="film-info">
+              <h3>VS Code</h3>
+              <p class="film-review">"home."</p>
+              <span class="film-tag">long-running series</span>
+            </div>
+          </article>
+        </div>
+
+        <!-- beyond the code -->
+        <h2 class="section-title beyond-title" data-reveal><span class="section-num">05</span> Beyond the code</h2>
+        <div class="cards-3">
+          <article class="card tilt" data-reveal>
+            <div class="card-icon">🎬</div>
+            <h3>Cinephile</h3>
+            <p>Movies &amp; series, religiously. Ratings live on <a class="lb-link" href="https://letterboxd.com/MrCreoid/" target="_blank" rel="noopener" data-cursor>letterboxd · @MrCreoid&nbsp;↗</a></p>
+          </article>
+          <article class="card tilt" data-reveal>
+            <div class="card-icon">🎸</div>
+            <h3>Guitarist</h3>
+            <p>Riffs between builds. The guitar gets picked up exactly when the bugs start winning.</p>
+          </article>
+          <article class="card tilt" data-reveal>
+            <div class="card-icon">🌌</div>
+            <h3>Night owl</h3>
+            <p>Best ideas arrive after midnight. Sleep schedule: genuinely figuring it out.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PROJECTS ============ -->
+    <section class="view" id="view-projects">
+      <div class="container section-top">
+        <h2 class="section-title" data-reveal><span class="section-num">06</span> Projects</h2>
+        <p class="section-sub" data-reveal>Things I've built — and the list is only getting longer.</p>
+
+        <div class="b-filters" data-reveal role="group" aria-label="Filter projects">
+          <button class="b-filter is-active" data-filter="all" data-cursor>all</button>
+          <button class="b-filter" data-filter="web" data-cursor>web</button>
+          <button class="b-filter" data-filter="python" data-cursor>python</button>
+        </div>
+
+        <div class="bento" id="bento">
+          <!-- featured project · 2x2 -->
+          <article class="b-cell b-featured" data-cat="web" data-url="index.html" data-reveal>
+            <span class="b-kind">featured</span>
+            <h3>This portfolio</h3>
+            <p>The site you're looking at — hand-written HTML, CSS &amp; JS. SPA routing, canvas constellation, physics toys and more secrets than it admits to.</p>
+            <ul class="b-tags"><li>HTML</li><li>CSS</li><li>JavaScript</li></ul>
+            <div class="b-actions">
+              <button class="b-btn b-preview" data-cursor>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5.14v13.72L19 12 8 5.14z"/></svg>
+                preview
+              </button>
+              <!-- ▼ replace # with the repo URL -->
+              <a class="b-btn b-ghostbtn" href="#" target="_blank" rel="noopener" data-cursor>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+                code
+              </a>
+            </div>
+          </article>
+
+          <!-- ▼▼ EDIT THIS PROJECT: title, description, tags, data-url (live site for preview), repo link ▼▼ -->
+          <article class="b-cell b-proj" data-cat="python" data-url="" data-reveal>
+            <span class="b-kind">project</span>
+            <h3>Your Python project</h3>
+            <p>Data crunching with NumPy &amp; Pandas — what it does, and what it taught you.</p>
+            <ul class="b-tags"><li>Python</li><li>Pandas</li><li>NumPy</li></ul>
+            <div class="b-actions">
+              <button class="b-btn b-preview" data-cursor>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5.14v13.72L19 12 8 5.14z"/></svg>
+                preview
+              </button>
+              <a class="b-btn b-ghostbtn" href="#" target="_blank" rel="noopener" data-cursor>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+                code
+              </a>
+            </div>
+          </article>
+
+          <!-- stat cell -->
+          <div class="b-cell b-stat" data-reveal>
+            <span class="b-big"><span data-count="7">0</span>+</span>
+            <span class="b-small">technologies in rotation</span>
+          </div>
+
+          <!-- currently cell -->
+          <div class="b-cell b-now" data-reveal>
+            <span class="b-label">// currently</span>
+            <p>watching too many movies<br>&amp; building this very site</p>
+          </div>
+
+          <!-- status cell -->
+          <div class="b-cell b-building" data-reveal>
+            <span class="b-label">$ status</span>
+            <p class="b-code">compiling next_project<span class="b-blink">▋</span></p>
+            <p class="b-small">something's cooking — check back soon</p>
+          </div>
+
+          <!-- github activity -->
+          <div class="b-cell b-github" data-reveal>
+            <span class="b-label">@github</span>
+            <div class="gh-grid" id="ghGrid" aria-hidden="true"></div>
+            <!-- ▼ replace # with your GitHub profile URL + your handle -->
+            <a class="gh-link" href="#" target="_blank" rel="noopener" data-cursor>github.com/yourhandle ↗</a>
+          </div>
+
+          <!-- more soon · dashed -->
+          <div class="b-cell b-soon" data-reveal>
+            <span class="b-big">+</span>
+            <span class="b-small">your next project lives here — duplicate a cell above</span>
+          </div>
+        </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ACHIEVEMENTS ============ -->
+    <section class="view" id="view-achievements">
+      <div class="container section-top">
+        <h2 class="section-title" data-reveal><span class="section-num">07</span> Achievements</h2>
+        <p class="section-sub" data-reveal>The trophy shelf. Small for now — watch this space.</p>
+
+        <div class="ach-grid">
+          <!-- ▼▼ EDIT THIS CARD: replace title / issuer / year with your certificate details.
+               To show the certificate image, drop it at assets/certificate-1.jpg ▼▼ -->
+          <article class="ach-card tilt featured" data-reveal>
+            <div class="ach-media">
+              <div class="ach-media-fallback">🏆</div>
+              <img src="assets/certificate-1.jpg" alt="Certificate" onerror="this.remove()">
+              <span class="ach-shine"></span>
+            </div>
+            <div class="ach-body">
+              <span class="ach-kind">Certificate</span>
+              <h3>Your Certificate Title</h3>
+              <p>Issued by — Organisation name</p>
+              <span class="ach-year">2025</span>
+            </div>
+          </article>
+
+          <!-- ▼▼ EDIT THIS CARD: your competition entry ▼▼ -->
+          <article class="ach-card tilt" data-reveal>
+            <div class="ach-media">
+              <div class="ach-media-fallback">⚔️</div>
+              <span class="ach-shine"></span>
+            </div>
+            <div class="ach-body">
+              <span class="ach-kind">Competition</span>
+              <h3>Competition Name</h3>
+              <p>What you did / where you placed</p>
+              <span class="ach-year">2025</span>
+            </div>
+          </article>
+
+          <!-- duplicate any card above to add more achievements -->
+
+          <article class="ach-card loading-card" data-reveal>
+            <div class="ach-body center">
+              <span class="loading-dots"><i></i><i></i><i></i></span>
+              <h3>Next achievement</h3>
+              <p>currently compiling…</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CONTACT ============ -->
+    <section class="view" id="view-contact">
+      <div class="container section-top">
+        <h2 class="section-title" data-reveal><span class="section-num">08</span> Contact</h2>
+        <h3 class="contact-big" data-reveal>Let's build<br>something <span class="grad">together.</span></h3>
+
+        <div class="contact-grid">
+          <div class="contact-left">
+            <p data-reveal>Got an idea, an opportunity, or just want to talk code? My inbox is always open.</p>
+
+            <!-- ▼ put your real email here (appears + used by the copy button) -->
+            <button class="email-row magnetic" id="copyEmail" data-email="pratyushgarg@example.com" data-reveal data-cursor>
+              <span class="email-text">pratyushgarg@example.com</span>
+              <span class="email-copy">copy</span>
+            </button>
+
+            <div class="socials" data-reveal>
+              <!-- ▼ replace # with your GitHub URL -->
+              <a class="social magnetic" href="#" target="_blank" rel="noopener" aria-label="GitHub" data-cursor>
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+              </a>
+              <!-- ▼ replace # with your LinkedIn URL -->
+              <a class="social magnetic" href="#" target="_blank" rel="noopener" aria-label="LinkedIn" data-cursor>
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.225 0z"/></svg>
+              </a>
+              <a class="social magnetic" href="mailto:pratyushgarg@example.com" aria-label="Email" data-cursor>
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="m3 6 9 7 9-7"/></svg>
+              </a>
+            </div>
+          </div>
+
+          <form class="contact-form" id="contactForm" data-reveal>
+            <div class="quick-chips" role="group" aria-label="Quick message starters">
+              <button type="button" class="qchip" data-cursor data-msg="Hi Pratyush! I'd love to talk about an internship opportunity — ">💼 internship</button>
+              <button type="button" class="qchip" data-cursor data-msg="Hey! I have an idea we could build together — ">🤝 collab</button>
+              <button type="button" class="qchip" data-cursor data-msg="Hey Pratyush, just saying hi! Found your site and ">👋 just saying hi</button>
+            </div>
+            <div class="field">
+              <input type="text" id="fName" required placeholder=" ">
+              <label for="fName">Your name</label>
+            </div>
+            <div class="field">
+              <input type="email" id="fEmail" required placeholder=" ">
+              <label for="fEmail">Your email</label>
+            </div>
+            <div class="field">
+              <textarea id="fMsg" rows="4" required placeholder=" "></textarea>
+              <label for="fMsg">Your message</label>
+            </div>
+            <button class="btn btn-primary magnetic" type="submit"><span class="btn-label">Send message</span><span class="btn-plane">✈</span></button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <span>Designed &amp; built by Pratyush Garg · 2026</span>
+    <button class="dnc" id="dnc" data-cursor>do not click this</button>
+    <span class="footer-hint">press <kbd>R</kbd> anywhere… if you're curious</span>
+  </footer>
+
+  <!-- revealed only by scrolling to the absolute bottom and lingering -->
+  <div class="bottom-secret" id="bottomSecret" aria-hidden="true">
+    you scrolled all the way down here. we should talk.
+    <button data-nav="contact" data-cursor>say hi →</button>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <!-- project preview window -->
+  <div class="pv" id="pv" aria-hidden="true">
+    <div class="pv-window">
+      <div class="pv-bar">
+        <span class="pv-dot pv-red"></span><span class="pv-dot pv-yellow"></span><span class="pv-dot pv-green"></span>
+        <span class="pv-url" id="pvUrl">—</span>
+        <a class="pv-visit" id="pvVisit" href="#" target="_blank" rel="noopener" data-cursor>visit ↗</a>
+        <button class="pv-close" id="pvClose" aria-label="Close preview" data-cursor>✕</button>
+      </div>
+      <div class="pv-body">
+        <div class="pv-loading" id="pvLoading"><span class="loading-dots"><i></i><i></i><i></i></span><span>spinning it up…</span></div>
+        <div class="pv-empty" id="pvEmpty">no live preview yet — add the project's URL to <code>data-url</code> in index.html</div>
+        <iframe id="pvFrame" title="Project preview"></iframe>
       </div>
     </div>
-    <div class="name">
-      <div class="name-only">
-        <div class="blur"></div>
-        <div class="ang-right"><</div>
-        <div class="slash">/</div>
-        <div class="fname">Pratyush Garg</div>
-        <div class="ang-left">></div>
-      </div>
-      <p>// Turning ideas into clean, functional, and beautiful code. //</p>
-    </div>
+  </div>
 
-    <script src="./JS/index.js"></script>
-  </body>
+  <!-- certificate lightbox -->
+  <div class="lb" id="lightbox" aria-hidden="true">
+    <figure class="lb-fig">
+      <img id="lbImg" src="" alt="Certificate">
+      <figcaption id="lbCap"></figcaption>
+    </figure>
+    <button class="lb-close" id="lbClose" aria-label="Close viewer" data-cursor>✕</button>
+  </div>
+
+  <!-- minecraft achievement (konami) -->
+  <div class="mc-toast" id="mcToast" aria-hidden="true">
+    <span class="mc-icon">🧪</span>
+    <span class="mc-text"><b>Achievement Get!</b>How Did We Get Here?</span>
+  </div>
+
+  <!-- crt scanlines (konami) -->
+  <div class="crt-overlay" id="crtOverlay" aria-hidden="true"></div>
+
+
+  <!-- secret typing game (opens with ?play in the URL) -->
+  <div class="game" id="game" aria-hidden="true">
+    <div class="game-box">
+      <button class="game-close" id="gameClose" aria-label="Close game">✕</button>
+      <p class="game-kicker">// secret level unlocked</p>
+      <h3>Typing Speed Test</h3>
+      <p class="game-sub">type the line below — the clock starts on your first key</p>
+      <div class="game-text" id="gameText"></div>
+      <input class="game-input" id="gameInput" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Type here">
+      <div class="game-stats">
+        <span>wpm <b id="gWpm">0</b></span>
+        <span>accuracy <b id="gAcc">100%</b></span>
+        <span>best <b id="gBest">—</b></span>
+      </div>
+      <div class="game-actions">
+        <button class="btn btn-ghost" id="gameNew" data-cursor><span>new line ↺</span></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/script.js" defer></script>
+</body>
 </html>
