@@ -1,0 +1,24 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+
+# Thumbnails
+._*
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Node
+node_modules/
+
+# Local-only notes — kept on disk, never pushed to GitHub (spoilers!)
+EASTER_EGGS.md
+assets/README.txt
