@@ -1,10 +1,47 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+*.log
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
 # macOS
 .DS_Store
 .AppleDouble
 .LSOverride
 Icon
-
-# Thumbnails
 ._*
 
 # Editor / IDE
@@ -12,13 +49,11 @@ Icon
 .idea/
 *.swp
 *.swo
-
-# Logs
-*.log
-
-# Node
-node_modules/
+*.pem
 
 # Local-only notes — kept on disk, never pushed to GitHub (spoilers!)
 EASTER_EGGS.md
-assets/README.txt
+
+# local tooling state
+.claude/
+.remember/

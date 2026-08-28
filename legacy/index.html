@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Pratyush Garg — B.Tech CS student at Faculty of Technology, DU. I build things for the web.">
   <title>Pratyush Garg — Portfolio</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0a0f'/%3E%3Ctext x='32' y='43' font-family='Arial' font-size='26' fill='%23a78bfa' text-anchor='middle' font-weight='700'%3EPG%3C/text%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0a0f'/%3E%3Ctext x='32' y='43' font-family='Arial' font-size='26' fill='%23ff963c' text-anchor='middle' font-weight='700'%3EPG%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -15,9 +15,9 @@
 <body>
 
   <!-- ambient layers -->
+  <div class="bg-shader" id="bgShader" aria-hidden="true"></div>
+  <div class="bg-scrim" aria-hidden="true"></div>
   <div class="noise" aria-hidden="true"></div>
-  <div class="glow glow-1" aria-hidden="true"></div>
-  <div class="glow glow-2" aria-hidden="true"></div>
   <canvas id="particles" aria-hidden="true"></canvas>
 
   <!-- custom cursor -->
@@ -25,7 +25,7 @@
   <div class="cursor-ring" aria-hidden="true"></div>
 
 
-  <!-- preloader: the crystal forge -->
+  <!-- preloader: the ignition -->
   <div class="preloader" id="preloader" aria-hidden="true">
     <canvas id="forge"></canvas>
     <div class="forge-name" id="forgeName">PRATYUSH&nbsp;GARG</div>
@@ -91,32 +91,6 @@
         <div class="scroll-hint" data-reveal aria-hidden="true">
           <span class="scroll-hint-track"><span class="scroll-hint-ball"></span></span>
           <span class="scroll-hint-label">scroll</span>
-        </div>
-
-        <!-- the crystal. it knows things. -->
-        <div class="crystal-wrap" id="crystal" aria-hidden="true">
-          <span class="crystal-shadow"></span>
-          <div class="crystal-spin">
-            <div class="crystal">
-              <i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i>
-              <i style="--i:3"></i><i style="--i:4"></i><i style="--i:5"></i>
-            </div>
-            <span class="crystal-core"></span>
-            <span class="crystal-fire"></span>
-            <span class="crystal-star"></span>
-          </div>
-          <div class="crystal-veil" id="crystalVeil"></div>
-          <div class="crystal-base">
-            <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-            <span class="base-glint"></span>
-          </div>
-          <span class="crystal-ember" style="--dx:-14px;--dur:3.4s;--dl:0s"></span>
-          <span class="crystal-ember" style="--dx:10px;--dur:4.1s;--dl:0.7s"></span>
-          <span class="crystal-ember" style="--dx:-6px;--dur:3.8s;--dl:1.4s"></span>
-          <span class="crystal-ember" style="--dx:18px;--dur:4.6s;--dl:2.1s"></span>
-          <span class="crystal-ember" style="--dx:-20px;--dur:3.2s;--dl:2.8s"></span>
-          <span class="crystal-ember" style="--dx:4px;--dur:4.3s;--dl:3.4s"></span>
-          <span class="orb-tip">back to the top ↑</span>
         </div>
       </div>
 
@@ -394,7 +368,6 @@
         <div class="b-filters" data-reveal role="group" aria-label="Filter projects">
           <button class="b-filter is-active" data-filter="all" data-cursor>all</button>
           <button class="b-filter" data-filter="web" data-cursor>web</button>
-          <button class="b-filter" data-filter="python" data-cursor>python</button>
         </div>
 
         <div class="bento" id="bento">
@@ -417,18 +390,35 @@
             </div>
           </article>
 
-          <!-- ▼▼ EDIT THIS PROJECT: title, description, tags, data-url (live site for preview), repo link ▼▼ -->
-          <article class="b-cell b-proj" data-cat="python" data-url="" data-reveal>
+
+          <article class="b-cell b-proj" data-cat="web" data-url="https://mrcreoid.github.io/attendance-tracker/" data-reveal>
             <span class="b-kind">project</span>
-            <h3>Your Python project</h3>
-            <p>Data crunching with NumPy &amp; Pandas — what it does, and what it taught you.</p>
-            <ul class="b-tags"><li>Python</li><li>Pandas</li><li>NumPy</li></ul>
+            <h3>Attendance Tracker</h3>
+            <p>A premium, glassmorphic attendance-tracking dashboard built for college students. Set up your weekly timetable once and track attendance seamlessly.</p>
+            <ul class="b-tags"><li>React</li><li>TypeScript</li><li>Tailwind CSS</li><li>Firebase</li></ul>
             <div class="b-actions">
               <button class="b-btn b-preview" data-cursor>
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5.14v13.72L19 12 8 5.14z"/></svg>
                 preview
               </button>
-              <a class="b-btn b-ghostbtn" href="#" target="_blank" rel="noopener" data-cursor>
+              <a class="b-btn b-ghostbtn" href="https://github.com/MrCreoid/attendance-tracker" target="_blank" rel="noopener" data-cursor>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+                code
+              </a>
+            </div>
+          </article>
+
+          <article class="b-cell b-proj" data-cat="web" data-url="https://mrcreoid.github.io/spent/" data-reveal>
+            <span class="b-kind">project</span>
+            <h3>Spent</h3>
+            <p>A fast, minimal expense &amp; debt tracker that feels like a native iOS app. Local-first, installable as a PWA, and synced across devices.</p>
+            <ul class="b-tags"><li>Next.js</li><li>React</li><li>Tailwind CSS</li><li>Firebase</li></ul>
+            <div class="b-actions">
+              <button class="b-btn b-preview" data-cursor>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5.14v13.72L19 12 8 5.14z"/></svg>
+                preview
+              </button>
+              <a class="b-btn b-ghostbtn" href="https://github.com/MrCreoid/spent" target="_blank" rel="noopener" data-cursor>
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
                 code
               </a>
@@ -650,5 +640,11 @@
   </div>
 
   <script src="js/script.js" defer></script>
+  <script type="module">
+    // the GrainGradient background. if the CDN is unreachable this module never
+    // runs and the CSS gradient inside .bg-shader stays as the fallback.
+    import { mountGradientBackground } from "./paper-design-shader-background.js";
+    mountGradientBackground(document.getElementById("bgShader")).catch(() => {});
+  </script>
 </body>
 </html>

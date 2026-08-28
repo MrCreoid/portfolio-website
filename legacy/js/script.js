@@ -14,9 +14,7 @@ const SPRING = "cubic-bezier(0.34, 1.56, 0.64, 1)";
 
 /* shared state */
 let cozyActive = false;
-const particleTheme = { dot: "rgba(167, 139, 250, 0.5)", line: "139, 92, 246" };
-/* the crystal's gravity well — the particle field reads this */
-const well = { x: 0, y: 0, active: false, strength: 0 };
+const particleTheme = { dot: "rgba(255, 150, 60, 0.5)", line: "255, 92, 36" };
 
 /* ---------------- toast ---------------- */
 const toastEl = $("#toast");
@@ -366,23 +364,6 @@ if (!reducedMotion) {
         ty += (dy / d) * f * 42 * DPR;
       }
 
-      // the crystal's gravity well: bend nearby particles into orbit around it
-      if (well.active) {
-        const WELL_R = 230 * DPR;
-        const wx = well.x * DPR - tx,
-          wy = well.y * DPR - ty;
-        const wd2 = wx * wx + wy * wy;
-        if (wd2 < WELL_R * WELL_R && wd2 > 1) {
-          const wd = Math.sqrt(wd2);
-          const pull = (1 - wd / WELL_R) * well.strength;
-          // inward pull + a tangential nudge so they swirl, not just collapse
-          tx += (wx / wd) * pull * 60 * DPR;
-          ty += (wy / wd) * pull * 60 * DPR;
-          tx += (-wy / wd) * pull * 34 * DPR;
-          ty += (wx / wd) * pull * 34 * DPR;
-        }
-      }
-
       p.x += (tx - p.x) * 0.045;
       p.y += (ty - p.y) * 0.045;
 
@@ -449,7 +430,7 @@ if (finePointer && !reducedMotion) {
 function confetti(x, y, n = 24) {
   const colors = cozyActive
     ? ["#f59e0b", "#fbbf24", "#fb923c", "#fde68a"]
-    : ["#8b5cf6", "#c084fc", "#a78bfa", "#7c3aed", "#e9d5ff"];
+    : ["#ff5c24", "#ffc705", "#ff963c", "#d6285a", "#ffecd0"];
   for (let i = 0; i < n; i++) {
     const bit = document.createElement("span");
     bit.className = "confetti-bit";
@@ -850,11 +831,11 @@ function matrixRain(duration = 7000) {
       const y = drops[i] * FS;
       ctx.fillStyle = cozyActive
         ? "rgba(251, 191, 36, 0.95)"
-        : "rgba(192, 132, 252, 0.95)";
+        : "rgba(255, 199, 5, 0.95)";
       ctx.fillText(ch, i * FS, y);
       ctx.fillStyle = cozyActive
         ? "rgba(245, 158, 11, 0.4)"
-        : "rgba(139, 92, 246, 0.4)";
+        : "rgba(255, 92, 36, 0.4)";
       ctx.fillText(ch, i * FS, y - FS);
       drops[i]++;
       if (y > H && Math.random() > 0.975) drops[i] = rand(-25, 0);
@@ -1124,12 +1105,12 @@ $("#contactForm").addEventListener("submit", function (e) {
   }, 600);
 });
 
-/* ---------------- preloader: the crystal forge ---------------- */
+/* ---------------- preloader: the ignition ---------------- */
 const preloader = $("#preloader");
 const seenIntro = sessionStorage.getItem("pg-intro");
 if (seenIntro) preloader.classList.add("is-gone");
 
-function crystalForge() {
+function ignition() {
   return new Promise((resolve) => {
     const canvas = $("#forge");
     const ctx = canvas.getContext("2d");
@@ -1146,7 +1127,7 @@ function crystalForge() {
     }
     size();
 
-    // target points traced along the crystal's diamond silhouette
+    // target points traced along the mark's silhouette
     const SC = Math.min(W, H) * 0.16;
     const verts = [
       [0, -1.45],
@@ -1200,12 +1181,12 @@ function crystalForge() {
         pt.y = pt.seedY + (pt.ty - pt.seedY) * e;
         ctx.beginPath();
         ctx.arc(pt.x, pt.y, 1.7 * DPR, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(192, 132, 252, 0.9)";
+        ctx.fillStyle = "rgba(255, 199, 5, 0.9)";
         ctx.fill();
       }
       // constellation links once they're mostly assembled
       if (p > 0.55) {
-        ctx.strokeStyle = `rgba(139, 92, 246, ${(p - 0.55) * 0.5})`;
+        ctx.strokeStyle = `rgba(255, 92, 36, ${(p - 0.55) * 0.5})`;
         ctx.lineWidth = DPR * 0.6;
         for (let i = 0; i < parts.length; i++) {
           const a = parts[i],
@@ -1260,7 +1241,7 @@ function crystalForge() {
             0,
             Math.PI * 2,
           );
-          ctx.fillStyle = `rgba(233, 213, 255, ${a})`;
+          ctx.fillStyle = `rgba(255, 236, 205, ${a})`;
           ctx.fill();
         }
         if (ft < 1) requestAnimationFrame(burst);
@@ -1272,7 +1253,7 @@ function crystalForge() {
     }
 
     function reveal() {
-      // circular shockwave wipes the curtain away from the crystal's birthplace
+      // circular shockwave wipes the curtain away from the ignition point
       preloader.style.setProperty("--cx", innerWidth / 2 + "px");
       preloader.style.setProperty("--cy", innerHeight / 2 + "px");
       preloader.classList.add("is-revealing");
@@ -1297,12 +1278,10 @@ window.addEventListener("load", async () => {
   }
   sessionStorage.setItem("pg-intro", "1");
   document.body.classList.add("is-locked");
-  await crystalForge();
+  await ignition();
   document.body.classList.remove("is-locked");
   finishSwitch("home");
   indicator.classList.add("is-ready");
-  // the hero crystal "powers on" as it inherits the forge's energy
-  $("#crystal")?.classList.add("just-forged");
 });
 
 /* keep nav indicator honest once fonts settle */
@@ -1311,7 +1290,7 @@ document.fonts?.ready.then(moveIndicator);
 /* ---------------- for the snoopers ---------------- */
 console.log(
   "%c👀 inspecting, are we? respect.",
-  "font-size:15px; font-weight:bold; color:#a78bfa;",
+  "font-size:15px; font-weight:bold; color:#ff963c;",
 );
 console.log(
   "%ctry typing my first name anywhere on the page.\nor add ?play to the URL. that's all the hints you get.\n— PG (current status: genuinely figuring it out)",
@@ -1322,7 +1301,7 @@ console.log(
    round 3: bento, preview window & more eggs
    ============================================================ */
 
-/* ---------------- theme helper (crt > cozy > violet) ---------------- */
+/* ---------------- theme helper (crt > cozy > ember) ---------------- */
 let crtActive = false;
 function updateParticleTheme() {
   if (crtActive) {
@@ -1332,8 +1311,8 @@ function updateParticleTheme() {
     particleTheme.dot = "rgba(251, 191, 36, 0.45)";
     particleTheme.line = "245, 158, 11";
   } else {
-    particleTheme.dot = "rgba(167, 139, 250, 0.5)";
-    particleTheme.line = "139, 92, 246";
+    particleTheme.dot = "rgba(255, 150, 60, 0.5)";
+    particleTheme.line = "255, 92, 36";
   }
 }
 
@@ -1456,7 +1435,7 @@ function updateParticleTheme() {
   if (reducedMotion) return;
   const IDLE_MS = 60000;
   const COLORS = [
-    "#c084fc",
+    "#ffc705",
     "#4ade80",
     "#fbbf24",
     "#60a5fa",
@@ -1594,172 +1573,8 @@ function updateParticleTheme() {
 })();
 
 /* ============================================================
-   round 4: crystal & structure upgrades
+   round 4: structure upgrades
    ============================================================ */
-
-/* ---------------- the hero crystal (companion · charge · gravity · collection) ---------------- */
-(function crystal() {
-  const wrap = $("#crystal");
-  if (!wrap || reducedMotion) return;
-  const spin = $(".crystal", wrap);
-  const tip = $(".orb-tip", wrap);
-
-  // ---- color collection (persisted) ----
-  // hue-rotate values applied to the amber (~45°) base, named by what they actually render
-  const HUES = [0, 60, 130, 200, 260, 320];
-  const HUE_NAMES = ["amber", "emerald", "teal", "sapphire", "magenta", "ruby"];
-  let hueIdx = +(localStorage.getItem("pg-crystal-hue") || 0) % HUES.length;
-  function applyHue() {
-    wrap.style.setProperty("--hue", HUES[hueIdx] + "deg");
-  }
-  applyHue();
-
-  // ---- charge ----
-  let charge = 0;
-  const MAX = 10;
-  let overcharging = false;
-
-  let angle = 0,
-    speed = 0.35,
-    targetSpeed = 0.35;
-  let tilt = -10,
-    targetTilt = -10;
-  let hot = false;
-  let companion = false;
-
-  function setHot(on) {
-    hot = on;
-    wrap.classList.toggle("is-hot", on);
-    targetSpeed = on ? 2.4 : 0.35;
-    if (!on) targetTilt = -10;
-    if (on) {
-      const r = wrap.getBoundingClientRect();
-      well.x = r.left + r.width / 2;
-      well.y = r.top + r.height / 2;
-    }
-    well.active = on && !companion;
-  }
-
-  wrap.addEventListener("mouseenter", () => setHot(true));
-  wrap.addEventListener("mouseleave", () => setHot(false));
-  wrap.addEventListener("mousemove", (e) => {
-    const r = wrap.getBoundingClientRect();
-    // tilt toward the cursor
-    targetTilt = -10 + ((e.clientY - r.top) / r.height - 0.5) * -26;
-    // the glow flows from the exact point of contact
-    wrap.style.setProperty("--cmx", ((e.clientX - r.left) / r.width) * 100 + "%");
-    wrap.style.setProperty("--cmy", ((e.clientY - r.top) / r.height) * 100 + "%");
-    // feed the gravity well its position (in CSS px)
-    well.x = r.left + r.width / 2;
-    well.y = r.top + r.height / 2;
-  });
-
-  wrap.addEventListener("click", (e) => {
-    // companion mode: it's a back-to-top button
-    if (companion) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
-    if (overcharging) return;
-
-    charge = Math.min(charge + 1, MAX);
-    wrap.style.setProperty("--charge", charge / MAX);
-    targetSpeed = 6;
-    setTimeout(() => (targetSpeed = hot ? 2.4 : 0.35), 500);
-    confetti(e.clientX, e.clientY, 10 + charge * 2);
-
-    if (charge >= MAX) overcharge();
-    else if (charge === 1) toast("it stirs… keep going. ⟡", 1800);
-    else if (charge === 5) toast("halfway charged ⚡", 1500);
-  });
-
-  function overcharge() {
-    overcharging = true;
-    wrap.classList.add("is-cracked");
-
-    // screen-wide shockwave from the crystal
-    const r = wrap.getBoundingClientRect();
-    const cx = r.left + r.width / 2,
-      cy = r.top + r.height / 2;
-    const ripple = document.createElement("div");
-    ripple.className = "surge-ripple";
-    ripple.style.left = cx + "px";
-    ripple.style.top = cy + "px";
-    document.body.appendChild(ripple);
-    ripple.animate(
-      [
-        { opacity: 1, transform: "translate(-50%,-50%) scale(0.2)" },
-        { opacity: 0, transform: `translate(-50%,-50%) scale(${(Math.max(innerWidth, innerHeight) / 5) * 1})` },
-      ],
-      { duration: 900, easing: "cubic-bezier(0.22,1,0.36,1)" },
-    ).onfinish = () => ripple.remove();
-    confetti(cx, cy, 70);
-
-    // the site briefly overclocks
-    document.body.classList.add("is-surging");
-
-    // advance the color collection
-    hueIdx = (hueIdx + 1) % HUES.length;
-    localStorage.setItem("pg-crystal-hue", hueIdx);
-    const collected = +(localStorage.getItem("pg-crystal-seen") || 1);
-    const newCount = Math.max(collected, hueIdx + 1);
-
-    setTimeout(() => {
-      applyHue();
-      const done = newCount >= HUES.length;
-      localStorage.setItem("pg-crystal-seen", newCount);
-      toast(
-        done
-          ? "⟡ all 6 crystal hues collected. you absolute legend."
-          : `⟡ overcharged — the crystal turned ${HUE_NAMES[hueIdx]}. (${hueIdx + 1}/6 hues found)`,
-        4200,
-      );
-    }, 650);
-
-    setTimeout(() => {
-      document.body.classList.remove("is-surging");
-      wrap.classList.remove("is-cracked");
-      charge = 0;
-      wrap.style.setProperty("--charge", 0);
-      overcharging = false;
-    }, 2600);
-  }
-
-  // ---- companion mode: shrink into the corner once you scroll past the hero ----
-  addEventListener(
-    "scroll",
-    () => {
-      if (currentView !== "home") return;
-      const past = scrollY > innerHeight * 0.7;
-      if (past !== companion) {
-        companion = past;
-        wrap.classList.toggle("is-companion", companion);
-        well.active = false;
-        if (tip) tip.textContent = "back to the top ↑";
-      }
-    },
-    { passive: true },
-  );
-
-  // ---- the render loop ----
-  let wellStrength = 0;
-  (function loop() {
-    speed += (targetSpeed - speed) * 0.06;
-    tilt += (targetTilt - tilt) * 0.08;
-    angle += speed;
-    spin.style.transform = `rotateX(${tilt}deg) rotateY(${angle}deg)`;
-
-    // ease the gravity well in/out so particles don't snap
-    wellStrength += ((well.active ? 1 : 0) - wellStrength) * 0.08;
-    well.strength = wellStrength;
-
-    if (hot && !companion && Math.random() < 0.05) {
-      const r = wrap.getBoundingClientRect();
-      floatBit(r.left + rand(20, r.width - 20), r.top + rand(30, r.height - 60), "✦");
-    }
-    requestAnimationFrame(loop);
-  })();
-})();
 
 /* ---------------- github heatmap (decorative until real) ---------------- */
 (function ghGrid() {
