@@ -34,13 +34,14 @@ export function Preloader({ onDone }: { onDone: () => void }) {
       done.current();
       return;
     }
-    sessionStorage.setItem(SESSION_KEY, "1");
-    document.body.classList.add("is-locked");
+    // NB: the "already seen" flag is written when the intro *finishes*, not here.
+    // StrictMode mounts effects twice in dev, and setting it up front made the
+    // second mount skip the animation entirely.
+    // the scroll lock is owned by <Site>, which knows about the mobile menu too
 
     const ctx = canvas.getContext("2d");
     if (!ctx) {
       root.classList.add("is-gone");
-      document.body.classList.remove("is-locked");
       done.current();
       return;
     }
@@ -103,11 +104,9 @@ export function Preloader({ onDone }: { onDone: () => void }) {
       root.style.setProperty("--cy", innerHeight / 2 + "px");
       root.classList.add("is-revealing");
       nameEl.classList.remove("is-lit");
+      sessionStorage.setItem(SESSION_KEY, "1");
       timers.push(
-        setTimeout(() => {
-          document.body.classList.remove("is-locked");
-          done.current();
-        }, 50),
+        setTimeout(() => done.current(), 50),
       );
       timers.push(setTimeout(() => root.classList.add("is-gone"), 750));
     };
@@ -143,7 +142,7 @@ export function Preloader({ onDone }: { onDone: () => void }) {
             0,
             Math.PI * 2,
           );
-          ctx.fillStyle = `rgba(255, 236, 205, ${a})`;
+          ctx.fillStyle = `rgba(255, 224, 221, ${a})`;
           ctx.fill();
         }
         if (ft < 1) raf = requestAnimationFrame(burst);
@@ -167,13 +166,13 @@ export function Preloader({ onDone }: { onDone: () => void }) {
         pt.y = pt.seedY + (pt.ty - pt.seedY) * e;
         ctx.beginPath();
         ctx.arc(pt.x, pt.y, 1.7 * DPR, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(255, 199, 5, 0.9)";
+        ctx.fillStyle = "rgba(255, 125, 107, 0.9)";
         ctx.fill();
       }
 
       // constellation links once they're mostly assembled
       if (p > 0.55) {
-        ctx.strokeStyle = `rgba(255, 92, 36, ${(p - 0.55) * 0.5})`;
+        ctx.strokeStyle = `rgba(255, 34, 51, ${(p - 0.55) * 0.5})`;
         ctx.lineWidth = DPR * 0.6;
         for (let i = 0; i < parts.length; i++) {
           const a = parts[i];
@@ -199,7 +198,6 @@ export function Preloader({ onDone }: { onDone: () => void }) {
       cancelled = true;
       cancelAnimationFrame(raf);
       timers.forEach(clearTimeout);
-      document.body.classList.remove("is-locked");
     };
   }, []);
 

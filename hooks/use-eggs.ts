@@ -50,7 +50,9 @@ export function useTypedSecrets() {
       }
       if (keyBuffer.endsWith("patty")) {
         keyBuffer = "";
-        setCozy((p) => !p);
+        const next = !cozyRef.current;
+        setCozy(next);
+        announceCozy(next, toast);
       }
       if (keyBuffer.endsWith("sudo")) {
         keyBuffer = "";
@@ -69,31 +71,35 @@ export function useTypedSecrets() {
 }
 
 /** Cozy mode's warm flash + the ☕🎬🎸 drifting up the screen. */
+/** Fires the cozy-mode announcement + warm flash. Called from the toggle, not
+ *  from an effect: an effect keyed on `cozy` re-announces itself whenever React
+ *  remounts (StrictMode does this on every dev load). */
+export function announceCozy(cozy: boolean, toast: (m: string, ms?: number) => void) {
+  const flash = document.createElement("div");
+  flash.className = "cozy-flash";
+  document.body.appendChild(flash);
+  void flash.offsetWidth;
+  flash.classList.add("is-on");
+  setTimeout(() => flash.remove(), 1400);
+
+  toast(
+    cozy
+      ? "oh… you know me know me 🧡 welcome to the cozy corner"
+      : "back to business 🧡",
+    cozy ? 3600 : 2400,
+  );
+}
+
+/** The ☕🎬🎸 drifting up the screen. Purely derived from `cozy`, so running it
+ *  twice is harmless. */
 export function useCozyMode() {
-  const { cozy, toast } = usePortfolio();
-  const first = useRef(true);
+  const { cozy } = usePortfolio();
 
   useEffect(() => {
-    // don't announce cozy mode on the very first render, only on a real toggle
-    if (first.current) {
-      first.current = false;
+    if (!cozy) {
+      document.querySelectorAll(".cozy-float").forEach((e) => e.remove());
       return;
     }
-
-    const flash = document.createElement("div");
-    flash.className = "cozy-flash";
-    document.body.appendChild(flash);
-    void flash.offsetWidth;
-    flash.classList.add("is-on");
-    const flashTimer = setTimeout(() => flash.remove(), 1400);
-
-    if (!cozy) {
-      toast("back to business 🧡");
-      document.querySelectorAll(".cozy-float").forEach((e) => e.remove());
-      return () => clearTimeout(flashTimer);
-    }
-
-    toast("oh… you know me know me 🧡 welcome to the cozy corner", 3600);
     const emojis = ["☕", "🎬", "🎸", "🍿", "🌙", "📺"];
     const drip = setInterval(() => {
       if (document.hidden) return;
@@ -106,11 +112,8 @@ export function useCozyMode() {
       setTimeout(() => e.remove(), 17000);
     }, 1400);
 
-    return () => {
-      clearTimeout(flashTimer);
-      clearInterval(drip);
-    };
-  }, [cozy, toast]);
+    return () => clearInterval(drip);
+  }, [cozy]);
 }
 
 /** ↑↑↓↓←→←→BA → CRT mode + a Minecraft achievement. */
@@ -160,11 +163,11 @@ export function useConsoleGreeting() {
   useEffect(() => {
     console.log(
       "%c👀 inspecting, are we? respect.",
-      "font-size:15px; font-weight:bold; color:#ff963c;",
+      "font-size:15px; font-weight:bold; color:#ff5a5a;",
     );
     console.log(
       "%ctry typing my first name anywhere on the page.\nor add ?play to the URL. that's all the hints you get.\n— PG (current status: genuinely figuring it out)",
-      "color:#a3928a;",
+      "color:#a89093;",
     );
   }, []);
 }

@@ -24,7 +24,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 const favicon =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0a0f'/%3E%3Ctext x='32' y='43' font-family='Arial' font-size='26' fill='%23ff963c' text-anchor='middle' font-weight='700'%3EPG%3C/text%3E%3C/svg%3E";
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23090405'/%3E%3Ctext x='32' y='43' font-family='Arial' font-size='26' fill='%23ff5a5a' text-anchor='middle' font-weight='700'%3EPG%3C/text%3E%3C/svg%3E";
 
 export const metadata: Metadata = {
   title: "Pratyush Garg — Portfolio",

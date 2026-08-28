@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { VIEWS } from "@/lib/data";
 import { PortfolioProvider, usePortfolio } from "@/components/portfolio-provider";
 import { Ambient, Cursor } from "@/components/fx/ambient";
@@ -48,7 +48,7 @@ const SECTIONS = {
 } as const;
 
 function Site() {
-  const { view } = usePortfolio();
+  const { view, menuOpen } = usePortfolio();
   const [ready, setReady] = useState(false);
   const [achievement, setAchievement] = useState(false);
 
@@ -57,6 +57,11 @@ function Site() {
     setAchievement(true);
     setTimeout(() => setAchievement(false), 4200);
   }, []);
+
+  // single owner of the scroll lock — both the mobile menu and the intro need it
+  useEffect(() => {
+    document.body.classList.toggle("is-locked", menuOpen || !ready);
+  }, [menuOpen, ready]);
 
   useViewEnter(view, ready);
   useNavIndicator(view, ready);

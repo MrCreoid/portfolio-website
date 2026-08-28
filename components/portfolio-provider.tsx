@@ -118,10 +118,6 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     setParticleTheme(crt, cozy);
   }, [crt, cozy]);
 
-  useEffect(() => {
-    document.body.classList.toggle("is-locked", menuOpen);
-  }, [menuOpen]);
-
   useEffect(() => () => clearTimeout(toastTimer.current), []);
 
   const value = useMemo<PortfolioValue>(

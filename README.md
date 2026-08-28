@@ -1,6 +1,6 @@
 # Pratyush Garg — Portfolio
 
-A dark, ember-warm, animation-obsessed portfolio behind a live WebGL `GrainGradient`
+A red-and-black, animation-obsessed portfolio behind a live WebGL `GrainGradient`
 shader background. **Next.js 16 · React 19 · TypeScript · Tailwind v4 · shadcn/ui**,
 with the original hand-written stylesheet carried over intact. It behaves like a
 single-page app (YouTube-style: the URL never changes), with five views:

@@ -25,8 +25,8 @@ export type ParticleTheme = { dot: string; line: string };
 
 /** Mutated in place so the running canvas loop picks changes up on its next frame. */
 export const particleTheme: ParticleTheme = {
-  dot: "rgba(255, 150, 60, 0.5)",
-  line: "255, 92, 36",
+  dot: "rgba(255, 90, 90, 0.5)",
+  line: "255, 34, 51",
 };
 
 export function setParticleTheme(crt: boolean, cozy: boolean) {
@@ -37,8 +37,8 @@ export function setParticleTheme(crt: boolean, cozy: boolean) {
     particleTheme.dot = "rgba(251, 191, 36, 0.45)";
     particleTheme.line = "245, 158, 11";
   } else {
-    particleTheme.dot = "rgba(255, 150, 60, 0.5)";
-    particleTheme.line = "255, 92, 36";
+    particleTheme.dot = "rgba(255, 90, 90, 0.5)";
+    particleTheme.line = "255, 34, 51";
   }
 }
 
@@ -47,7 +47,7 @@ export function setParticleTheme(crt: boolean, cozy: boolean) {
 export function confetti(x: number, y: number, n = 24, cozy = false) {
   const colors = cozy
     ? ["#f59e0b", "#fbbf24", "#fb923c", "#fde68a"]
-    : ["#ff5c24", "#ffc705", "#ff963c", "#d6285a", "#ffecd0"];
+    : ["#ff2233", "#ff7d6b", "#ff5a5a", "#7d0b1e", "#ffe0dd"];
 
   for (let i = 0; i < n; i++) {
     const bit = document.createElement("span");
@@ -114,14 +114,14 @@ export function matrixRain(cozy: boolean, duration = 7000) {
 
   let stopping = false;
   (function rainFrame() {
-    ctx.fillStyle = "rgba(7, 5, 6, 0.22)";
+    ctx.fillStyle = "rgba(8, 4, 5, 0.22)";
     ctx.fillRect(0, 0, W, H);
     for (let i = 0; i < cols; i++) {
       const ch = glyphs[(Math.random() * glyphs.length) | 0];
       const y = drops[i] * FS;
-      ctx.fillStyle = cozy ? "rgba(251, 191, 36, 0.95)" : "rgba(255, 199, 5, 0.95)";
+      ctx.fillStyle = cozy ? "rgba(251, 191, 36, 0.95)" : "rgba(255, 125, 107, 0.95)";
       ctx.fillText(ch, i * FS, y);
-      ctx.fillStyle = cozy ? "rgba(245, 158, 11, 0.4)" : "rgba(255, 92, 36, 0.4)";
+      ctx.fillStyle = cozy ? "rgba(245, 158, 11, 0.4)" : "rgba(255, 34, 51, 0.4)";
       ctx.fillText(ch, i * FS, y - FS);
       drops[i]++;
       if (y > H && Math.random() > 0.975) drops[i] = rand(-25, 0);

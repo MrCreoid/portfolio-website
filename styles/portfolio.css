@@ -11,18 +11,18 @@
    file. The extra specificity keeps these values authoritative without
    duplicating them into globals.css. */
 html:root {
-  --bg: #070506;
-  --bg-2: #0e0a0b;
+  --bg: #080405;
+  --bg-2: #0f0709;
   /* surfaces are slightly translucent so the shader bleeds through the cards */
-  --surface: rgba(21, 15, 17, 0.82);
-  --surface-2: rgba(31, 22, 24, 0.9);
-  --line: rgba(255, 150, 60, 0.14);
-  --text: #f6ece6;
-  --muted: #a3928a;
-  --accent: #ff5c24;
-  --accent-2: #ffc705;
-  --accent-3: #f0246a;
-  --glow: rgba(255, 92, 36, 0.35);
+  --surface: rgba(24, 13, 16, 0.82);
+  --surface-2: rgba(34, 18, 22, 0.9);
+  --line: rgba(255, 90, 90, 0.14);
+  --text: #f7eaea;
+  --muted: #a89093;
+  --accent: #ff2233;
+  --accent-2: #ff7d6b;
+  --accent-3: #a30f28;
+  --glow: rgba(255, 34, 51, 0.35);
 
   --font-display: var(--font-space-grotesk), "Space Grotesk", sans-serif;
   --font-body: var(--font-inter), "Inter", sans-serif;
@@ -153,9 +153,9 @@ code {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(85% 65% at 8% 2%, rgba(255, 92, 36, 0.6), transparent 62%),
-    radial-gradient(75% 65% at 100% 6%, rgba(255, 199, 5, 0.42), transparent 64%),
-    radial-gradient(90% 75% at 80% 100%, rgba(240, 36, 106, 0.5), transparent 66%),
+    radial-gradient(85% 65% at 8% 2%, rgba(255, 34, 51, 0.6), transparent 62%),
+    radial-gradient(75% 65% at 100% 6%, rgba(255, 125, 107, 0.42), transparent 64%),
+    radial-gradient(90% 75% at 80% 100%, rgba(163, 15, 40, 0.5), transparent 66%),
     #000;
 }
 /* keeps body copy legible on top of a very bright background */
@@ -166,8 +166,8 @@ code {
   pointer-events: none;
   background: linear-gradient(
     to bottom,
-    rgba(5, 3, 4, 0.52),
-    rgba(5, 3, 4, 0.78)
+    rgba(6, 2, 4, 0.46),
+    rgba(6, 2, 4, 0.74)
   );
 }
 
@@ -212,7 +212,7 @@ body.cursor-hover .cursor-ring {
   width: 58px;
   height: 58px;
   border-color: var(--accent-2);
-  background: rgba(255, 92, 36, 0.08);
+  background: rgba(255, 34, 51, 0.08);
 }
 body.cursor-hover .cursor-dot {
   scale: 0.4;
@@ -267,7 +267,7 @@ body.cursor-down .cursor-ring {
   inset: 0;
   background: radial-gradient(
     circle at var(--cx) var(--cy),
-    #171113,
+    #1a1014,
     var(--bg-2) 60%
   );
   clip-path: circle(0px at var(--cx) var(--cy));
@@ -319,7 +319,7 @@ body.cursor-down .cursor-ring {
   align-items: center;
   justify-content: space-between;
   padding: 1.1rem clamp(1.2rem, 4vw, 3rem);
-  background: linear-gradient(to bottom, rgba(7, 5, 6, 0.85), transparent);
+  background: linear-gradient(to bottom, rgba(8, 4, 5, 0.85), transparent);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   mask-image: linear-gradient(to bottom, black 75%, transparent);
@@ -432,7 +432,7 @@ body.cursor-down .cursor-ring {
   justify-content: center;
   gap: 0.5rem;
   padding: 0 12vw;
-  background: rgba(7, 5, 6, 0.96);
+  background: rgba(8, 4, 5, 0.96);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   clip-path: circle(0% at calc(100% - 48px) 36px);
@@ -725,7 +725,7 @@ body.cursor-down .cursor-ring {
 .btn-ghost {
   border: 1px solid var(--line);
   color: var(--text);
-  background: rgba(21, 15, 17, 0.5);
+  background: rgba(24, 13, 16, 0.5);
 }
 .btn-ghost:hover {
   border-color: var(--accent);
@@ -902,7 +902,7 @@ body.cursor-down .cursor-ring {
 }
 .card:hover {
   background: var(--surface-2);
-  border-color: rgba(255, 150, 60, 0.45);
+  border-color: rgba(255, 90, 90, 0.45);
   box-shadow: 0 18px 44px -22px var(--glow);
 }
 .card-icon {
@@ -1120,16 +1120,16 @@ body.cursor-down .cursor-ring {
   transition: border-color 0.35s, translate 0.35s var(--ease-spring), box-shadow 0.35s;
 }
 .film:hover {
-  border-color: rgba(255, 150, 60, 0.45);
+  border-color: rgba(255, 90, 90, 0.45);
   translate: 0 -5px;
   box-shadow: 0 18px 44px -24px var(--glow);
 }
 .film-poster {
   position: relative; flex: 0 0 84px; aspect-ratio: 2 / 3;
   border-radius: 10px; overflow: hidden;
-  background: linear-gradient(165deg, #201618, #0b0809 70%);
+  background: linear-gradient(165deg, #24141a, #0c0608 70%);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
-  border: 1px solid rgba(255, 150, 60, 0.16);
+  border: 1px solid rgba(255, 90, 90, 0.16);
 }
 .film-poster::before {
   content: ""; position: absolute; inset: 0; opacity: 0.35;
@@ -1137,7 +1137,7 @@ body.cursor-down .cursor-ring {
 }
 .film-poster::after {
   content: ""; position: absolute; inset: 0;
-  background: linear-gradient(115deg, transparent 38%, rgba(254, 240, 232, 0.16) 50%, transparent 62%);
+  background: linear-gradient(115deg, transparent 38%, rgba(255, 236, 236, 0.16) 50%, transparent 62%);
   translate: -130% 0; transition: translate 0.55s;
 }
 .film:hover .film-poster::after { translate: 130% 0; }
@@ -1149,9 +1149,9 @@ body.cursor-down .cursor-ring {
 .pg-badge {
   position: absolute; bottom: 7px; left: 50%; translate: -50%; z-index: 1;
   font-family: var(--font-mono); font-size: 0.5rem; letter-spacing: 0.12em;
-  color: var(--accent-2); border: 1px solid rgba(255, 199, 5, 0.5);
+  color: var(--accent-2); border: 1px solid rgba(255, 125, 107, 0.5);
   padding: 1.5px 6px; border-radius: 4px; white-space: nowrap;
-  background: rgba(7, 5, 6, 0.6);
+  background: rgba(8, 4, 5, 0.6);
 }
 .film-info { display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; }
 .film-info h3 { font-family: var(--font-display); font-size: 1.12rem; line-height: 1.3; }
@@ -1159,7 +1159,7 @@ body.cursor-down .cursor-ring {
 .film-tag {
   width: max-content;
   font-family: var(--font-mono); font-size: 0.64rem; color: var(--accent-2);
-  background: rgba(255, 92, 36, 0.1); padding: 2.5px 10px; border-radius: 99px;
+  background: rgba(255, 34, 51, 0.1); padding: 2.5px 10px; border-radius: 99px;
   margin-top: 0.15rem;
 }
 
@@ -1179,7 +1179,7 @@ body.cursor-down .cursor-ring {
   will-change: transform;
 }
 .ach-card:hover {
-  border-color: rgba(255, 150, 60, 0.4);
+  border-color: rgba(255, 90, 90, 0.4);
 }
 .ach-card.featured {
   grid-row: span 1;
@@ -1406,7 +1406,7 @@ body.cursor-down .cursor-ring {
 .field textarea:focus {
   border-color: var(--accent);
   box-shadow:
-    0 0 0 4px rgba(255, 92, 36, 0.12),
+    0 0 0 4px rgba(255, 34, 51, 0.12),
     0 8px 30px -14px var(--glow);
 }
 .field label {
@@ -1627,10 +1627,10 @@ body.cursor-down .cursor-ring {
     ),
     radial-gradient(
       circle at 50% 50%,
-      rgba(255, 92, 36, 0.22),
-      rgba(255, 92, 36, 0.08) 70%
+      rgba(255, 34, 51, 0.22),
+      rgba(255, 34, 51, 0.08) 70%
     );
-  border: 1px solid rgba(255, 150, 60, 0.3);
+  border: 1px solid rgba(255, 90, 90, 0.3);
   cursor: pointer;
   transition:
     scale 0.18s var(--ease-spring),
@@ -1647,7 +1647,7 @@ body.cursor-down .cursor-ring {
   scale: 1;
   cursor: default;
   background: none;
-  border: 1px dashed rgba(255, 150, 60, 0.18);
+  border: 1px dashed rgba(255, 90, 90, 0.18);
   animation: bubble-pop 0.3s var(--ease-out);
 }
 @keyframes bubble-pop {
@@ -1681,7 +1681,7 @@ body.cursor-down .cursor-ring {
   transition: background 0.3s;
 }
 .stat-combo:hover {
-  background: rgba(255, 92, 36, 0.07);
+  background: rgba(255, 34, 51, 0.07);
 }
 .stat-combo:active .stat-num {
   scale: 0.85;
@@ -1773,7 +1773,7 @@ body.cursor-down .cursor-ring {
 .flip-hint {
   position: absolute; bottom: 12px; left: 50%; translate: -50%; z-index: 4;
   font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.1em;
-  color: var(--accent-2); background: rgba(7, 5, 6, 0.65);
+  color: var(--accent-2); background: rgba(8, 4, 5, 0.65);
   padding: 4px 12px; border-radius: 99px; border: 1px solid var(--line);
   opacity: 0; transition: opacity 0.3s;
 }
@@ -1783,7 +1783,7 @@ body.cursor-down .cursor-ring {
   position: absolute; z-index: 7; left: var(--rx, 50%); top: var(--ry, 45%);
   width: 14px; height: 14px; translate: -50% -50%; border-radius: 50%;
   pointer-events: none;
-  border: 2px solid rgba(255, 199, 5, 0.9);
+  border: 2px solid rgba(255, 125, 107, 0.9);
   box-shadow: 0 0 30px 8px var(--glow), inset 0 0 12px var(--glow);
 }
 
@@ -1832,7 +1832,7 @@ body.cursor-down .cursor-ring {
   display: grid;
   place-items: center;
   padding: 1.2rem;
-  background: rgba(6, 4, 5, 0.82);
+  background: rgba(7, 3, 5, 0.82);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   opacity: 0;
@@ -2009,10 +2009,10 @@ body.cursor-down .cursor-ring {
     box-shadow: 0 0 0 0 var(--glow);
   }
   60% {
-    box-shadow: 0 0 0 9px rgba(255, 92, 36, 0);
+    box-shadow: 0 0 0 9px rgba(255, 34, 51, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(255, 92, 36, 0);
+    box-shadow: 0 0 0 0 rgba(255, 34, 51, 0);
   }
 }
 .tl-card {
@@ -2026,7 +2026,7 @@ body.cursor-down .cursor-ring {
     box-shadow 0.3s;
 }
 .tl-card:hover {
-  border-color: rgba(255, 150, 60, 0.45);
+  border-color: rgba(255, 90, 90, 0.45);
   translate: 6px 0;
   box-shadow: 0 14px 34px -20px var(--glow);
 }
@@ -2076,7 +2076,7 @@ body.cursor-down .cursor-ring {
   gap: 0.45rem;
   padding: 1.5rem 1.6rem;
   border-radius: 22px;
-  background: rgba(21, 15, 17, 0.55);
+  background: rgba(24, 13, 16, 0.55);
   border: 1px solid var(--line);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -2093,7 +2093,7 @@ body.cursor-down .cursor-ring {
   border-radius: inherit;
   background: radial-gradient(
     340px circle at var(--mx) var(--my),
-    rgba(255, 92, 36, 0.13),
+    rgba(255, 34, 51, 0.13),
     transparent 65%
   );
   opacity: 0;
@@ -2109,7 +2109,7 @@ body.cursor-down .cursor-ring {
   padding: 1px;
   background: radial-gradient(
     220px circle at var(--mx) var(--my),
-    rgba(255, 199, 5, 0.8),
+    rgba(255, 125, 107, 0.8),
     transparent 70%
   );
   -webkit-mask:
@@ -2196,14 +2196,14 @@ body.cursor-down .cursor-ring {
   font-family: var(--font-mono);
   font-size: 0.66rem;
   color: var(--accent-2);
-  background: rgba(255, 92, 36, 0.1);
+  background: rgba(255, 34, 51, 0.1);
   border: 1px solid transparent;
   padding: 3px 10px;
   border-radius: 99px;
   transition: border-color 0.25s;
 }
 .b-cell:hover .b-tags li {
-  border-color: rgba(255, 150, 60, 0.3);
+  border-color: rgba(255, 90, 90, 0.3);
 }
 
 .b-actions {
@@ -2290,7 +2290,7 @@ body.cursor-down .cursor-ring {
   display: grid;
   place-items: center;
   padding: 1.2rem;
-  background: rgba(6, 4, 5, 0.82);
+  background: rgba(7, 3, 5, 0.82);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   opacity: 0;
@@ -2374,7 +2374,7 @@ body.cursor-down .cursor-ring {
 }
 .pv-visit:hover {
   border-color: var(--accent);
-  background: rgba(255, 92, 36, 0.1);
+  background: rgba(255, 34, 51, 0.1);
 }
 .pv-close {
   width: 30px;
@@ -2392,7 +2392,7 @@ body.cursor-down .cursor-ring {
 .pv-body {
   position: relative;
   flex: 1;
-  background: #0a0708;
+  background: #0b0507;
 }
 .pv-body iframe {
   width: 100%;
@@ -2458,7 +2458,7 @@ body.cursor-down .cursor-ring {
 /* letterboxd link on the card back */
 .lb-link {
   color: var(--accent-2);
-  border-bottom: 1px dashed rgba(255, 199, 5, 0.4);
+  border-bottom: 1px dashed rgba(255, 125, 107, 0.4);
   transition:
     color 0.25s,
     border-color 0.25s;
@@ -2510,7 +2510,7 @@ body.cursor-down .cursor-ring {
   color: var(--accent-2);
   font-family: var(--font-mono);
   font-size: 0.78rem;
-  border-bottom: 1px dashed rgba(255, 199, 5, 0.4);
+  border-bottom: 1px dashed rgba(255, 125, 107, 0.4);
   transition: color 0.25s;
 }
 .bottom-secret button:hover {
@@ -2615,7 +2615,7 @@ body.is-crt .crt-overlay {
   position: fixed;
   inset: 0;
   z-index: 9850;
-  background: rgba(5, 3, 4, 0.93);
+  background: rgba(6, 2, 4, 0.93);
   opacity: 0;
   transition: opacity 0.8s;
   cursor: none;
@@ -2709,8 +2709,8 @@ body.is-crt .crt-overlay {
   border-radius: 20px;
   background: linear-gradient(
     120deg,
-    rgba(240, 36, 106, 0.16),
-    rgba(21, 15, 17, 0.6) 55%
+    rgba(163, 15, 40, 0.16),
+    rgba(24, 13, 16, 0.6) 55%
   );
   border: 1px solid var(--line);
   transition:
@@ -2719,7 +2719,7 @@ body.is-crt .crt-overlay {
     box-shadow 0.35s;
 }
 .teaser:hover {
-  border-color: rgba(255, 150, 60, 0.5);
+  border-color: rgba(255, 90, 90, 0.5);
   translate: 0 -4px;
   box-shadow: 0 20px 50px -25px var(--glow);
 }
@@ -2811,7 +2811,7 @@ body.is-crt .crt-overlay {
 }
 .gh-grid b {
   border-radius: 3px;
-  background: rgba(255, 92, 36, calc(var(--g) * 0.22 + 0.05));
+  background: rgba(255, 34, 51, calc(var(--g) * 0.22 + 0.05));
   transition: scale 0.2s var(--ease-spring);
 }
 .gh-grid b:hover {
@@ -2839,7 +2839,7 @@ body.is-crt .crt-overlay {
   display: grid;
   place-items: center;
   padding: 1.5rem;
-  background: rgba(6, 4, 5, 0.88);
+  background: rgba(7, 3, 5, 0.88);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   opacity: 0;
