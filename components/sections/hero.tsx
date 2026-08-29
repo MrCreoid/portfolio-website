@@ -12,6 +12,7 @@ import {
   WHAT_I_DO,
 } from "@/lib/data";
 import { confetti, floatBit, rand } from "@/lib/fx";
+import { asset } from "@/lib/utils";
 import {
   useEyebrowRotator,
   useGrabbableLetters,
@@ -272,7 +273,7 @@ export function Hero() {
           {/* one plate, desaturated in CSS — hover lets its own colour back in
               rather than crossfading a second copy of the same photograph */}
           <Image
-            src="/assets/portrait-color.webp"
+            src={asset("/assets/portrait-color.webp")}
             alt="Pratyush Garg"
             width={1139}
             height={1182}

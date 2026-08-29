@@ -12,6 +12,7 @@ import {
   Rocket,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { asset } from "@/lib/utils";
 export const VIEWS = ["home", "about", "projects", "achievements", "contact"] as const;
 export type View = (typeof VIEWS)[number];
 export const NAV: { id: View; label: string }[] = [
@@ -28,7 +29,7 @@ export const LINKS = {
   linkedin: "https://www.linkedin.com/in/devpratyushgarg/",
   letterboxd: "https://letterboxd.com/MrCreoid/",
   githubHandle: "github.com/MrCreoid",
-  resume: "/assets/resume.pdf",
+  resume: asset("/assets/resume.pdf"),
 };
 export const EYEBROW_LINES = [
   "open to internships & collabs",
@@ -200,7 +201,7 @@ export const PROJECTS: Project[] = [
     body: "The site you're reading — Next.js, TypeScript and a hand-written stylesheet. View routing, a canvas constellation, physics toys, and more secrets than it admits to.",
     tags: ["Next.js", "TypeScript", "Tailwind CSS"],
     cat: "web",
-    url: "/",
+    url: asset("/"),
     repo: "https://github.com/MrCreoid/portfolio-website",
   },
   {
@@ -234,7 +235,8 @@ export type Achievement = {
   year: string;
   fallback: LucideIcon;
   featured?: boolean;
-  /** drop the file in public/assets and point here to make the card open a lightbox */
+  /** drop the file in public/assets and point here (wrapped in asset()) to
+   *  make the card open a lightbox */
   image?: string;
 };
 /** ▼▼ add an entry and the ruled rows come back on their own ▼▼ */

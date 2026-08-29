@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { BEYOND, CHIPS, FLIP_FACTS, LINKS, SKILLS, TIMELINE } from "@/lib/data";
 import { Paperclip } from "lucide-react";
+import { asset } from "@/lib/utils";
 import { useGuitarString } from "@/hooks/use-toys";
 import { FallbackImage } from "@/components/ui/fallback-image";
 import { SectionHead } from "@/components/layout/section-head";
@@ -42,7 +43,7 @@ function PhotoCard() {
             <div className="photo-fallback">PG</div>
             {hasPhoto && (
               <FallbackImage
-                src="/assets/photo.jpeg"
+                src={asset("/assets/photo.jpeg")}
                 alt="Pratyush Garg"
                 className="photo-img"
                 onMissing={() => setHasPhoto(false)}
