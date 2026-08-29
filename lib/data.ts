@@ -58,17 +58,17 @@ export const WHAT_I_DO = [
   {
     icon: Code2,
     title: "Web experiences",
-    body: "Interactive, animated websites built with hand-written HTML, CSS and JavaScript. No shortcuts — every pixel placed on purpose.",
+    body: "Interactive, animated sites built by hand — HTML, CSS and JavaScript, no page builders. I'd rather write the thing than configure it.",
   },
   {
     icon: ChartColumn,
     title: "Data & Python",
-    body: "NumPy and Pandas are my playground. I like taking messy data and turning it into something that actually says something.",
+    body: "Mostly NumPy and Pandas. Hand me a messy CSV and I'll lose an afternoon to it quite happily.",
   },
   {
     icon: Rocket,
     title: "Always learning",
-    body: "Currently sharpening C and going deeper into JavaScript. Second year starts August 2026 — the roadmap only gets bigger.",
+    body: "Right now that means C, and the parts of JavaScript I had been avoiding. Second year starts August 2026.",
   },
 ];
 export const STATS = [
@@ -116,7 +116,7 @@ export type Skill = { name: string; note: string; status: string };
 export const SKILLS: Skill[] = [
   {
     name: "HTML & CSS",
-    note: "Semantic structure and modern layout — grid, flexbox, custom properties. Hand-written, including the 3,000-line stylesheet behind this page.",
+    note: "Grid, flexbox and custom properties, written by hand — including the 3,000-line stylesheet behind this page.",
     status: "daily",
   },
   {
@@ -126,7 +126,7 @@ export const SKILLS: Skill[] = [
   },
   {
     name: "TypeScript",
-    note: "Types as a design tool rather than decoration. Every project below is written in it.",
+    note: "Every project here is written in it. Mostly it stops me shipping my own typos.",
     status: "building",
   },
   {
@@ -141,12 +141,12 @@ export const SKILLS: Skill[] = [
   },
   {
     name: "NumPy & Pandas",
-    note: "Taking messy data and turning it into something that actually says something.",
+    note: "Cleaning up data that arrives in whatever shape it likes, then getting an answer out of it.",
     status: "data",
   },
   {
     name: "C",
-    note: "Pointers, memory and what the machine is genuinely doing underneath. Character-building, as the critics say.",
+    note: "Pointers, memory, and what the machine is actually doing underneath. Humbling, most weeks.",
     status: "learning",
   },
   {
@@ -197,7 +197,7 @@ export const PROJECTS: Project[] = [
     id: "portfolio",
     kind: "project",
     title: "This portfolio",
-    body: "The site you're looking at — React, TypeScript and a hand-written stylesheet. SPA routing, canvas constellation, physics toys and more secrets than it admits to.",
+    body: "The site you're reading — Next.js, TypeScript and a hand-written stylesheet. View routing, a canvas constellation, physics toys, and more secrets than it admits to.",
     tags: ["Next.js", "TypeScript", "Tailwind CSS"],
     cat: "web",
     url: "/",
@@ -208,7 +208,7 @@ export const PROJECTS: Project[] = [
     kind: "featured",
     featured: true,
     title: "Attendance Tracker",
-    body: "A premium, glassmorphic attendance-tracking dashboard built for college students. Set up your weekly timetable once and track attendance seamlessly.",
+    body: "An attendance tracker for college students. Set your weekly timetable once, then mark each class as it happens.",
     tags: ["React", "TypeScript", "Tailwind CSS", "Firebase"],
     cat: "web",
     url: "https://mrcreoid.github.io/attendance-tracker/",
@@ -218,7 +218,7 @@ export const PROJECTS: Project[] = [
     id: "spent",
     kind: "project",
     title: "Spent",
-    body: "A fast, minimal expense & debt tracker that feels like a native iOS app. Local-first, installable as a PWA, and synced across devices.",
+    body: "An expense and debt tracker that behaves like a native iOS app. Local-first, installable as a PWA, synced across devices.",
     tags: ["Next.js", "React", "Tailwind CSS", "Firebase"],
     cat: "web",
     url: "https://mrcreoid.github.io/spent/",

@@ -6,9 +6,9 @@ import LiquidLoading from "@/components/ui/liquid-loader";
 import { prefersReducedMotion } from "@/lib/fx";
 
 const SESSION_KEY = "pg-intro";
-const HOLD = 2200;
-const SETTLE = 420;
-const WIPE = 900;
+const HOLD = 1900;
+const SETTLE = 170;
+const WIPE = 760;
 
 /**
  * The intro: the liquid loader runs while the site settles, then the curtain

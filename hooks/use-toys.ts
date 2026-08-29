@@ -2,7 +2,7 @@
 
 import { useEffect, type RefObject } from "react";
 import { EYEBROW_LINES, TYPE_WORDS } from "@/lib/data";
-import { SPRING, prefersReducedMotion, rand, wait } from "@/lib/fx";
+import { SPRING, hasFinePointer, prefersReducedMotion, rand, wait } from "@/lib/fx";
 
 /** The hero sub-line types itself, forever. */
 export function useTypewriter(ref: RefObject<HTMLSpanElement | null>) {
@@ -258,4 +258,62 @@ export function useGuitarString(
       box.removeEventListener("pointerleave", onLeave);
     };
   }, [boxRef, pathRef]);
+}
+
+/**
+ * Colours the hero portrait only while the pointer is genuinely over him.
+ *
+ * The element is a rectangle but the photograph inside it is an alpha cut-out,
+ * so a plain :hover lit it up from the empty corners of the box. This samples
+ * the image's alpha channel at the pointer instead: the frame is drawn once
+ * into a small offscreen canvas, and each move reads one pixel from it.
+ */
+export function usePortraitAlphaHover() {
+  useEffect(() => {
+    const wrap = document.querySelector<HTMLElement>(".hero-portrait");
+    const img = wrap?.querySelector("img");
+    if (!wrap || !img || !hasFinePointer()) return;
+
+    // a low-res copy is plenty — we only ever ask "is there anything here?"
+    const W = 160;
+    let ctx: CanvasRenderingContext2D | null = null;
+    let data: Uint8ClampedArray | null = null;
+
+    const build = () => {
+      if (!img.naturalWidth) return;
+      const c = document.createElement("canvas");
+      c.width = W;
+      c.height = Math.round((img.naturalHeight / img.naturalWidth) * W);
+      ctx = c.getContext("2d", { willReadFrequently: true });
+      if (!ctx) return;
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      try {
+        data = ctx.getImageData(0, 0, c.width, c.height).data;
+      } catch {
+        data = null; // tainted canvas — fall back to never lighting up
+      }
+    };
+
+    if (img.complete) build();
+    else img.addEventListener("load", build, { once: true });
+
+    const move = (e: MouseEvent) => {
+      if (!data || !ctx) return;
+      const r = img.getBoundingClientRect();
+      const x = Math.floor(((e.clientX - r.left) / r.width) * W);
+      const y = Math.floor(((e.clientY - r.top) / r.height) * ctx.canvas.height);
+      if (x < 0 || y < 0 || x >= W || y >= ctx.canvas.height) return;
+      const alpha = data[(y * W + x) * 4 + 3];
+      wrap.classList.toggle("is-lit", alpha > 40);
+    };
+    const leave = () => wrap.classList.remove("is-lit");
+
+    wrap.addEventListener("mousemove", move);
+    wrap.addEventListener("mouseleave", leave);
+    return () => {
+      wrap.removeEventListener("mousemove", move);
+      wrap.removeEventListener("mouseleave", leave);
+      img.removeEventListener("load", build);
+    };
+  }, []);
 }

@@ -15,6 +15,7 @@ import { confetti, floatBit, rand } from "@/lib/fx";
 import {
   useEyebrowRotator,
   useGrabbableLetters,
+  usePortraitAlphaHover,
   useTypewriter,
 } from "@/hooks/use-toys";
 import { usePortfolio } from "@/components/portfolio-provider";
@@ -175,6 +176,7 @@ export function Hero() {
   useTypewriter(typeRef);
   useEyebrowRotator(eyebrowRef);
   useGrabbableLetters();
+  usePortraitAlphaHover();
 
   return (
     <>

@@ -58,3 +58,5 @@ EASTER_EGGS.md
 .claude/
 .remember/
 .impeccable/
+.agents/
+skills-lock.json

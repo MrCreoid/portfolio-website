@@ -193,8 +193,7 @@ main {
 }
 
 .meta,
-.b-kind,
-.b-label {
+.b-kind {
   font-family: var(--font-mono);
   font-size: 0.68rem;
   font-weight: 500;
@@ -357,10 +356,6 @@ main {
 .btn-plane {
   display: none;
 }
-.btn.is-sent .btn-plane {
-  display: inline-block;
-}
-
 .arrow {
   display: inline-block;
   transition: translate 0.28s var(--ease-out);
@@ -512,7 +507,7 @@ body.cursor-down .cursor-ring {
 }
 .preloader.is-revealing {
   clip-path: inset(0 0 100% 0);
-  transition: clip-path 0.9s cubic-bezier(0.76, 0, 0.24, 1);
+  transition: clip-path 0.76s cubic-bezier(0.76, 0, 0.24, 1);
 }
 /* the wave settles and lifts away before the curtain moves, so the hand-off
    reads as one gesture rather than a stop followed by a jump cut */
@@ -520,8 +515,8 @@ body.cursor-down .cursor-ring {
   opacity: 0;
   translate: 0 -1.25rem;
   transition:
-    opacity 0.42s var(--ease-out),
-    translate 0.42s var(--ease-out);
+    opacity 0.26s var(--ease-out),
+    translate 0.26s var(--ease-out);
 }
 .preloader.is-gone {
   display: none;
@@ -889,30 +884,24 @@ body.cursor-down .cursor-ring {
    line itself is now transparent to the pointer and the letters take it back,
    which is where the grab handlers actually live. */
 .hero-title,
-.hero-title .line {
+.hero-title .line,
+.hero-body,
+.hero-aside {
   pointer-events: none;
 }
+/* the leaves take the pointer back — their wrappers are full-width blocks that
+   would otherwise swallow every event over the right half of the hero, the
+   portrait included */
 .h-letter,
-.hero-dot {
+.hero-dot,
+.hero-sub,
+.hero-cta .btn,
+.whisper-link,
+.scroll-hint {
   pointer-events: auto;
 }
 
-/* the crop line: the figure is cut to the grid, and the cut is drawn */
-.hero-portrait::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 18%;
-  height: 1px;
-  background: var(--rule-2);
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.5s var(--ease-out);
-}
-.hero-portrait.is-in::after {
-  opacity: 1;
-}
+
 /* he arrives from the page edge he bleeds off, not from below like the type */
 .hero-portrait[data-reveal]:not(.is-in) {
   translate: 2.5rem 0;
@@ -929,7 +918,10 @@ body.cursor-down .cursor-ring {
      the way a plate is cropped to its column in print */
   clip-path: inset(0 0 18% 0);
 }
-.hero-portrait:hover img {
+/* driven by an alpha hit-test rather than :hover — the element is a rectangle,
+   but the photograph inside it is a cut-out, and hovering the empty corner of a
+   box is not hovering the person */
+.hero-portrait.is-lit img {
   filter: grayscale(0) contrast(1.04) brightness(1);
 }
 
@@ -1249,12 +1241,7 @@ body.cursor-down .cursor-ring {
     margin-inline: auto calc(var(--edge) + 1rem);
     clip-path: inset(0 0 12% 0);
   }
-  .hero-portrait::after {
-    bottom: 12%;
-    left: auto;
-    right: calc(var(--edge) + 1rem);
-    width: min(80%, 21rem);
-  }
+
   .hero-aside {
     padding-left: 0;
   }
@@ -1763,14 +1750,21 @@ body.cursor-down .cursor-ring {
 }
 .photo-frame {
   position: relative;
-  aspect-ratio: 1 / 1;
+  /* a portrait plate: the square crop framed him dead centre with a band of
+     empty sky above his head and his arms cut off at the bottom edge */
+  aspect-ratio: 4 / 5;
   border: 1px solid var(--rule-2);
   cursor: pointer;
-  overflow: hidden;
+  perspective: 1400px;
 }
 .flipper {
   position: absolute;
   inset: 0;
+  transform-style: preserve-3d;
+  transition: transform 0.75s var(--ease-smooth);
+}
+.photo-frame.show-back .flipper {
+  transform: rotateY(180deg);
 }
 .flip-front,
 .flip-back {
@@ -1778,10 +1772,13 @@ body.cursor-down .cursor-ring {
   inset: 0;
   overflow: hidden;
   background: var(--ink-2);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
-.flip-front {
-  z-index: 2;
+.flip-back {
+  transform: rotateY(180deg);
 }
+
 .flip-back {
   z-index: 1;
   display: flex;
@@ -1789,12 +1786,8 @@ body.cursor-down .cursor-ring {
   justify-content: center;
   padding: clamp(1.2rem, 3vw, 2rem);
 }
-.photo-frame.show-back .flip-back {
-  z-index: 2;
-}
-.photo-frame.show-back .flip-front {
-  z-index: 1;
-}
+
+
 .photo-fallback {
   position: absolute;
   inset: 0;
@@ -1813,11 +1806,12 @@ body.cursor-down .cursor-ring {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: grayscale(1) contrast(1.15);
+  object-position: 50% 38%;
+  filter: grayscale(1) contrast(1.04);
   transition: filter 0.5s var(--ease-out);
 }
 .photo-frame:hover .photo-img {
-  filter: grayscale(0) contrast(1);
+  filter: grayscale(0) contrast(0.98);
 }
 .flip-back h4 {
   font-family: var(--font-mono);
@@ -1870,26 +1864,20 @@ body.cursor-down .cursor-ring {
   opacity: 1;
 }
 /* the ring of light that wipes the new face in */
-.photo-ripple {
-  position: absolute;
-  z-index: 7;
-  left: var(--rx, 50%);
-  top: var(--ry, 45%);
-  width: 14px;
-  height: 14px;
-  translate: -50% -50%;
-  pointer-events: none;
-  border: 2px solid var(--red);
-}
 /* sneaky résumé #2 — the paperclip */
 .paperclip {
   position: absolute;
-  top: -14px;
-  right: 16px;
+  top: -18px;
+  right: 22px;
   z-index: 8;
-  color: var(--paper-3);
+  display: grid;
+  place-items: center;
+  color: var(--paper-2);
   rotate: 12deg;
-  transition: rotate 0.3s var(--ease-spring);
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.55));
+  transition:
+    rotate 0.3s var(--ease-spring),
+    color var(--snap);
 }
 .paperclip:hover {
   rotate: -6deg;
@@ -2609,9 +2597,6 @@ body.cursor-down .cursor-ring {
 .ach-card:hover .ach-media img {
   filter: grayscale(0);
 }
-.ach-shine {
-  display: none;
-}
 .ach-body h3 {
   font-family: var(--font-display);
   font-weight: 800;
@@ -2657,19 +2642,6 @@ body.cursor-down .cursor-ring {
   right: -0.6em;
   font-size: 0.3em;
   color: var(--paper-4);
-}
-.ach-card.loading-card {
-  cursor: default;
-  border-bottom-style: dashed;
-}
-.ach-card.loading-card:hover {
-  background: none;
-}
-.ach-card.loading-card h3 {
-  color: var(--paper-4);
-}
-.ach-card.loading-card:hover h3 {
-  translate: 0;
 }
 @media (max-width: 720px) {
   .ach-card {

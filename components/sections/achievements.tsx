@@ -78,8 +78,8 @@ export function Achievements() {
           <div className="ach-empty-body">
             <span className="ach-empty-kind">No entries filed</span>
             <p>
-              Nothing on the shelf yet. Certificates and placements get catalogued
-              here as they land — <em>watch this space</em>.
+              Nothing filed yet. Certificates and placements land here as they
+              happen — <em>watch this space</em>.
             </p>
           </div>
           <span className="ach-empty-year">2026</span>

@@ -194,8 +194,8 @@ export function Contact() {
             <span className="filed-stamp">Filed</span>
             <h4>Message received.</h4>
             <p>
-              It landed in my inbox — I read everything and usually reply within
-              a day or two.
+              It&apos;s in my inbox. I read everything, and I usually get back
+              within a day or two.
             </p>
             <button
               className="filed-again"
