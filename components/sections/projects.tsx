@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { LINKS, PROJECTS, PROJECT_FILTERS, type Project } from "@/lib/data";
 import { usePortfolio } from "@/components/portfolio-provider";
+import { SectionHead } from "@/components/layout/section-head";
 
 function PlayIcon() {
   return (
-    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" aria-hidden="true">
       <path d="M8 5.14v13.72L19 12 8 5.14z" />
     </svg>
   );
@@ -27,157 +29,146 @@ export function GithubIcon({ size = 14 }: { size?: number }) {
 }
 
 /**
- * Decorative until it's wired to the real GitHub API. The levels come from a
- * cheap integer hash rather than Math.random so the server and the client agree
- * and the grid is painted on first render instead of popping in.
+ * One bento cell. The featured project gets the tall box and a display-scale
+ * title; the rest run at body scale — the grid is deliberately uneven so the
+ * eye lands on the big cell first and reads the others as supporting work.
+ *
+ * There are no project screenshots in the repo, so the cells are typographic
+ * rather than image-led.
  */
-const GH_LEVELS = Array.from({ length: 7 * 16 }, (_, i) => {
-  const v = ((Math.sin(i * 12.9898) * 43758.5453) % 1 + 1) % 1;
-  return v < 0.35 ? 0 : v < 0.6 ? 1 : v < 0.8 ? 2 : v < 0.93 ? 3 : 4;
-});
-
-function GithubGrid() {
-  return (
-    <div className="gh-grid" aria-hidden="true">
-      {GH_LEVELS.map((g, i) => (
-        <b key={i} style={{ "--g": g } as React.CSSProperties} />
-      ))}
-    </div>
-  );
-}
-
 function ProjectCell({
   project,
   filtered,
+  area,
 }: {
   project: Project;
   filtered: boolean;
+  area: string;
 }) {
   const { openPreview } = usePortfolio();
+  const reduced = useReducedMotion();
 
   return (
-    <article
+    <motion.article
       className={`b-cell ${project.featured ? "b-featured" : "b-proj"}${filtered ? " is-filtered" : ""}`}
+      style={{ gridArea: area }}
       data-cat={project.cat}
       data-reveal
+      whileHover={reduced ? undefined : { y: -6 }}
+      transition={{ type: "spring", stiffness: 380, damping: 30, mass: 0.7 }}
     >
-      <span className="b-kind">{project.kind}</span>
-      <h3>{project.title}</h3>
-      <p>{project.body}</p>
-      <ul className="b-tags">
-        {project.tags.map((t) => (
-          <li key={t}>{t}</li>
-        ))}
-      </ul>
-      <div className="b-actions">
-        <button
-          className="b-btn b-preview"
-          data-cursor
-          onClick={() =>
-            openPreview({
-              url: project.url,
-              title: project.title.toLowerCase().replace(/\s+/g, "-"),
-            })
-          }
-        >
-          <PlayIcon />
-          preview
-        </button>
-        <a
-          className="b-btn b-ghostbtn"
-          href={project.repo}
-          target="_blank"
-          rel="noopener"
-          data-cursor
-        >
-          <GithubIcon />
-          code
-        </a>
-      </div>
-    </article>
-  );
-}
+      {/* the red plate wipes up from the bottom edge on hover — a second
+          printing plate, not a glow */}
+      <span className="b-plate" aria-hidden="true" />
 
-export function Projects() {
-  const [filter, setFilter] = useState("all");
+      <div className="b-cell-in">
+        {project.featured && <span className="b-kind">Featured</span>}
+        <h3 className="b-title">{project.title}</h3>
+        <p className="b-body">{project.body}</p>
 
-  return (
-    <div className="container section-top">
-      <h2 className="section-title" data-reveal>
-        <span className="section-num">06</span> Projects
-      </h2>
-      <p className="section-sub" data-reveal>
-        Things I&apos;ve built — and the list is only getting longer.
-      </p>
+        <ul className="b-tags">
+          {project.tags.map((t) => (
+            <li key={t}>{t}</li>
+          ))}
+        </ul>
 
-      <div className="b-filters" data-reveal role="group" aria-label="Filter projects">
-        {PROJECT_FILTERS.map((f) => (
+        <div className="b-actions">
           <button
-            key={f}
-            className={`b-filter${filter === f ? " is-active" : ""}`}
-            onClick={() => setFilter(f)}
-            aria-pressed={filter === f}
+            className="b-btn b-preview"
             data-cursor
+            onClick={() =>
+              openPreview({
+                url: project.url,
+                title: project.title.toLowerCase().replace(/\s+/g, "-"),
+              })
+            }
           >
-            {f}
+            <PlayIcon />
+            preview
           </button>
-        ))}
-      </div>
-
-      <div className="bento" id="bento">
-        {PROJECTS.map((p) => (
-          <ProjectCell
-            key={p.id}
-            project={p}
-            filtered={filter !== "all" && p.cat !== filter}
-          />
-        ))}
-
-        <div className="b-cell b-stat" data-reveal>
-          <span className="b-big">
-            <span data-count="7">0</span>+
-          </span>
-          <span className="b-small">technologies in rotation</span>
-        </div>
-
-        <div className="b-cell b-now" data-reveal>
-          <span className="b-label">{"// currently"}</span>
-          <p>
-            watching too many movies
-            <br />
-            &amp; building this very site
-          </p>
-        </div>
-
-        <div className="b-cell b-building" data-reveal>
-          <span className="b-label">$ status</span>
-          <p className="b-code">
-            compiling next_project<span className="b-blink">▋</span>
-          </p>
-          <p className="b-small">something&apos;s cooking — check back soon</p>
-        </div>
-
-        <div className="b-cell b-github" data-reveal>
-          <span className="b-label">@github</span>
-          <GithubGrid />
-          {/* ▼ your GitHub profile URL + handle */}
           <a
-            className="gh-link"
-            href={LINKS.github}
+            className="b-btn"
+            href={project.repo}
             target="_blank"
             rel="noopener"
             data-cursor
           >
-            {LINKS.githubHandle} ↗
+            <GithubIcon />
+            code
           </a>
         </div>
+      </div>
+    </motion.article>
+  );
+}
 
-        <div className="b-cell b-soon" data-reveal>
-          <span className="b-big">+</span>
-          <span className="b-small">
-            your next project lives here — add an entry to PROJECTS in lib/data.ts
-          </span>
+/** Named slots, so the grid stays uneven instead of tiling into equal boxes.
+ *  Slot 0 is the tall one, so whatever is flagged featured has to sort into it
+ *  — otherwise the big box goes to whichever project happens to be first in
+ *  the data file and the featured title gets crushed into a narrow cell. */
+const AREAS = ["feat", "a", "b", "c", "d", "e"];
+
+const byFeatured = (a: Project, b: Project) =>
+  Number(Boolean(b.featured)) - Number(Boolean(a.featured));
+
+export function Projects() {
+  const [filter, setFilter] = useState("all");
+  const cats = Array.from(new Set(PROJECTS.map((p) => p.cat)));
+  // a filter bar with one real category can never change anything — don't ship
+  // a control that does nothing. It returns on its own once a second cat exists.
+  const showFilters = cats.length > 1;
+
+  return (
+    <div className="container section-top">
+      <SectionHead title="Projects" meta="Selected work — 2025–2026" />
+      <p className="sec-note" data-reveal>
+        Things I&apos;ve built — and the list is <em>only getting longer</em>.
+      </p>
+
+      {showFilters && (
+        <div className="b-filters" data-reveal role="group" aria-label="Filter projects">
+          {PROJECT_FILTERS.map((f) => (
+            <button
+              key={f}
+              className={`b-filter${filter === f ? " is-active" : ""}`}
+              onClick={() => setFilter(f)}
+              aria-pressed={filter === f}
+              data-cursor
+            >
+              {f}
+            </button>
+          ))}
         </div>
+      )}
+
+      {/* keeps the id the cursor-tracking hook looks for */}
+      <div className="bento" id="bento">
+        {[...PROJECTS].sort(byFeatured).map((p, i) => (
+          <ProjectCell
+            key={p.id}
+            project={p}
+            area={AREAS[i] ?? "auto"}
+            filtered={filter !== "all" && p.cat !== filter}
+          />
+        ))}
+
+        {/* real link, real handle — no invented contribution graph */}
+        <a
+          className="b-cell b-github"
+          href={LINKS.github}
+          target="_blank"
+          rel="noopener"
+          data-reveal
+          data-cursor
+        >
+          <span className="b-github-in">
+            <GithubIcon size={18} />
+            <span className="b-github-handle">{LINKS.githubHandle}</span>
+          </span>
+          <span className="b-github-cta">
+            the rest of the work lives here <span className="whisper-arrow">↗</span>
+          </span>
+        </a>
       </div>
     </div>
   );

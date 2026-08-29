@@ -68,7 +68,7 @@ export function useCursor(
     raf = requestAnimationFrame(follow);
 
     const hoverSel =
-      "a, button, [data-cursor], input, textarea, .film, .card, .ach-card, .proj-card";
+      "a, button, [data-cursor], input, textarea, .film, .col-item, .ach-card, .b-cell";
     const over = (e: MouseEvent) => {
       if ((e.target as Element).closest?.(hoverSel))
         document.body.classList.add("cursor-hover");
@@ -314,7 +314,7 @@ export function useTabPout() {
     let pout: ReturnType<typeof setTimeout>;
     const onChange = () => {
       if (document.hidden) {
-        document.title = "👀 come back…";
+        document.title = "come back…";
         pout = setTimeout(() => {
           document.title = "still here. waiting.";
         }, 15000);

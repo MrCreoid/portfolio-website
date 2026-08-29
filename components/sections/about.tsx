@@ -1,10 +1,12 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { BEYOND, CHIPS, FILMS, FLIP_FACTS, LINKS, TIMELINE } from "@/lib/data";
+import { BEYOND, CHIPS, FLIP_FACTS, LINKS, SKILLS, TIMELINE } from "@/lib/data";
+import { Paperclip } from "lucide-react";
 import { prefersReducedMotion } from "@/lib/fx";
 import { useGuitarString } from "@/hooks/use-toys";
 import { FallbackImage } from "@/components/ui/fallback-image";
+import { SectionHead } from "@/components/layout/section-head";
 
 /** Click the photo: a ring of light expands and the other face irises in. */
 function PhotoCard() {
@@ -55,12 +57,10 @@ function PhotoCard() {
       return;
     }
     incoming.style.zIndex = "6";
+    // a hard rectangular wipe rather than an iris — same gesture, new language
     incoming.animate(
-      [
-        { clipPath: `circle(0% at ${cx}% ${cy}%)` },
-        { clipPath: `circle(150% at ${cx}% ${cy}%)` },
-      ],
-      { duration: 640, easing: "cubic-bezier(0.65,0,0.35,1)" },
+      [{ clipPath: "inset(0 0 100% 0)" }, { clipPath: "inset(0 0 0 0)" }],
+      { duration: 560, easing: "cubic-bezier(0.65,0,0.35,1)" },
     ).onfinish = () => {
       setShowBack(toBack);
       incoming.style.zIndex = "";
@@ -86,7 +86,8 @@ function PhotoCard() {
           aria-label="Open résumé"
           onClick={(e) => e.stopPropagation()}
         >
-          📎<span className="paperclip-tip">there&apos;s a résumé attached</span>
+          <Paperclip size={20} strokeWidth={1.6} aria-hidden="true" />
+          <span className="paperclip-tip">there&apos;s a résumé attached</span>
         </a>
 
         <div className="flipper">
@@ -95,7 +96,7 @@ function PhotoCard() {
             <div className="photo-fallback">PG</div>
             {hasPhoto && (
               <FallbackImage
-                src="/assets/photo.jpg"
+                src="/assets/photo.jpeg"
                 alt="Pratyush Garg"
                 className="photo-img"
                 onMissing={() => setHasPhoto(false)}
@@ -105,13 +106,10 @@ function PhotoCard() {
           </div>
 
           <div className="flip-back" ref={backRef}>
-            <h4>the other side</h4>
+            <h4>The other side</h4>
             <ul>
+              <li>{FLIP_FACTS[0]}</li>
               <li>
-                {FLIP_FACTS[0].emoji} {FLIP_FACTS[0].text}
-              </li>
-              <li>
-                🍿{" "}
                 <a
                   className="lb-link"
                   href={LINKS.letterboxd}
@@ -124,9 +122,7 @@ function PhotoCard() {
                 </a>
               </li>
               {FLIP_FACTS.slice(1).map((f) => (
-                <li key={f.text}>
-                  {f.emoji} {f.text}
-                </li>
+                <li key={f}>{f}</li>
               ))}
             </ul>
             <span className="flip-hint">↻ spin back</span>
@@ -155,13 +151,9 @@ function GuitarString() {
 export function About() {
   return (
     <div className="container section-top">
-      <h2 className="section-title" data-reveal>
-        <span className="section-num">02</span> About me
-      </h2>
+      <SectionHead title="About" meta="The human behind the code" />
 
       <div className="about-grid">
-        <PhotoCard />
-
         <div className="about-text-col">
           <p className="about-lede" data-reveal>
             Hey, I&apos;m <strong>Pratyush</strong> — a Computer Science undergrad at
@@ -178,84 +170,62 @@ export function About() {
             data with Python, and wrestling with C — and honestly, I enjoy all three
             fights.
           </p>
-          <div className="chips" data-reveal>
+          <ul className="chips" data-reveal>
             {CHIPS.map((c) => (
-              <span className="chip" key={c}>
+              <li className="chip" key={c}>
                 {c}
-              </span>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
+
+        <PhotoCard />
       </div>
 
-      <h2 className="section-title" data-reveal>
-        <span className="section-num">03</span> Journey
-      </h2>
+      <SectionHead title="Journey" variant="margin" meta="So far" />
       <div className="timeline" data-reveal>
         {TIMELINE.map((stop) => (
           <div className="tl-item" key={stop.title}>
-            <span className="tl-dot" />
+            <span className="tl-dot" aria-hidden="true" />
+            <span className="tl-date">{stop.date}</span>
             <div className="tl-card">
-              <span className="tl-date">{stop.date}</span>
               <h3>{stop.title}</h3>
-              <p>
-                {stop.code ? (
-                  <>
-                    First <code>{stop.code}</code> in a DU lab. No looking back since.
-                  </>
-                ) : (
-                  stop.body
-                )}
-              </p>
+              <p>{stop.body}</p>
+              {stop.code && <code className="tl-code">{stop.code}</code>}
             </div>
           </div>
         ))}
-        <div className="tl-item tl-next">
-          <span className="tl-dot" />
-          <div className="tl-card">
-            <span className="tl-date">soon</span>
-            <h3>next stop — loading…</h3>
-          </div>
-        </div>
       </div>
 
       <GuitarString />
 
-      <h2 className="section-title skills-title" data-reveal>
-        <span className="section-num">04</span> Skills{" "}
-        <span className="skills-note">— rated like films</span>
-      </h2>
-      <p className="film-note" data-reveal>
-        proficiency, but make it letterboxd. every poster certified{" "}
-        <b>RATED&nbsp;PG</b>.
-      </p>
+      <SectionHead title="Skills" variant="light" meta="What I work in" />
 
-      <div className="filmography">
-        {FILMS.map((film) => (
-          <article className="film" data-reveal key={film.title}>
-            <div className="film-poster">
-              {film.posters.map((src) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img key={src} src={src} alt="" loading="lazy" />
-              ))}
-              <span className="pg-badge">RATED PG</span>
-            </div>
-            <div className="film-info">
-              <h3>{film.title}</h3>
-              <p className="film-review">{film.review}</p>
-              <span className="film-tag">{film.tag}</span>
-            </div>
-          </article>
+      {/* the index: numeral, entry, one line of what it means, a standing */}
+      <ol className="skills">
+        {SKILLS.map((skill, i) => (
+          <li className="skill" data-reveal key={skill.name}>
+            <span className="skill-no">{String(i + 1).padStart(2, "0")}</span>
+            <h3 className="skill-name">{skill.name}</h3>
+            <p className="skill-note">{skill.note}</p>
+            <span className="skill-status">{skill.status}</span>
+          </li>
         ))}
-      </div>
+      </ol>
 
-      <h2 className="section-title beyond-title" data-reveal>
-        <span className="section-num">05</span> Beyond the code
-      </h2>
-      <div className="cards-3">
-        {BEYOND.map((card) => (
-          <article className="card tilt" data-reveal key={card.title}>
-            <div className="card-icon">{card.icon}</div>
+      <SectionHead title="Beyond the code" meta="Off the clock" />
+      <div className="cols-3 is-ruled">
+        {BEYOND.map((card, i) => (
+          <article className="col-item" data-reveal key={card.title}>
+            <span className="col-head">
+              <span className="col-index">{String(i + 1).padStart(2, "0")}</span>
+              <card.icon
+                className="col-mark"
+                size={18}
+                strokeWidth={1.5}
+                aria-hidden="true"
+              />
+            </span>
             <h3>{card.title}</h3>
             <p>
               {card.body}

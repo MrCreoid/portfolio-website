@@ -10,6 +10,12 @@ const $$ = <T extends Element = Element>(s: string, c: ParentNode = document) =>
 /**
  * Staggered reveals + count-ups, re-run every time a view becomes active so a
  * revisit animates again — same behaviour the vanilla router had.
+ *
+ * Only what is actually on screen when the view opens gets the entrance
+ * stagger. Everything below the fold waits for the reader to reach it, which is
+ * the whole point of a reveal — the old version fired all of them at once into
+ * an empty viewport, so four fifths of every page was already static by the
+ * time you scrolled to it.
  */
 export function useViewEnter(view: View, ready: boolean) {
   useLayoutEffect(() => {
@@ -20,13 +26,51 @@ export function useViewEnter(view: View, ready: boolean) {
     const els = $$<HTMLElement>("[data-reveal]", root);
     els.forEach((el) => el.classList.remove("is-in"));
     void root.offsetHeight; // reflow so the transitions re-trigger
-    els.forEach((el, i) => {
-      el.style.setProperty("--d", `${Math.min(i * 70, 900)}ms`);
+
+    if (prefersReducedMotion()) {
+      els.forEach((el) => el.classList.add("is-in"));
+      return;
+    }
+
+    const fold = innerHeight * 0.92;
+    const above = els.filter((el) => el.getBoundingClientRect().top < fold);
+    const below = els.filter((el) => !above.includes(el));
+
+    above.forEach((el, i) => {
+      el.style.setProperty("--d", `${Math.min(i * 70, 560)}ms`);
       el.classList.add("is-in");
     });
 
+    // below the fold: reveal on approach, in small groups so a row of cards
+    // still lands as a stagger rather than all at once
+    const seen = new WeakMap<Element, number>();
+    let group = 0;
+    let lastTop = -Infinity;
+    for (const el of below) {
+      const top = el.getBoundingClientRect().top;
+      if (top - lastTop > 40) group = 0;
+      else group += 1;
+      lastTop = top;
+      seen.set(el, group);
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          const el = e.target as HTMLElement;
+          el.style.setProperty("--d", `${(seen.get(el) ?? 0) * 70}ms`);
+          el.classList.add("is-in");
+          io.unobserve(el);
+        }
+      },
+      { rootMargin: "0px 0px -12% 0px", threshold: 0.01 },
+    );
+    below.forEach((el) => io.observe(el));
+
+    // the count-ups have the same problem the reveals had: a number that ticks
+    // 0 -> 47 while it is three screens below the fold has simply not happened
     const frames: number[] = [];
-    $$<HTMLElement>("[data-count]", root).forEach((el) => {
+    const countUp = (el: HTMLElement) => {
       const target = Number(el.dataset.count);
       const t0 = performance.now();
       const tick = (t: number) => {
@@ -35,9 +79,29 @@ export function useViewEnter(view: View, ready: boolean) {
         if (p < 1) frames.push(requestAnimationFrame(tick));
       };
       frames.push(requestAnimationFrame(tick));
+    };
+
+    const counters = $$<HTMLElement>("[data-count]", root);
+    const countIo = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          countUp(e.target as HTMLElement);
+          countIo.unobserve(e.target);
+        }
+      },
+      { threshold: 0.6 },
+    );
+    counters.forEach((el) => {
+      el.textContent = "0";
+      countIo.observe(el);
     });
 
-    return () => frames.forEach(cancelAnimationFrame);
+    return () => {
+      frames.forEach(cancelAnimationFrame);
+      io.disconnect();
+      countIo.disconnect();
+    };
   }, [view, ready]);
 }
 
@@ -109,30 +173,61 @@ export function useMagneticTilt() {
   }, []);
 }
 
-/** Bento cells glow where the cursor is. */
+/**
+ * Tracks the cursor across the bento and feeds each cell its local pointer
+ * position as --mx/--my, so a cell can react to where the cursor actually is
+ * rather than merely that it is somewhere inside.
+ */
 export function useBentoSpotlight() {
   useEffect(() => {
     const grid = document.getElementById("bento");
     if (!grid || !hasFinePointer()) return;
     const cells = $$<HTMLElement>(".b-cell", grid);
 
-    const move = (e: MouseEvent) => {
-      for (const cell of cells) {
-        const r = cell.getBoundingClientRect();
-        cell.style.setProperty("--mx", e.clientX - r.left + "px");
-        cell.style.setProperty("--my", e.clientY - r.top + "px");
+    // rects are measured once on entry and on resize, and the writes are
+    // batched into one frame: the old version forced a layout per cell per
+    // mousemove, which is a reflow storm on the one interaction meant to feel
+    // effortless
+    let rects: DOMRect[] = [];
+    let frame = 0;
+    let px = 0;
+    let py = 0;
+
+    const measure = () => {
+      rects = cells.map((c) => c.getBoundingClientRect());
+    };
+    const paint = () => {
+      frame = 0;
+      for (let i = 0; i < cells.length; i++) {
+        const r = rects[i];
+        if (!r) continue;
+        cells[i].style.setProperty("--mx", px - r.left + "px");
+        cells[i].style.setProperty("--my", py - r.top + "px");
       }
     };
-    const on = () => grid.classList.add("is-lit");
+    const move = (e: MouseEvent) => {
+      px = e.clientX;
+      py = e.clientY;
+      if (!frame) frame = requestAnimationFrame(paint);
+    };
+    const on = () => {
+      measure();
+      grid.classList.add("is-lit");
+    };
     const off = () => grid.classList.remove("is-lit");
 
     grid.addEventListener("mousemove", move);
     grid.addEventListener("mouseenter", on);
     grid.addEventListener("mouseleave", off);
+    addEventListener("scroll", measure, { passive: true });
+    addEventListener("resize", measure);
     return () => {
+      cancelAnimationFrame(frame);
       grid.removeEventListener("mousemove", move);
       grid.removeEventListener("mouseenter", on);
       grid.removeEventListener("mouseleave", off);
+      removeEventListener("scroll", measure);
+      removeEventListener("resize", measure);
     };
   }, []);
 }

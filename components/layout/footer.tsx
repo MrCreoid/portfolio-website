@@ -23,14 +23,14 @@ export function Footer() {
       toast(REPLIES[clicks.current - 1]);
     } else {
       confetti(e.clientX, e.clientY - 20, 50, cozy);
-      toast("fine. you win. 🏆");
+      toast("fine. you win.");
       clicks.current = 0;
     }
   };
 
   return (
     <footer className="footer">
-      <span>Designed &amp; built by Pratyush Garg · 2026</span>
+      <span>Designed &amp; built by Pratyush Garg — 2026</span>
       <button className="dnc" onClick={doNotClick} data-cursor>
         do not click this
       </button>

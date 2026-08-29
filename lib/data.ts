@@ -3,10 +3,17 @@
    lives here — add a project by adding an object, not by copying a <div>.
    ▼ marks the spots meant to be edited.
    ============================================================ */
-
+import {
+  ChartColumn,
+  Clapperboard,
+  Code2,
+  Guitar,
+  MoonStar,
+  Rocket,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 export const VIEWS = ["home", "about", "projects", "achievements", "contact"] as const;
 export type View = (typeof VIEWS)[number];
-
 export const NAV: { id: View; label: string }[] = [
   { id: "home", label: "Home" },
   { id: "about", label: "About" },
@@ -14,19 +21,15 @@ export const NAV: { id: View; label: string }[] = [
   { id: "achievements", label: "Achievements" },
   { id: "contact", label: "Contact" },
 ];
-
-/** ▼ your email — powers the copy button, the mailto form and the email social link */
-export const EMAIL = "pratyushgarg@example.com";
-
-/** ▼ your profiles */
+/** powers the copy button, the mailto form and the email social link */
+export const EMAIL = "pratyushgarg527@gmail.com";
 export const LINKS = {
-  github: "#",
-  linkedin: "#",
+  github: "https://github.com/MrCreoid",
+  linkedin: "https://www.linkedin.com/in/devpratyushgarg/",
   letterboxd: "https://letterboxd.com/MrCreoid/",
-  githubHandle: "github.com/yourhandle",
+  githubHandle: "github.com/MrCreoid",
   resume: "/assets/resume.pdf",
 };
-
 export const EYEBROW_LINES = [
   "open to internships & collabs",
   "fueled by curiosity, mostly",
@@ -34,14 +37,12 @@ export const EYEBROW_LINES = [
   "cinephile with a compiler",
   "building something at 2 a.m.",
 ];
-
 export const TYPE_WORDS = [
   "websites",
   "web experiences",
   "data crunchers",
   "ideas into code",
 ];
-
 export const MARQUEE = [
   "HTML",
   "CSS",
@@ -53,136 +54,131 @@ export const MARQUEE = [
   "clean code",
   "dark mode enjoyer",
 ];
-
 export const WHAT_I_DO = [
   {
-    icon: "⌨️",
+    icon: Code2,
     title: "Web experiences",
     body: "Interactive, animated websites built with hand-written HTML, CSS and JavaScript. No shortcuts — every pixel placed on purpose.",
   },
   {
-    icon: "📊",
+    icon: ChartColumn,
     title: "Data & Python",
     body: "NumPy and Pandas are my playground. I like taking messy data and turning it into something that actually says something.",
   },
   {
-    icon: "🚀",
+    icon: Rocket,
     title: "Always learning",
     body: "Currently sharpening C and going deeper into JavaScript. Second year starts August 2026 — the roadmap only gets bigger.",
   },
 ];
-
 export const STATS = [
   { count: 47, suffix: "", label: "tabs open right now" },
   { count: 12, suffix: "+", label: "easter eggs hidden here" },
   { count: 60, suffix: "+", label: "animations on this site" },
 ];
-
 /* ---------------- about ---------------- */
-
 export const CHIPS = [
-  "🎓 B.Tech CS · FoT DU",
-  "📍 Delhi, India",
-  "🌙 night-owl coder",
-  "⚡ fast learner",
+  "B.Tech CS · FoT DU",
+  "Delhi, India",
+  "night-owl coder",
+  "fast learner",
 ];
-
-/** ▼▼ duplicate an entry per milestone ▼▼ */
+/* Only milestones that are actually documented — no invented roles or dates.
+   Ordered oldest → newest so the section reads as progression, and each entry
+   carries what changed, not just what happened. */
 export const TIMELINE = [
   {
     date: "2024 — 2025",
-    title: "Vice President — Byte Club",
-    body: "Ran events and workshops, and spent a year convincing people that coding is fun. It worked on at least a few.",
+    title: "Vice President, Byte Club",
+    body: "Ran events and workshops for a year, and spent it convincing people that coding is fun. It worked on at least a few of them.",
   },
   {
     date: "Aug 2025",
-    title: "Started B.Tech CS — Faculty of Technology, DU",
-    body: 'First print("hello world") in a DU lab. No looking back since.',
+    title: "B.Tech Computer Science, Faculty of Technology — University of Delhi",
+    body: "First print(\"hello world\") in a DU lab. Coding stopped being a subject on a timetable somewhere around week three.",
     code: 'print("hello world")',
   },
   {
-    date: "2026",
-    title: "Your next milestone here",
-    body: "Add an entry to TIMELINE in lib/data.ts whenever something happens. Keep the flow going.",
+    date: "2025 — 2026",
+    title: "Started shipping, not just studying",
+    body: "Attendance Tracker and Spent — two tools built because I actually wanted them, then put in front of other people. React and Firebase learned by needing them.",
+  },
+  {
+    date: "Aug 2026",
+    title: "Second year begins",
+    body: "Going deeper into C and JavaScript, and further into data with NumPy and Pandas.",
   },
 ];
-
-const devicon = (name: string, variant = "original") =>
-  `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${name}/${name}-${variant}.svg`;
-
-export const FILMS = [
+/* The skills index. Read as an archive table: a numeral, the entry, one line
+   on what it actually means, and a standing. No posters, no reviews — the film
+   conceit lives on Letterboxd, not in a competency list. */
+export type Skill = { name: string; note: string; status: string };
+export const SKILLS: Skill[] = [
   {
-    title: "HTML & CSS",
-    review: '"a timeless double feature — structure falls for style."',
-    tag: "rewatched daily",
-    posters: [devicon("html5"), devicon("css3")],
+    name: "HTML & CSS",
+    note: "Semantic structure and modern layout — grid, flexbox, custom properties. Hand-written, including the 3,000-line stylesheet behind this page.",
+    status: "daily",
   },
   {
-    title: "JavaScript",
-    review: '"chaotic, brilliant, occasionally undefined. would import again."',
-    tag: "now showing",
-    posters: [devicon("javascript")],
+    name: "JavaScript",
+    note: "The DOM, async, canvas and the browser platform underneath the frameworks. Most of the interaction on this site is plain JS.",
+    status: "daily",
   },
   {
-    title: "Python",
-    review: '"elegant pacing. zero semicolon jump-scares."',
-    tag: "now showing",
-    posters: [devicon("python")],
+    name: "TypeScript",
+    note: "Types as a design tool rather than decoration. Every project below is written in it.",
+    status: "building",
   },
   {
-    title: "NumPy & Pandas",
-    review: '"a gripping documentary about taming wild data."',
-    tag: "double feature",
-    posters: [devicon("numpy"), devicon("pandas")],
+    name: "React & Next.js",
+    note: "Components, hooks and app-router builds. Learned by needing them — Spent and Attendance Tracker both run on this stack.",
+    status: "building",
   },
   {
-    title: "Git & GitHub",
-    review: '"a time-travel thriller. the merge-conflict scene still haunts me."',
-    tag: "daily driver",
-    posters: [devicon("git")],
+    name: "Python",
+    note: "My first language and still the one I reach for when a problem is really a data problem.",
+    status: "daily",
   },
   {
-    title: "C",
-    review:
-      '"psychological horror. pointers everywhere. \'character-building\' — critics."',
-    tag: "in the watchlist",
-    posters: [devicon("c")],
+    name: "NumPy & Pandas",
+    note: "Taking messy data and turning it into something that actually says something.",
+    status: "data",
   },
   {
-    title: "VS Code",
-    review: '"home."',
-    tag: "long-running series",
-    posters: [devicon("vscode")],
+    name: "C",
+    note: "Pointers, memory and what the machine is genuinely doing underneath. Character-building, as the critics say.",
+    status: "learning",
+  },
+  {
+    name: "Git & GitHub",
+    note: "Branches, rebases and the occasional merge conflict I brought on myself.",
+    status: "daily",
   },
 ];
-
 export const BEYOND = [
   {
-    icon: "🎬",
+    icon: Clapperboard,
     title: "Cinephile",
     body: "Movies & series, religiously. Ratings live on ",
     link: { label: "letterboxd · @MrCreoid ↗", href: LINKS.letterboxd },
   },
   {
-    icon: "🎸",
+    icon: Guitar,
     title: "Guitarist",
     body: "Riffs between builds. The guitar gets picked up exactly when the bugs start winning.",
   },
   {
-    icon: "🌌",
+    icon: MoonStar,
     title: "Night owl",
     body: "Best ideas arrive after midnight. Sleep schedule: genuinely figuring it out.",
   },
 ];
-
 export const FLIP_FACTS = [
-  { emoji: "🎬", text: "certified cinephile — movies & series, religiously" },
-  { emoji: "🎸", text: "plays guitar when the bugs win" },
-  { emoji: "🧭", text: "the master plan? genuinely figuring it out" },
+  "certified cinephile — movies & series, religiously",
+  "plays guitar when the bugs win",
+  "the master plan? genuinely figuring it out",
 ];
-
 /* ---------------- projects ---------------- */
-
 export type Project = {
   id: string;
   kind: string;
@@ -195,23 +191,22 @@ export type Project = {
   url: string;
   repo: string;
 };
-
 /** ▼▼ add a project by adding an object ▼▼ */
 export const PROJECTS: Project[] = [
   {
     id: "portfolio",
-    kind: "featured",
-    featured: true,
+    kind: "project",
     title: "This portfolio",
     body: "The site you're looking at — React, TypeScript and a hand-written stylesheet. SPA routing, canvas constellation, physics toys and more secrets than it admits to.",
     tags: ["Next.js", "TypeScript", "Tailwind CSS"],
     cat: "web",
     url: "/",
-    repo: "#",
+    repo: "https://github.com/MrCreoid/portfolio-website",
   },
   {
     id: "attendance",
-    kind: "project",
+    kind: "featured",
+    featured: true,
     title: "Attendance Tracker",
     body: "A premium, glassmorphic attendance-tracking dashboard built for college students. Set up your weekly timetable once and track attendance seamlessly.",
     tags: ["React", "TypeScript", "Tailwind CSS", "Firebase"],
@@ -230,58 +225,33 @@ export const PROJECTS: Project[] = [
     repo: "https://github.com/MrCreoid/spent",
   },
 ];
-
 export const PROJECT_FILTERS = ["all", "web"];
-
 /* ---------------- achievements ---------------- */
-
 export type Achievement = {
   kind: string;
   title: string;
   issuer: string;
   year: string;
-  fallback: string;
+  fallback: LucideIcon;
   featured?: boolean;
   /** drop the file in public/assets and point here to make the card open a lightbox */
   image?: string;
 };
-
-/** ▼▼ edit / duplicate ▼▼ */
-export const ACHIEVEMENTS: Achievement[] = [
-  {
-    kind: "Certificate",
-    title: "Your Certificate Title",
-    issuer: "Issued by — Organisation name",
-    year: "2025",
-    fallback: "🏆",
-    featured: true,
-    image: "/assets/certificate-1.jpg",
-  },
-  {
-    kind: "Competition",
-    title: "Competition Name",
-    issuer: "What you did / where you placed",
-    year: "2025",
-    fallback: "⚔️",
-  },
-];
-
+/** ▼▼ add an entry and the ruled rows come back on their own ▼▼ */
+export const ACHIEVEMENTS: Achievement[] = [];
 /* ---------------- contact ---------------- */
-
 export const QUICK_CHIPS = [
   {
-    label: "💼 internship",
+    label: "internship",
     msg: "Hi Pratyush! I'd love to talk about an internship opportunity — ",
   },
-  { label: "🤝 collab", msg: "Hey! I have an idea we could build together — " },
+  { label: "collab", msg: "Hey! I have an idea we could build together — " },
   {
-    label: "👋 just saying hi",
+    label: "just saying hi",
     msg: "Hey Pratyush, just saying hi! Found your site and ",
   },
 ];
-
 /* ---------------- secret typing game ---------------- */
-
 export const GAME_LINES = [
   'print("hello, recruiter!")',
   'const dream = "genuinely figuring it out";',

@@ -37,7 +37,7 @@ export function useTypedSecrets() {
       if (k === "r") {
         clearTimeout(resumeTimer);
         resumeTimer = setTimeout(() => {
-          toast("you found it — opening résumé 📄");
+          toast("you found it — opening résumé");
           setTimeout(() => open(LINKS.resume, "_blank"), 500);
         }, 750);
       }
@@ -45,7 +45,7 @@ export function useTypedSecrets() {
       if (keyBuffer.endsWith("pratyush")) {
         keyBuffer = "";
         clearTimeout(resumeTimer);
-        toast("wake up, neo 🐇", 3000);
+        toast("wake up, neo", 3000);
         matrixRain(cozyRef.current);
       }
       if (keyBuffer.endsWith("patty")) {
@@ -56,7 +56,7 @@ export function useTypedSecrets() {
       }
       if (keyBuffer.endsWith("sudo")) {
         keyBuffer = "";
-        toast("ah, a person of culture. permissions granted. ✨");
+        toast("ah, a person of culture. permissions granted.");
         document.body.classList.add("sudo-gold");
         setTimeout(() => document.body.classList.remove("sudo-gold"), 4000);
       }
@@ -84,8 +84,8 @@ export function announceCozy(cozy: boolean, toast: (m: string, ms?: number) => v
 
   toast(
     cozy
-      ? "oh… you know me know me 🧡 welcome to the cozy corner"
-      : "back to business 🧡",
+      ? "oh… you know me — welcome to the cozy corner"
+      : "back to business",
     cozy ? 3600 : 2400,
   );
 }
@@ -118,7 +118,14 @@ export function useCozyMode() {
 
 /** ↑↑↓↓←→←→BA → CRT mode + a Minecraft achievement. */
 export function useKonami(onAchievement: () => void) {
-  const { setCrt, toast } = usePortfolio();
+  const { setCrt, crt, toast } = usePortfolio();
+  // the listener is registered once; this keeps it reading the live value
+  // without re-binding, and — more importantly — keeps the toast and the
+  // achievement out of the state updater, which React replays during render
+  const crtRef = useRef(crt);
+  useEffect(() => {
+    crtRef.current = crt;
+  }, [crt]);
 
   useEffect(() => {
     const SEQ = [
@@ -141,16 +148,16 @@ export function useKonami(onAchievement: () => void) {
       if (pos !== SEQ.length) return;
       pos = 0;
 
-      setCrt((prev) => {
-        const next = !prev;
-        if (next) {
-          onAchievement();
-          setTimeout(() => toast("CRT mode engaged. same code exits. 📺"), 1200);
-        } else {
-          toast("back to the future 🧡");
-        }
-        return next;
-      });
+      const next = !crtRef.current;
+      crtRef.current = next;
+      setCrt(next);
+
+      if (next) {
+        onAchievement();
+        setTimeout(() => toast("CRT mode engaged. same code exits."), 1200);
+      } else {
+        toast("back to the future");
+      }
     };
 
     addEventListener("keydown", onKey);
@@ -162,7 +169,7 @@ export function useKonami(onAchievement: () => void) {
 export function useConsoleGreeting() {
   useEffect(() => {
     console.log(
-      "%c👀 inspecting, are we? respect.",
+      "%cinspecting, are we? respect.",
       "font-size:15px; font-weight:bold; color:#ff5a5a;",
     );
     console.log(

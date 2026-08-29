@@ -4,7 +4,7 @@ import type { MouseEvent } from "react";
 import { NAV, type View } from "@/lib/data";
 import { usePortfolio } from "@/components/portfolio-provider";
 
-/** Nav clicks pass their own centre so the wipe circle grows out of the button. */
+/** Nav clicks pass their own centre so the wipe grows out of the button. */
 export function useNavClick() {
   const { goTo } = usePortfolio();
   return (name: View) => (e: MouseEvent<HTMLElement>) => {
@@ -19,12 +19,14 @@ export function Header() {
 
   return (
     <header className="header">
-      <button className="logo magnetic" onClick={nav("home")} aria-label="Go to home">
+      <button className="logo" onClick={nav("home")} aria-label="Go to home">
         <span className="logo-mark">
           P<em>G</em>
         </span>
+        <span className="logo-sub">Portfolio — 2026</span>
       </button>
 
+      {/* the nav and the burger share column 3; only one is ever visible */}
       <nav className="nav" aria-label="Main">
         {NAV.map((item) => (
           <button

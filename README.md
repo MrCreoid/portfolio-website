@@ -1,10 +1,39 @@
 # Pratyush Garg — Portfolio
 
-A red-and-black, animation-obsessed portfolio behind a live WebGL `GrainGradient`
-shader background. **Next.js 16 · React 19 · TypeScript · Tailwind v4 · shadcn/ui**,
-with the original hand-written stylesheet carried over intact. It behaves like a
-single-page app (YouTube-style: the URL never changes), with five views:
+An editorial-brutalist portfolio in cream and red on black, behind a live WebGL
+`GrainGradient` shader background. **Next.js 16 · React 19 · TypeScript ·
+Tailwind v4 · shadcn/ui · Motion**. It behaves like a single-page app
+(YouTube-style: the URL never changes), with five views:
 **Home · About · Projects · Achievements · Contact**.
+
+## The design system — "The Archive"
+
+A 12-column grid whose rules are visible; hard edges everywhere (the radius token
+is literally zero); warm cream ink on near-black paper; red used the way a printer
+uses a second plate — for rules, numerals and one word per headline, never as a
+glow. Type does the heavy lifting.
+
+| | |
+|---|---|
+| **Display + body** | Archivo 400–900 — headlines, oversized numerals, body copy |
+| **Editorial voice** | Instrument Serif — ledes, project blurbs, film reviews |
+| **Metadata** | JetBrains Mono — every label, index, tag and caption |
+| **Ink** | `--ink` `#080506` · surfaces `--ink-2/3` |
+| **Paper** | `--paper` `#f2ece4`, stepped down through `--paper-2/3/4` |
+| **Second plate** | `--red` `#ff2233` — rules, section numerals, one accent word |
+| **Radius** | `0`, globally, in the reset |
+
+Rules worth keeping:
+
+- **Text on a red field is always `--ink`.** Cream on this red is only 3.2:1;
+  black on it is 5.3:1. Every text role on the page clears WCAG AA (lowest 4.99:1).
+- **Section headers are never identical twice.** `<SectionHead>` takes a
+  `variant` — `margin` swells the numeral and tucks it behind the title,
+  `light` hairlines the rule and right-aligns the title.
+- **The shader is atmosphere, not the design.** `.bg-scrim` holds it well back;
+  the layout has to read the same if WebGL never paints.
+- **Tints derive from `--red-rgb` / `--paper-rgb`**, so cozy and CRT modes
+  recolour the whole page from two token lines.
 
 ## Running it
 
@@ -26,9 +55,10 @@ app/
   page.tsx            renders <Portfolio />
   globals.css         tailwind + shadcn tokens, then imports the stylesheet below
 styles/
-  portfolio.css       the hand-written visual system — every animation and style
+  portfolio.css       the whole visual system — tokens, grid, type, every animation
 components/
   ui/                 shadcn's home + the shader background + <FallbackImage>
+  layout/section-head.tsx  the section header, with its variants
   portfolio.tsx       app shell: mounts every view, overlay and effect hook
   portfolio-provider.tsx   view routing, toasts, cozy/CRT modes, overlays
   layout/             header, mobile menu, footer, bottom-secret
@@ -36,7 +66,7 @@ components/
   fx/                 ambient background, custom cursor, preloader
   overlays/           toast, wipe transition, preview window, lightbox, typing game
 hooks/
-  use-view-effects.ts reveals, count-ups, nav indicator, magnetic/tilt, bento glow
+  use-view-effects.ts reveals, count-ups, nav underline, magnetic, archive scan-rule
   use-ambient.ts      cursor trail, particle constellation, DVD idle, tab pout
   use-toys.ts         typewriter, eyebrow rotator, grabbable letters, guitar string
   use-eggs.ts         typed secrets, cozy mode, konami, console greeting
@@ -121,10 +151,10 @@ This site has layers. Here is the complete map — reading further spoils the fu
 | Home | **Bubble-wrap strip** below the stats — pop them, they regenerate, the counter remembers |
 | Home | Click the **∞ curiosity stat** rapidly — combo meter with milestones at ×5, ×10 (confetti), ×15, ×25 |
 | Everywhere | **Comet stardust trail** behind the cursor |
-| About | Click the photo — an **iris of light** expands from where you click and wipes the other side in (cinephile facts + Letterboxd) |
+| About | Click the photo — a **ring of light** expands from where you click and a hard wipe brings the other side in (cinephile facts + Letterboxd) |
 | About | **Pluck the guitar string** above the skills — it vibrates and throws music notes |
 | About | Click a **film poster** in the Skills filmography — the logos backflip |
-| Projects | The bento cells **glow where your cursor is**; borders light up as you pass |
+| Projects | Hover a project row — a **red poster panel follows your cursor** on a spring, and a **red scan rule** tracks you across the row |
 | Projects | **▶ preview** opens projects in a mini in-site browser window — the portfolio can preview *itself*, recursively |
 
 ---

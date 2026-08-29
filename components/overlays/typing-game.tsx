@@ -97,7 +97,7 @@ export function TypingGame() {
         localStorage.setItem(BEST_KEY, String(finalWpm));
         setBest(finalWpm);
         confetti(innerWidth / 2, innerHeight / 2.5, 50, cozy);
-        toast(`new personal best — ${finalWpm} wpm 🔥`);
+        toast(`new personal best — ${finalWpm} wpm`);
       } else {
         confetti(innerWidth / 2, innerHeight / 2.5, 20, cozy);
       }

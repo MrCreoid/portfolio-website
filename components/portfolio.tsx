@@ -77,7 +77,7 @@ function Site() {
 
   return (
     <>
-      <Ambient />
+      <Ambient view={view} />
       <Cursor />
       <Preloader onDone={onPreloaderDone} />
       <Transition />

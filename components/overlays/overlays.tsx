@@ -1,5 +1,6 @@
 "use client";
 
+import { FlaskConical } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { usePortfolio } from "@/components/portfolio-provider";
 
@@ -164,7 +165,9 @@ export function Lightbox() {
 export function McToast({ shown }: { shown: boolean }) {
   return (
     <div className={`mc-toast${shown ? " is-show" : ""}`} aria-hidden={!shown}>
-      <span className="mc-icon">🧪</span>
+      <span className="mc-icon">
+        <FlaskConical size={18} strokeWidth={1.8} aria-hidden="true" />
+      </span>
       <span className="mc-text">
         <b>Achievement Get!</b>How Did We Get Here?
       </span>

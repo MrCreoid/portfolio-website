@@ -1,30 +1,35 @@
 import type { Metadata, Viewport } from "next";
-import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
+import { Archivo, Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
+/* The type system is three voices: a heavy grotesque for display and body, a
+   serif for the editorial lede and the film reviews, a mono for every label,
+   number and piece of metadata. Nothing else. */
+
+const archivo = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800", "900"],
   display: "swap",
 });
 
-const inter = Inter({
-  variable: "--font-inter",
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-instrument-serif",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400"],
+  style: ["normal", "italic"],
   display: "swap",
 });
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
   subsets: ["latin"],
-  weight: ["400", "500"],
+  weight: ["400", "500", "700"],
   display: "swap",
 });
 
 const favicon =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23090405'/%3E%3Ctext x='32' y='43' font-family='Arial' font-size='26' fill='%23ff5a5a' text-anchor='middle' font-weight='700'%3EPG%3C/text%3E%3C/svg%3E";
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23090405'/%3E%3Crect x='4' y='4' width='56' height='56' fill='none' stroke='%23ff2233' stroke-width='3'/%3E%3Ctext x='32' y='44' font-family='Arial Black, Arial' font-size='28' fill='%23f2ece4' text-anchor='middle' font-weight='900'%3EPG%3C/text%3E%3C/svg%3E";
 
 export const metadata: Metadata = {
   title: "Pratyush Garg — Portfolio",
@@ -45,7 +50,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+      className={`${archivo.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable}`}
     >
       <body>{children}</body>
     </html>
