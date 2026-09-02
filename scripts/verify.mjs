@@ -88,7 +88,7 @@ for (const { name, w, h, mobile } of WIDTHS) {
         new Promise((r) => {
           const a = [];
           let last = performance.now(), i = 0;
-          const tick = (t) => { a.push(t - last); last = t; ++i < n ? requestAnimationFrame(tick) : r(a.slice(5)); };
+          const tick = (t) => { a.push(t - last); last = t; if (++i < n) requestAnimationFrame(tick); else r(a.slice(5)); };
           requestAnimationFrame(tick);
         }),
       n,

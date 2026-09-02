@@ -608,6 +608,91 @@ body.cursor-down .cursor-ring {
   }
 }
 
+/* ---------- the archive rail ---------- */
+/* The native scrollbar goes only while the rail is mounted to replace it —
+   never on touch, where the rail never renders. */
+html.has-rail {
+  scrollbar-width: none;
+}
+html.has-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.rail {
+  --thumb: 56px;
+  position: fixed;
+  right: 1.35rem;
+  top: 7rem;
+  bottom: 4.5rem;
+  z-index: 92;
+  width: 2px;
+  background: var(--rule);
+  cursor: grab;
+  touch-action: none;
+}
+.rail:active {
+  cursor: grabbing;
+}
+.rail:focus-visible {
+  outline: 1px solid var(--red);
+  outline-offset: 7px;
+}
+
+.rail-thumb {
+  position: absolute;
+  right: -1px;
+  top: 0;
+  width: 4px;
+  height: var(--thumb);
+  background: var(--red);
+  will-change: transform;
+}
+
+/* the tick sits where the thumb's centre will be at that progress */
+.rail-tick {
+  position: absolute;
+  right: -3px;
+  top: calc(var(--at) * (100% - var(--thumb)) + var(--thumb) / 2);
+  width: 8px;
+  height: 2px;
+  margin-top: -1px;
+  padding: 0;
+  border: 0;
+  background: var(--rule-3);
+  cursor: pointer;
+  transition: width 220ms var(--ease-out), background 220ms var(--ease-out);
+}
+.rail-tick:hover,
+.rail-tick.is-current {
+  width: 16px;
+  background: var(--red);
+}
+.rail-tick i {
+  position: absolute;
+  right: 1.15rem;
+  top: 50%;
+  writing-mode: vertical-rl;
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  font-style: normal;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--paper-4);
+  opacity: 0;
+  translate: 5px -50%;
+  transition: opacity 220ms var(--ease-out), translate 220ms var(--ease-out);
+}
+.rail:hover .rail-tick i,
+.rail:focus-visible .rail-tick i,
+.rail-tick.is-current i {
+  opacity: 1;
+  translate: 0 -50%;
+}
+.rail-tick.is-current i {
+  color: var(--paper-2);
+}
+
 /* ---------- the grid (type "grid") ---------- */
 .grid-overlay {
   position: fixed;

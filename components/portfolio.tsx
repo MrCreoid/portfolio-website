@@ -6,6 +6,7 @@ import { PortfolioProvider, usePortfolio } from "@/components/portfolio-provider
 import { Ambient, Cursor } from "@/components/fx/ambient";
 import { Preloader } from "@/components/fx/preloader";
 import { Header, MobileMenu } from "@/components/layout/header";
+import { Rail } from "@/components/layout/rail";
 import { BottomSecret, Footer } from "@/components/layout/footer";
 import { Hero } from "@/components/sections/hero";
 import { About } from "@/components/sections/about";
@@ -104,8 +105,9 @@ function Site() {
 
       <Header />
       <MobileMenu />
+      <Rail view={view} ready={ready} />
 
-      <main>
+      <main id="main">
         {VIEWS.map((name) => {
           const Section = SECTIONS[name];
           return (
