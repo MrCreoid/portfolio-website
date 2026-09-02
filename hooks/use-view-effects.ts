@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect } from "react";
 import type { View } from "@/lib/data";
-import { SPRING, hasFinePointer, prefersReducedMotion } from "@/lib/fx";
+import { SPRING, hasFinePointer, prefersReducedMotion, scramble } from "@/lib/fx";
 
 const $$ = <T extends Element = Element>(s: string, c: ParentNode = document) =>
   Array.from(c.querySelectorAll<T>(s));
@@ -63,7 +63,9 @@ export function useViewEnter(view: View, ready: boolean) {
           io.unobserve(el);
         }
       },
-      { rootMargin: "0px 0px -12% 0px", threshold: 0.01 },
+      // threshold 0, not 0.01: a wiped row exposes a single pixel until it
+      // reveals, which is a ratio no fixed fraction of its height clears
+      { rootMargin: "0px 0px -12% 0px", threshold: 0 },
     );
     below.forEach((el) => io.observe(el));
 
@@ -103,6 +105,19 @@ export function useViewEnter(view: View, ready: boolean) {
       countIo.disconnect();
     };
   }, [view, ready]);
+}
+
+/** Every [data-scramble] label decodes itself out of noise when hovered. */
+export function useScramble() {
+  useEffect(() => {
+    if (!hasFinePointer() || prefersReducedMotion()) return;
+    const over = (e: MouseEvent) => {
+      const el = (e.target as Element).closest?.<HTMLElement>("[data-scramble]");
+      if (el) scramble(el);
+    };
+    document.addEventListener("mouseover", over);
+    return () => document.removeEventListener("mouseover", over);
+  }, []);
 }
 
 /** Slides the pill under the active nav link. */

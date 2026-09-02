@@ -37,7 +37,7 @@ export function useTypedSecrets() {
       if (k === "r") {
         clearTimeout(resumeTimer);
         resumeTimer = setTimeout(() => {
-          toast("you found it — opening résumé");
+          toast("you found it. opening the résumé");
           setTimeout(() => open(LINKS.resume, "_blank"), 500);
         }, 750);
       }
@@ -53,6 +53,11 @@ export function useTypedSecrets() {
         const next = !cozyRef.current;
         setCozy(next);
         announceCozy(next, toast);
+      }
+      if (keyBuffer.endsWith("grid")) {
+        keyBuffer = "";
+        const on = document.body.classList.toggle("show-grid");
+        toast(on ? "twelve columns. always were." : "grid off");
       }
       if (keyBuffer.endsWith("sudo")) {
         keyBuffer = "";
@@ -84,7 +89,7 @@ export function announceCozy(cozy: boolean, toast: (m: string, ms?: number) => v
 
   toast(
     cozy
-      ? "oh… you know me — welcome to the cozy corner"
+      ? "oh… you know me. welcome to the cozy corner"
       : "back to business",
     cozy ? 3600 : 2400,
   );
@@ -173,7 +178,7 @@ export function useConsoleGreeting() {
       "font-size:15px; font-weight:bold; color:#ff5a5a;",
     );
     console.log(
-      "%ctry typing my first name anywhere on the page.\nor add ?play to the URL. that's all the hints you get.\n— PG (current status: genuinely figuring it out)",
+      "%ctry typing my first name anywhere on the page.\nor add ?play to the URL. that's all the hints you get.\nPG (current status: genuinely figuring it out)",
       "color:#a89093;",
     );
   }, []);

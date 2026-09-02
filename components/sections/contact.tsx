@@ -5,7 +5,8 @@ import { useRef, useState } from "react";
 import { EMAIL, LINKS, QUICK_CHIPS } from "@/lib/data";
 import { usePortfolio } from "@/components/portfolio-provider";
 import { GithubIcon } from "@/components/sections/projects";
-import { SectionHead } from "@/components/layout/section-head";
+import { Roll } from "@/components/layout/header";
+import { Chars, SectionHead } from "@/components/layout/section-head";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
@@ -54,7 +55,7 @@ export function Contact() {
       toast("Email copied to clipboard");
       setTimeout(() => setCopyLabel("copy"), 2000);
     } catch {
-      toast("Couldn't copy — email: " + EMAIL);
+      toast("Couldn't copy. Email: " + EMAIL);
     }
   };
 
@@ -116,17 +117,22 @@ export function Contact() {
     <div className="container section-top">
       <SectionHead title="Contact" variant="light" meta="Inbox: open" />
 
-      <h3 className="contact-big" data-reveal>
-        Let&apos;s build
+      <h3 className="contact-big" data-reveal data-cursor="blend" aria-label="Let's build something together.">
+        <span className="line-1">
+          <Chars text="Let's build" />
+        </span>
         <span className="line-2">
-          something <span className="accent">together.</span>
+          <Chars text="something " />
+          <span className="accent">
+            <Chars text="together." />
+          </span>
         </span>
       </h3>
 
       <div className="contact-grid">
         <div className="contact-left">
-          <p data-reveal>
-            Got an idea, an opportunity, or just want to talk code? My inbox is
+          <p data-reveal data-words>
+            Got something worth a late night? Tell me about it. The inbox is
             always open.
           </p>
 
@@ -134,7 +140,7 @@ export function Contact() {
             className="email-row magnetic"
             onClick={copyEmail}
             data-reveal
-            data-cursor
+            data-cursor="copy"
           >
             <span className="email-text">{EMAIL}</span>
             <span className="email-copy">{copyLabel}</span>
@@ -174,15 +180,15 @@ export function Contact() {
           <dl className="contact-meta" data-reveal>
             <div>
               <dt>Based in</dt>
-              <dd>Delhi, India — GMT+5:30</dd>
+              <dd data-scramble>Delhi, India — GMT+5:30</dd>
             </div>
             <div>
               <dt>Open to</dt>
-              <dd>Internships · collaborations</dd>
+              <dd data-scramble>Internships · collaborations</dd>
             </div>
             <div>
               <dt>Replies in</dt>
-              <dd>A day or two, usually</dd>
+              <dd data-scramble>A day or two, usually</dd>
             </div>
           </dl>
         </div>
@@ -194,8 +200,8 @@ export function Contact() {
             <span className="filed-stamp">Filed</span>
             <h4>Message received.</h4>
             <p>
-              It&apos;s in my inbox. I read everything, and I usually get back
-              within a day or two.
+              It&apos;s in my inbox. I read everything and usually reply within a
+              day or two.
             </p>
             <button
               className="filed-again"
@@ -221,7 +227,7 @@ export function Contact() {
               ))}
             </div>
 
-            <div className="field">
+            <div className="field" data-reveal>
               <input
                 type="text"
                 id="fName"
@@ -232,7 +238,7 @@ export function Contact() {
               />
               <label htmlFor="fName">Your name</label>
             </div>
-            <div className="field">
+            <div className="field" data-reveal>
               <input
                 type="email"
                 id="fEmail"
@@ -243,7 +249,7 @@ export function Contact() {
               />
               <label htmlFor="fEmail">Your email</label>
             </div>
-            <div className="field">
+            <div className="field" data-reveal>
               <textarea
                 id="fMsg"
                 name="message"
@@ -270,14 +276,15 @@ export function Contact() {
               className={`btn btn-primary magnetic${status === "sending" ? " is-sending" : ""}`}
               type="submit"
               disabled={status === "sending"}
+              data-reveal
             >
-              <span className="btn-label">
+              <Roll>
                 {status === "sending"
                   ? "Sending…"
                   : status === "error"
                     ? "Try again"
                     : "Send message"}
-              </span>
+              </Roll>
               {status === "sending" ? (
                 <RotateCw className="btn-spin" size={15} strokeWidth={2} aria-hidden="true" />
               ) : status === "error" ? (

@@ -78,8 +78,8 @@ export function Achievements() {
           <div className="ach-empty-body">
             <span className="ach-empty-kind">No entries filed</span>
             <p>
-              Nothing filed yet. Certificates and placements land here as they
-              happen — <em>watch this space</em>.
+              Nothing filed yet. Certificates and placements go here as they
+              happen. <em>Watch this space</em>.
             </p>
           </div>
           <span className="ach-empty-year">2026</span>
@@ -87,7 +87,7 @@ export function Achievements() {
       ) : (
         <>
           <p className="sec-note" data-reveal>
-            Small for now — <em>watch this space</em>.
+            Small for now. <em>Watch this space</em>.
           </p>
           <div className="ach-list">
             {ACHIEVEMENTS.map((a) => (

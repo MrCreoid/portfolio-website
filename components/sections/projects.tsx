@@ -40,10 +40,12 @@ function ProjectCell({
   project,
   filtered,
   area,
+  index,
 }: {
   project: Project;
   filtered: boolean;
   area: string;
+  index: number;
 }) {
   const { openPreview } = usePortfolio();
   const reduced = useReducedMotion();
@@ -53,16 +55,24 @@ function ProjectCell({
       className={`b-cell ${project.featured ? "b-featured" : "b-proj"}${filtered ? " is-filtered" : ""}`}
       style={{ gridArea: area }}
       data-cat={project.cat}
-      data-reveal
+      data-reveal="wipe"
       whileHover={reduced ? undefined : { y: -6 }}
       transition={{ type: "spring", stiffness: 380, damping: 30, mass: 0.7 }}
     >
       {/* the red plate wipes up from the bottom edge on hover — a second
           printing plate, not a glow */}
       <span className="b-plate" aria-hidden="true" />
+      {/* the folio number, set huge and faint in the corner */}
+      <span className="b-no" aria-hidden="true">
+        {String(index + 1).padStart(2, "0")}
+      </span>
 
       <div className="b-cell-in">
-        {project.featured && <span className="b-kind">Featured</span>}
+        {project.featured && (
+          <span className="b-kind" data-scramble>
+            Featured
+          </span>
+        )}
         <h3 className="b-title">{project.title}</h3>
         <p className="b-body">{project.body}</p>
 
@@ -121,8 +131,8 @@ export function Projects() {
   return (
     <div className="container section-top">
       <SectionHead title="Projects" meta="Selected work — 2025–2026" />
-      <p className="sec-note" data-reveal>
-        Things I&apos;ve built — and the list is <em>only getting longer</em>.
+      <p className="sec-note" data-reveal data-words>
+        Things I&apos;ve built. The list is <em>only getting longer</em>.
       </p>
 
       {showFilters && (
@@ -147,6 +157,7 @@ export function Projects() {
           <ProjectCell
             key={p.id}
             project={p}
+            index={i}
             area={AREAS[i] ?? "auto"}
             filtered={filter !== "all" && p.cat !== filter}
           />
@@ -158,8 +169,8 @@ export function Projects() {
           href={LINKS.github}
           target="_blank"
           rel="noopener"
-          data-reveal
-          data-cursor
+          data-reveal="wipe"
+          data-cursor="github"
         >
           <span className="b-github-in">
             <GithubIcon size={18} />

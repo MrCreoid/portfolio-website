@@ -25,13 +25,43 @@ export function Toast() {
   );
 }
 
-/** The circular wipe between views. Driven imperatively so the timing is exact. */
+/** The wipe between views: five slats of ink drop in one after another with
+ *  the destination's name across them, then lift away. Driven imperatively
+ *  from `goTo` so the timing is exact. */
 export function Transition() {
   const { transitionRef } = usePortfolio();
   return (
     <div className="transition" ref={transitionRef} aria-hidden="true">
-      <div className="t-veil" />
-      <div className="t-logo">PG</div>
+      <div className="t-slats">
+        <i />
+        <i />
+        <i />
+        <i />
+        <i />
+      </div>
+      <div className="t-logo" />
+    </div>
+  );
+}
+
+/** Scroll telemetry, bottom-left: the view you are on and how far down it. */
+export function Readout({ view }: { view: string }) {
+  return (
+    <div className="readout" aria-hidden="true">
+      <span className="readout-view">{view}</span>
+      <span className="readout-val">000</span>
+      <span>%</span>
+    </div>
+  );
+}
+
+/** Type "grid" to see the twelve columns everything sits on. */
+export function GridOverlay() {
+  return (
+    <div className="grid-overlay" aria-hidden="true">
+      {Array.from({ length: 12 }, (_, i) => (
+        <i key={i} />
+      ))}
     </div>
   );
 }
@@ -112,7 +142,7 @@ export function PreviewWindow() {
             <span>spinning it up…</span>
           </div>
           <div className="pv-empty">
-            no live preview yet — set <code>url</code> on the project in{" "}
+            no live preview yet. set <code>url</code> on the project in{" "}
             <code>lib/data.ts</code>
           </div>
           <iframe

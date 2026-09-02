@@ -33,9 +33,9 @@ function PhotoCard() {
       </a>
 
       <div
-        className={`photo-frame${showBack ? " show-back" : ""}`}
+        className={`photo-frame tilt${showBack ? " show-back" : ""}`}
         onClick={() => setShowBack((b) => !b)}
-        data-cursor
+        data-cursor="flip"
       >
         <div className="flipper">
           <div className="flip-front">
@@ -86,11 +86,11 @@ function GuitarString() {
   useGuitarString(boxRef, pathRef);
 
   return (
-    <div className="string-box" ref={boxRef} data-reveal aria-hidden="true">
+    <div className="string-box" ref={boxRef} data-reveal data-cursor="pluck" aria-hidden="true">
       <svg viewBox="0 0 1000 90" preserveAspectRatio="none">
         <path ref={pathRef} d="M 0 45 Q 500 45 1000 45" fill="none" />
       </svg>
-      <span className="string-label">♪ this string is real — pluck it</span>
+      <span className="string-label">this string is real. pluck it</span>
     </div>
   );
 }
@@ -98,28 +98,26 @@ function GuitarString() {
 export function About() {
   return (
     <div className="container section-top">
-      <SectionHead title="About" meta="The human behind the code" />
+      <SectionHead title="About" meta="Who is writing this" />
 
       <div className="about-grid">
         <div className="about-text-col">
-          <p className="about-lede" data-reveal>
-            Hey, I&apos;m <strong>Pratyush</strong> — a Computer Science undergrad at
+          <p className="about-lede" data-reveal data-words>
+            Hey, I&apos;m <strong>Pratyush</strong>, a Computer Science undergrad at
             the <strong>Faculty of Technology, Delhi University</strong>.
           </p>
-          <p data-reveal>
-            I&apos;ve just wrapped up my first year of B.Tech and I&apos;m heading into
-            my second this August. Somewhere between my first{" "}
-            <code>print(&quot;hello world&quot;)</code> and now, coding went from a
-            subject to a genuine obsession.
+          <p data-reveal data-scrub-words>
+            I&apos;ve just finished my first year of B.Tech and start my second this
+            August. Coding was a habit well before it showed up on a timetable, and
+            college hasn&apos;t managed to make it feel like homework.
           </p>
-          <p data-reveal>
-            These days I split my time between building things for the web, crunching
-            data with Python, and wrestling with C — and honestly, I enjoy all three
-            fights.
+          <p data-reveal data-scrub-words>
+            These days the time goes three ways: building for the web, crunching data
+            in Python, and wrestling with C. I enjoy all three fights.
           </p>
           <ul className="chips" data-reveal>
             {CHIPS.map((c) => (
-              <li className="chip" key={c}>
+              <li className="chip" key={c} data-scramble>
                 {c}
               </li>
             ))}
@@ -130,15 +128,17 @@ export function About() {
       </div>
 
       <SectionHead title="Journey" variant="margin" meta="So far" />
-      <div className="timeline" data-reveal>
+      <div className="timeline">
+        <span className="tl-rail" data-rail aria-hidden="true" />
         {TIMELINE.map((stop) => (
-          <div className="tl-item" key={stop.title}>
+          <div className="tl-item" key={stop.title} data-reveal="wipe" data-pass>
             <span className="tl-dot" aria-hidden="true" />
-            <span className="tl-date">{stop.date}</span>
+            <span className="tl-date" data-scramble>
+              {stop.date}
+            </span>
             <div className="tl-card">
               <h3>{stop.title}</h3>
               <p>{stop.body}</p>
-              {stop.code && <code className="tl-code">{stop.code}</code>}
             </div>
           </div>
         ))}
@@ -151,19 +151,24 @@ export function About() {
       {/* the index: numeral, entry, one line of what it means, a standing */}
       <ol className="skills">
         {SKILLS.map((skill, i) => (
-          <li className="skill" data-reveal key={skill.name}>
+          <li className="skill" data-reveal="wipe" key={skill.name}>
             <span className="skill-no">{String(i + 1).padStart(2, "0")}</span>
             <h3 className="skill-name">{skill.name}</h3>
             <p className="skill-note">{skill.note}</p>
-            <span className="skill-status">{skill.status}</span>
+            <span className="skill-status" data-scramble>
+              {skill.status}
+            </span>
           </li>
         ))}
       </ol>
 
       <SectionHead title="Beyond the code" meta="Off the clock" />
-      <div className="cols-3 is-ruled">
+      <div className="cols-3 is-ruled" data-scope>
         {BEYOND.map((card, i) => (
-          <article className="col-item" data-reveal key={card.title}>
+          <article className="col-item" data-reveal="wipe" key={card.title}>
+            <span className="col-ghost" data-parallax={String(0.05 + i * 0.04)} aria-hidden="true">
+              {String(i + 1).padStart(2, "0")}
+            </span>
             <span className="col-head">
               <span className="col-index">{String(i + 1).padStart(2, "0")}</span>
               <card.icon

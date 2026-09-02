@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { VIEWS } from "@/lib/data";
 import { PortfolioProvider, usePortfolio } from "@/components/portfolio-provider";
 import { Ambient, Cursor } from "@/components/fx/ambient";
@@ -14,9 +14,11 @@ import { Achievements } from "@/components/sections/achievements";
 import { Contact } from "@/components/sections/contact";
 import {
   CrtOverlay,
+  GridOverlay,
   Lightbox,
   McToast,
   PreviewWindow,
+  Readout,
   Toast,
   Transition,
 } from "@/components/overlays/overlays";
@@ -25,8 +27,11 @@ import {
   useBentoSpotlight,
   useMagneticTilt,
   useNavIndicator,
+  useScramble,
   useViewEnter,
 } from "@/hooks/use-view-effects";
+import { useScrollChrome, useViewScrollFx } from "@/hooks/use-scroll-fx";
+import { useHeroLetters } from "@/hooks/use-toys";
 import {
   useDvdScreensaver,
   useFilmPosterWobble,
@@ -38,6 +43,8 @@ import {
   useKonami,
   useTypedSecrets,
 } from "@/hooks/use-eggs";
+import { splitWords } from "@/lib/fx";
+import { getLenis } from "@/lib/scroll";
 
 const SECTIONS = {
   home: Hero,
@@ -60,13 +67,26 @@ function Site() {
 
   // single owner of the scroll lock — both the mobile menu and the intro need it
   useEffect(() => {
-    document.body.classList.toggle("is-locked", menuOpen || !ready);
+    const locked = menuOpen || !ready;
+    document.body.classList.toggle("is-locked", locked);
+    const lenis = getLenis();
+    if (lenis) (locked ? lenis.stop : lenis.start).call(lenis);
   }, [menuOpen, ready]);
+
+  // the word cascades need their spans before the first reveal fires, and
+  // this runs before useViewEnter because it is declared before it
+  useLayoutEffect(() => {
+    document.querySelectorAll<HTMLElement>("[data-words]").forEach(splitWords);
+  }, []);
 
   useViewEnter(view, ready);
   useNavIndicator(view, ready);
+  useScrollChrome(ready);
+  useViewScrollFx(view, ready);
+  useHeroLetters(view === "home" && ready);
   useMagneticTilt();
   useBentoSpotlight();
+  useScramble();
   useDvdScreensaver();
   useTabPout();
   useFilmPosterWobble();
@@ -103,11 +123,13 @@ function Site() {
       <Footer />
       <BottomSecret />
 
+      <Readout view={view} />
       <Toast />
       <PreviewWindow />
       <Lightbox />
       <McToast shown={achievement} />
       <CrtOverlay />
+      <GridOverlay />
       <TypingGame />
     </>
   );

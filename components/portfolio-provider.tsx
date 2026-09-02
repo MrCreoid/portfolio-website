@@ -11,8 +11,9 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
-import { View } from "@/lib/data";
+import { NAV, View } from "@/lib/data";
 import { prefersReducedMotion, setParticleTheme, wait } from "@/lib/fx";
+import { scrollTop } from "@/lib/scroll";
 
 type PreviewTarget = { url: string; title: string } | null;
 type LightboxTarget = { src: string; caption: string } | null;
@@ -69,12 +70,13 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     toastTimer.current = setTimeout(() => setToastShown(false), ms);
   }, []);
 
-  /* the circular wipe grows out of wherever the click came from */
+  /* the slats drop, the view swaps underneath them, the slats lift. The
+     click's centre is kept for the label, which leans toward where you were. */
   const goTo = useCallback(
     async (name: View, cx?: number, cy?: number) => {
       if (animating.current) return;
       if (name === view) {
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        scrollTop(false);
         return;
       }
       animating.current = true;
@@ -83,21 +85,23 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       const el = transitionRef.current;
       if (prefersReducedMotion() || !el) {
         setView(name);
-        window.scrollTo(0, 0);
+        scrollTop();
         animating.current = false;
         return;
       }
 
       el.style.setProperty("--cx", (cx ?? innerWidth / 2) + "px");
       el.style.setProperty("--cy", (cy ?? innerHeight / 2) + "px");
+      const logo = el.querySelector<HTMLElement>(".t-logo");
+      if (logo) logo.textContent = NAV.find((n) => n.id === name)?.label ?? name;
       el.classList.add("is-covering");
-      await wait(640);
+      await wait(760);
 
       setView(name);
-      window.scrollTo(0, 0);
+      scrollTop();
 
       el.classList.add("is-leaving");
-      await wait(660);
+      await wait(780);
 
       el.classList.remove("is-covering", "is-leaving");
       animating.current = false;

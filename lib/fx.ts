@@ -87,6 +87,69 @@ export function floatBit(x: number, y: number, text: string) {
   ).onfinish = () => b.remove();
 }
 
+/* ---------------- text: word splitting & the scramble ---------------- */
+
+/**
+ * Wraps every word inside `el` in <span class="w" style="--i:n"> without
+ * disturbing the inline elements around them (a <strong> keeps its words).
+ * Idempotent — the stylesheet and the scroll hooks both call it.
+ */
+export function splitWords(el: HTMLElement): HTMLElement[] {
+  if (!el.dataset.split) {
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    const nodes: Text[] = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode as Text);
+    let i = 0;
+    for (const n of nodes) {
+      const frag = document.createDocumentFragment();
+      for (const part of n.data.split(/(\s+)/)) {
+        if (!part) continue;
+        if (/^\s+$/.test(part)) {
+          frag.append(part);
+          continue;
+        }
+        const w = document.createElement("span");
+        w.className = "w";
+        w.style.setProperty("--i", String(i++));
+        w.textContent = part;
+        frag.append(w);
+      }
+      n.replaceWith(frag);
+    }
+    el.dataset.split = "1";
+  }
+  return Array.from(el.querySelectorAll<HTMLElement>(".w"));
+}
+
+const GLYPHS = "!<>-_\\/[]{}—=+*^?#01";
+
+/** Decodes the element's own text out of noise, left to right. */
+export function scramble(el: HTMLElement, ms = 420) {
+  if (el.dataset.busy) return;
+  const text = el.dataset.text ?? (el.dataset.text = el.textContent ?? "");
+  el.dataset.busy = "1";
+  const t0 = performance.now();
+  const tick = (t: number) => {
+    const p = Math.min((t - t0) / ms, 1);
+    const fixed = Math.floor(p * text.length);
+    let out = "";
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      out +=
+        i < fixed || ch === " "
+          ? ch
+          : GLYPHS[(Math.random() * GLYPHS.length) | 0];
+    }
+    el.textContent = out;
+    if (p < 1) requestAnimationFrame(tick);
+    else {
+      el.textContent = text;
+      delete el.dataset.busy;
+    }
+  };
+  requestAnimationFrame(tick);
+}
+
 /* ---------------- EGG: matrix rain (type "pratyush") ---------------- */
 
 let matrixOn = false;

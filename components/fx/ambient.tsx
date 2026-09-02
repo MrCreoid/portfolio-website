@@ -4,26 +4,25 @@ import { useRef } from "react";
 import type { View } from "@/lib/data";
 import { GradientBackground } from "@/components/ui/paper-design-shader-background";
 import { prefersReducedMotion } from "@/lib/fx";
-import { useCursor, useParticles } from "@/hooks/use-ambient";
+import { useCursor, useInk, useParticles } from "@/hooks/use-ambient";
 import { useMounted } from "@/hooks/use-mounted";
 
 /**
- * Everything behind the content.
+ * Everything behind the content, bottom to top: the shader field (with a CSS
+ * radial fallback for no-WebGL), the scrim that keeps copy legible on it, the
+ * ink plate the pointer paints on, the constellation, and the grain on top.
  *
- * `.bg-shader` is fixed so the gradient stays put while the page scrolls, and
- * carries a CSS radial-gradient fallback for no-WebGL. <GradientBackground /> is
- * `absolute inset-0 -z-10`, which paints it over that fallback but under the
- * scrim, the noise and the page itself.
- *
- * The field runs at full strength on the hero, where it is the atmosphere, and
- * drops back hard on every other view so red returns to being ink rather than
- * ambient glow — `data-view` is what the stylesheet keys that off. Under
- * reduced motion the WebGL canvas is never mounted at all; the CSS fallback
- * underneath carries the look on its own.
+ * The field runs at full strength on the hero, where it is the atmosphere,
+ * and drops back hard on every other view so red returns to being ink rather
+ * than ambient glow — `data-view` is what the stylesheet keys that off. Under
+ * reduced motion the WebGL canvas is never mounted; the CSS fallback carries
+ * the look on its own.
  */
 export function Ambient({ view }: { view: View }) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  useParticles(canvasRef);
+  const particlesRef = useRef<HTMLCanvasElement | null>(null);
+  const inkRef = useRef<HTMLCanvasElement | null>(null);
+  useParticles(particlesRef);
+  useInk(inkRef);
   const mounted = useMounted();
   const shader = mounted && !prefersReducedMotion();
 
@@ -33,21 +32,23 @@ export function Ambient({ view }: { view: View }) {
         {shader && <GradientBackground />}
       </div>
       <div className="bg-scrim" aria-hidden="true" />
+      <canvas id="ink" ref={inkRef} aria-hidden="true" />
+      <canvas id="particles" ref={particlesRef} aria-hidden="true" />
       <div className="noise" aria-hidden="true" />
-      <canvas id="particles" ref={canvasRef} aria-hidden="true" />
     </>
   );
 }
 
 export function Cursor() {
-  const dotRef = useRef<HTMLDivElement | null>(null);
-  const ringRef = useRef<HTMLDivElement | null>(null);
-  useCursor(dotRef, ringRef);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  useCursor(rootRef);
 
   return (
-    <>
-      <div className="cursor-dot" ref={dotRef} aria-hidden="true" />
-      <div className="cursor-ring" ref={ringRef} aria-hidden="true" />
-    </>
+    <div className="cursor" ref={rootRef} aria-hidden="true">
+      <div className="cursor-dot" />
+      <div className="cursor-ring">
+        <span className="cursor-label" />
+      </div>
+    </div>
   );
 }

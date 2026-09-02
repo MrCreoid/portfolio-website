@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, type RefObject } from "react";
+import { animate, stagger, utils } from "animejs";
 import { EYEBROW_LINES, TYPE_WORDS } from "@/lib/data";
 import { SPRING, hasFinePointer, prefersReducedMotion, rand, wait } from "@/lib/fx";
 
@@ -166,6 +167,61 @@ export function useGrabbableLetters() {
   }, []);
 }
 
+/**
+ * The name's glyphs. On entering the home view they rise out of the baseline
+ * one after another; from then on, hovering any letter sends a ripple through
+ * all of them, outward from the one under the pointer. The glyph is the inner
+ * <i> — the outer span belongs to the grab physics, so the two never fight
+ * over one transform.
+ */
+export function useHeroLetters(active: boolean) {
+  useEffect(() => {
+    if (!active) return;
+    const title = document.querySelector<HTMLElement>(".hero-title");
+    if (!title) return;
+    title.classList.add("is-lit");
+    if (prefersReducedMotion()) return;
+
+    const glyphs = Array.from(
+      title.querySelectorAll<HTMLElement>(".h-letter > i, .hero-dot"),
+    );
+    animate(glyphs, {
+      translateY: ["1.15em", "0em"],
+      rotate: [9, 0],
+      opacity: [0, 1],
+      duration: 1150,
+      ease: "outExpo",
+      delay: stagger(26, { start: 240 }),
+    });
+
+    let last = 0;
+    const ripple = (from: number) => () => {
+      const now = performance.now();
+      if (now - last < 90) return;
+      last = now;
+      animate(glyphs, {
+        translateY: [
+          { to: "-0.14em", duration: 170, ease: "outQuad" },
+          { to: "0em", duration: 820, ease: "outElastic(1, .55)" },
+        ],
+        delay: stagger(28, { from }),
+      });
+    };
+    const letters = glyphs.map((g, i) => {
+      const el = g.parentElement ?? g;
+      const fn = ripple(i);
+      el.addEventListener("mouseenter", fn);
+      return () => el.removeEventListener("mouseenter", fn);
+    });
+
+    return () => {
+      letters.forEach((off) => off());
+      utils.remove(glyphs);
+      title.classList.remove("is-lit");
+    };
+  }, [active]);
+}
+
 /** A real string: bend it with the cursor, let go, it oscillates and decays. */
 export function useGuitarString(
   boxRef: RefObject<HTMLDivElement | null>,
@@ -300,6 +356,9 @@ export function usePortraitAlphaHover() {
     const move = (e: MouseEvent) => {
       if (!data || !ctx) return;
       const r = img.getBoundingClientRect();
+      // the two colour plates slide against the pointer while he is lit
+      wrap.style.setProperty("--gx", (((e.clientX - r.left) / r.width) * 2 - 1).toFixed(3));
+      wrap.style.setProperty("--gy", (((e.clientY - r.top) / r.height) * 2 - 1).toFixed(3));
       const x = Math.floor(((e.clientX - r.left) / r.width) * W);
       const y = Math.floor(((e.clientY - r.top) / r.height) * ctx.canvas.height);
       if (x < 0 || y < 0 || x >= W || y >= ctx.canvas.height) return;

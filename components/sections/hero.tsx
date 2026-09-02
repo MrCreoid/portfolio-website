@@ -20,11 +20,13 @@ import {
   useTypewriter,
 } from "@/hooks/use-toys";
 import { usePortfolio } from "@/components/portfolio-provider";
-import { useNavClick } from "@/components/layout/header";
+import { Roll, useNavClick } from "@/components/layout/header";
 import { SectionHead } from "@/components/layout/section-head";
 
 /**
- * One <span> per character so each letter can be grabbed and flung.
+ * One <span> per character so each letter can be grabbed and flung; the
+ * glyph itself sits in an inner <i> that the entrance and the hover ripple
+ * animate, so the physics and the flourish never share a transform.
  * `accent` re-applies the red per letter — an inline-block child doesn't
  * inherit the colour trick the wrapper used to do with a gradient.
  */
@@ -42,7 +44,7 @@ function SplitText({
           <Fragment key={i}> </Fragment>
         ) : (
           <span key={i} className={accent ? "h-letter accent" : "h-letter"}>
-            {ch}
+            <i>{ch}</i>
           </span>
         ),
       )}
@@ -106,7 +108,7 @@ function Bubbles() {
             free, unlimited refills · popped: <b>{popped}</b>
           </em>
         </p>
-        <div className="bubbles" aria-label="Bubble wrap. Pop them.">
+        <div className="bubbles" aria-label="Bubble wrap. Pop them." data-cursor="pop">
           {Array.from({ length: 16 }, (_, i) => (
             <button
               key={i}
@@ -153,7 +155,7 @@ function ComboStat() {
       className={`stat stat-combo${combo >= 5 ? " tier-1" : ""}${combo >= 10 ? " tier-2" : ""}`}
       onClick={click}
       data-cursor
-      aria-label="Curiosity — try clicking it a lot"
+      aria-label="Curiosity. Try clicking it a lot"
     >
       <span className="stat-num">∞</span>
       <span className="stat-label">curiosity</span>
@@ -181,8 +183,8 @@ export function Hero() {
 
   return (
     <>
-      <div className="hero container">
-        <div className="hero-rail" data-reveal>
+      <div className="hero container" data-scope>
+        <div className="hero-rail" data-reveal data-parallax="0.06">
           <p className="eyebrow">
             <span className="eyebrow-dot" />
             <span className="eyebrow-swap">
@@ -193,22 +195,22 @@ export function Hero() {
 
         {/* the composition: a small "I'M", the given name full-bleed, the
             surname indented so the block reads as three staggered steps */}
-        <h1 className="hero-title">
-          <span className="line line-1" data-reveal>
+        <h1 className="hero-title" data-cursor="blend" data-fade>
+          <span className="line line-1" data-parallax="0.1">
             <SplitText text="I'm" />
           </span>
-          <span className="line line-2" data-reveal>
+          <span className="line line-2" data-parallax="0.18">
             <SplitText text="Pratyush" />
           </span>
-          <span className="line line-3" data-reveal>
+          <span className="line line-3" data-parallax="0.3">
             <SplitText text="Garg" accent />
             <span className="hero-dot">.</span>
           </span>
         </h1>
 
-        <div className="hero-body">
+        <div className="hero-body" data-parallax="0.05">
           <p className="hero-sub" data-reveal>
-            B.Tech CS student who turns curiosity into code — building{" "}
+            B.Tech CS student, building{" "}
             <span className="type-wrap">
               <span ref={typeRef} />
               <span className="caret" />
@@ -233,20 +235,20 @@ export function Hero() {
                 className="btn btn-primary magnetic"
                 onClick={nav("contact")}
               >
-                <span>Let&apos;s connect</span>
+                <Roll>Let&apos;s connect</Roll>
                 <span className="arrow" aria-hidden="true">
                   →
                 </span>
               </button>
               <button className="btn magnetic" onClick={nav("projects")}>
-                <span>See the work</span>
+                <Roll>See the work</Roll>
               </button>
             </div>
 
             <button className="whisper-link" onClick={nav("about")} data-reveal>
               {/* nbsp: the arrow must never orphan onto its own line when the
                   column gets tight */}
-              curious about the human behind the code?&nbsp;
+              who writes all this, anyway?&nbsp;
               <span className="whisper-arrow">→</span>
             </button>
 
@@ -261,7 +263,9 @@ export function Hero() {
 
         <ul className="hero-facts" data-reveal>
           {CHIPS.map((c) => (
-            <li key={c}>{c}</li>
+            <li key={c} data-scramble>
+              {c}
+            </li>
           ))}
         </ul>
 
@@ -269,7 +273,7 @@ export function Hero() {
             the surname crosses its shoulder, so the two read as one lockup
             rather than a photo parked beside some type. Last in the DOM so the
             shared reveal stagger lands it after the name rather than before. */}
-        <div className="hero-portrait" data-reveal>
+        <div className="hero-portrait" data-reveal data-parallax="-0.14">
           {/* one plate, desaturated in CSS — hover lets its own colour back in
               rather than crossfading a second copy of the same photograph */}
           <Image
@@ -280,6 +284,13 @@ export function Hero() {
             sizes="(max-width: 900px) 80vw, 46vw"
             priority
           />
+          {/* the misregistered plates: two more prints of the same photograph,
+              one red and one cyan, that slide against the pointer while he is
+              lit — the way a two-colour print goes off-register */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="portrait-ghost ghost-r" src={asset("/assets/portrait-color.webp")} alt="" aria-hidden="true" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="portrait-ghost ghost-c" src={asset("/assets/portrait-color.webp")} alt="" aria-hidden="true" />
         </div>
       </div>
 
@@ -289,11 +300,14 @@ export function Hero() {
         <Band words={[...MARQUEE].reverse()} />
       </div>
 
-      <div className="container section">
+      <div className="container section" data-scope>
         <SectionHead title="What I do" meta="Three things, mostly" />
         <div className="cols-3 is-ruled">
           {WHAT_I_DO.map((card, i) => (
-            <article className="col-item" data-reveal key={card.title}>
+            <article className="col-item" data-reveal="wipe" key={card.title}>
+              <span className="col-ghost" data-parallax={String(0.05 + i * 0.04)} aria-hidden="true">
+                {String(i + 1).padStart(2, "0")}
+              </span>
               <span className="col-head">
                 <span className="col-index">
                   {String(i + 1).padStart(2, "0")}
@@ -320,14 +334,16 @@ export function Hero() {
               <button
                 className="work-row"
                 onClick={nav("projects")}
-                data-cursor
-                data-reveal
+                data-cursor="open"
+                data-reveal="wipe"
               >
                 <span className="work-no">
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <span className="work-title">{project.title}</span>
-                <span className="work-tags">{project.tags.join(" · ")}</span>
+                <span className="work-tags" data-scramble>
+                  {project.tags.join(" · ")}
+                </span>
                 <span className="work-go" aria-hidden="true">
                   →
                 </span>
@@ -354,7 +370,9 @@ export function Hero() {
                 <span data-count={s.count}>0</span>
                 {s.suffix}
               </span>
-              <span className="stat-label">{s.label}</span>
+              <span className="stat-label" data-scramble>
+                {s.label}
+              </span>
             </div>
           ))}
           <ComboStat />
@@ -362,6 +380,30 @@ export function Hero() {
       </div>
 
       <Bubbles />
+
+      {/* the sign-off: a line of outline type that slides across the page as
+          you scroll through it, with the one filled word in red */}
+      <div className="outro" data-scope aria-label="Let's build something together">
+        <div className="outro-track" data-drift="-38" aria-hidden="true">
+          {[0, 1].map((k) => (
+            <span key={k}>
+              Let&apos;s build <em>something</em> together&nbsp;—&nbsp;
+            </span>
+          ))}
+        </div>
+        <div className="container outro-cta">
+          <p data-reveal data-scrub-words>
+            Got an idea, an internship, or a bug you want to argue about? The inbox
+            is open, and replies are usually quick.
+          </p>
+          <button className="btn btn-primary magnetic" onClick={nav("contact")} data-reveal>
+            <Roll>Say hello</Roll>
+            <span className="arrow" aria-hidden="true">
+              →
+            </span>
+          </button>
+        </div>
+      </div>
     </>
   );
 }

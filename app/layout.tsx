@@ -34,7 +34,7 @@ const favicon =
 export const metadata: Metadata = {
   title: "Pratyush Garg — Portfolio",
   description:
-    "Pratyush Garg — B.Tech CS student at Faculty of Technology, DU. I build things for the web.",
+    "Pratyush Garg, B.Tech CS student at the Faculty of Technology, DU. I build things for the web, mostly late at night.",
   icons: { icon: favicon },
 };
 

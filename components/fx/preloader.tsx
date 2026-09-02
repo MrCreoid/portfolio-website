@@ -1,38 +1,33 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useMounted } from "@/hooks/use-mounted";
-import LiquidLoading from "@/components/ui/liquid-loader";
+import { useEffect, useRef } from "react";
 import { prefersReducedMotion } from "@/lib/fx";
 
 const SESSION_KEY = "pg-intro";
 const HOLD = 1900;
 const SETTLE = 170;
-const WIPE = 760;
+const WIPE = 1000;
+
+/* the count runs fast, hesitates twice the way a real load does, and lands */
+const curve = (p: number) => {
+  const e = 1 - Math.pow(1 - p, 3);
+  return e + Math.sin(p * Math.PI * 3) * 0.035 * (1 - p);
+};
 
 /**
- * The intro: the liquid loader runs while the site settles, then the curtain
- * wipes up off the top edge. Once per session, and skipped outright under
- * reduced-motion — the loader is decorative, so it must never gate the content.
+ * The intro: a counter in display type climbs to 100 while the site settles
+ * behind five slats of ink; then the slats lift, one after another, off the
+ * top edge. Once per session, and skipped outright under reduced motion — the
+ * loader is decorative, so it must never gate the content.
  *
- * The three beats are deliberately separated. The old version called `onDone`
- * and started the wipe in the same tick, so the page's whole entrance — 58
- * reveal targets measured, observers wired, the scroll lock released — ran as
- * one synchronous lump *during* the clip-path transition, which is what made
- * it stall and then snap open. Now the loader stops animating and fades, the
- * site builds itself behind the curtain while nothing else is moving, and only
- * then does the curtain lift.
+ * The beats are separated on purpose. `onDone` fires at HOLD so the page can
+ * lay itself out (reveal targets measured, observers wired, the scroll lock
+ * released) with nothing else moving, and only then do the slats go.
  */
 export function Preloader({ onDone }: { onDone: () => void }) {
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const mounted = useMounted();
-  const [stopped, setStopped] = useState(false);
-  // derived rather than set from inside the effect: a returning visitor never
-  // starts the wave at all, instead of starting it and switching it off
-  const skip =
-    mounted &&
-    (sessionStorage.getItem(SESSION_KEY) !== null || prefersReducedMotion());
-  const running = mounted && !skip && !stopped;
+  const numRef = useRef<HTMLSpanElement | null>(null);
+  const barRef = useRef<HTMLElement | null>(null);
   // the intro must run exactly once, so it reads the callback through a ref
   // rather than depending on its identity
   const done = useRef(onDone);
@@ -52,18 +47,23 @@ export function Preloader({ onDone }: { onDone: () => void }) {
     // NB: the "already seen" flag is written when the intro *finishes*, not
     // here. StrictMode mounts effects twice in dev, and setting it up front
     // made the second mount skip the animation entirely.
-    // the scroll lock is owned by <Site>, which knows about the mobile menu too
+
+    const t0 = performance.now();
+    let raf = 0;
+    const count = (t: number) => {
+      const p = Math.min((t - t0) / (HOLD - 140), 1);
+      const v = Math.round(Math.max(0, Math.min(1, curve(p))) * 100);
+      if (numRef.current) numRef.current.textContent = String(v).padStart(3, "0");
+      if (barRef.current) barRef.current.style.transform = `scaleX(${v / 100})`;
+      if (p < 1) raf = requestAnimationFrame(count);
+    };
+    raf = requestAnimationFrame(count);
 
     const timers = [
-      // 1. stop the wave and fade it out; hand the page over so it can lay
-      //    itself out under the curtain, with the loader no longer re-rendering
-      //    seven bars every 32ms against it
       setTimeout(() => {
         root.classList.add("is-exiting");
-        setStopped(true);
         done.current();
       }, HOLD),
-      // 2. once that work has settled, lift the curtain on a quiet main thread
       setTimeout(() => {
         root.classList.add("is-revealing");
         sessionStorage.setItem(SESSION_KEY, "1");
@@ -71,14 +71,37 @@ export function Preloader({ onDone }: { onDone: () => void }) {
       setTimeout(() => root.classList.add("is-gone"), HOLD + SETTLE + WIPE),
     ];
 
-    return () => timers.forEach(clearTimeout);
+    return () => {
+      cancelAnimationFrame(raf);
+      timers.forEach(clearTimeout);
+    };
   }, []);
 
   return (
     <div className="preloader" ref={rootRef} aria-hidden="true">
-      <div className="forge-stack">
-        <LiquidLoading running={running} />
-        <div className="forge-name is-lit">PRATYUSH&nbsp;GARG</div>
+      <div className="pre-slats">
+        <i />
+        <i />
+        <i />
+        <i />
+        <i />
+      </div>
+      <div className="pre-grid" />
+      <div className="pre-body">
+        <span className="pre-tag">
+          Pratyush Garg <em>Portfolio — 2026</em>
+        </span>
+        <span className="pre-status">
+          <i />
+          opening the archive
+        </span>
+        <div className="pre-count">
+          <span ref={numRef}>000</span>
+          <em>%</em>
+        </div>
+        <div className="pre-bar">
+          <i ref={barRef} />
+        </div>
       </div>
     </div>
   );

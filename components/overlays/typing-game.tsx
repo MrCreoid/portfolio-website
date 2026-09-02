@@ -97,7 +97,7 @@ export function TypingGame() {
         localStorage.setItem(BEST_KEY, String(finalWpm));
         setBest(finalWpm);
         confetti(innerWidth / 2, innerHeight / 2.5, 50, cozy);
-        toast(`new personal best — ${finalWpm} wpm`);
+        toast(`new personal best: ${finalWpm} wpm`);
       } else {
         confetti(innerWidth / 2, innerHeight / 2.5, 20, cozy);
       }
@@ -123,7 +123,7 @@ export function TypingGame() {
         <p className="game-kicker">{"// secret level unlocked"}</p>
         <h3>Typing Speed Test</h3>
         <p className="game-sub">
-          type the line below — the clock starts on your first key
+          type the line below. the clock starts on your first key
         </p>
 
         <div

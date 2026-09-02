@@ -59,23 +59,23 @@ export const WHAT_I_DO = [
   {
     icon: Code2,
     title: "Web experiences",
-    body: "Interactive, animated sites built by hand — HTML, CSS and JavaScript, no page builders. I'd rather write the thing than configure it.",
+    body: "Interactive, animated sites built by hand in HTML, CSS and JavaScript. No page builders. I'd rather write the thing than configure it.",
   },
   {
     icon: ChartColumn,
     title: "Data & Python",
-    body: "Mostly NumPy and Pandas. Hand me a messy CSV and I'll lose an afternoon to it quite happily.",
+    body: "Mostly NumPy and Pandas. Hand me a messy CSV and I'll happily lose an afternoon to it.",
   },
   {
     icon: Rocket,
     title: "Always learning",
-    body: "Right now that means C, and the parts of JavaScript I had been avoiding. Second year starts August 2026.",
+    body: "Right now that means C, and the bits of JavaScript I'd been avoiding. Second year starts August 2026.",
   },
 ];
 export const STATS = [
   { count: 47, suffix: "", label: "tabs open right now" },
   { count: 12, suffix: "+", label: "easter eggs hidden here" },
-  { count: 60, suffix: "+", label: "animations on this site" },
+  { count: 90, suffix: "+", label: "animations on this site" },
 ];
 /* ---------------- about ---------------- */
 export const CHIPS = [
@@ -95,19 +95,18 @@ export const TIMELINE = [
   },
   {
     date: "Aug 2025",
-    title: "B.Tech Computer Science, Faculty of Technology — University of Delhi",
-    body: "First print(\"hello world\") in a DU lab. Coding stopped being a subject on a timetable somewhere around week three.",
-    code: 'print("hello world")',
+    title: "B.Tech Computer Science, Faculty of Technology, University of Delhi",
+    body: "Started the degree. The coding habit was already there; college gave it deadlines, a syllabus, and other people who cared about it.",
   },
   {
     date: "2025 — 2026",
     title: "Started shipping, not just studying",
-    body: "Attendance Tracker and Spent — two tools built because I actually wanted them, then put in front of other people. React and Firebase learned by needing them.",
+    body: "Attendance Tracker and Spent: two tools I built because I wanted them, then put in front of other people. I learned React and Firebase by needing them.",
   },
   {
     date: "Aug 2026",
     title: "Second year begins",
-    body: "Going deeper into C and JavaScript, and further into data with NumPy and Pandas.",
+    body: "More C, more JavaScript, and more data work with NumPy and Pandas.",
   },
 ];
 /* The skills index. Read as an archive table: a numeral, the entry, one line
@@ -117,12 +116,12 @@ export type Skill = { name: string; note: string; status: string };
 export const SKILLS: Skill[] = [
   {
     name: "HTML & CSS",
-    note: "Grid, flexbox and custom properties, written by hand — including the 3,000-line stylesheet behind this page.",
+    note: "Grid, flexbox and custom properties, written by hand. That includes the 4,000-line stylesheet behind this page.",
     status: "daily",
   },
   {
     name: "JavaScript",
-    note: "The DOM, async, canvas and the browser platform underneath the frameworks. Most of the interaction on this site is plain JS.",
+    note: "The DOM, async, canvas, and the browser underneath the frameworks. Most of what moves on this site is plain JS.",
     status: "daily",
   },
   {
@@ -132,7 +131,7 @@ export const SKILLS: Skill[] = [
   },
   {
     name: "React & Next.js",
-    note: "Components, hooks and app-router builds. Learned by needing them — Spent and Attendance Tracker both run on this stack.",
+    note: "Components, hooks and app-router builds. Spent and Attendance Tracker both run on this stack, so I learned it by needing it.",
     status: "building",
   },
   {
@@ -160,13 +159,13 @@ export const BEYOND = [
   {
     icon: Clapperboard,
     title: "Cinephile",
-    body: "Movies & series, religiously. Ratings live on ",
+    body: "Movies and series, religiously. Ratings live on ",
     link: { label: "letterboxd · @MrCreoid ↗", href: LINKS.letterboxd },
   },
   {
     icon: Guitar,
     title: "Guitarist",
-    body: "Riffs between builds. The guitar gets picked up exactly when the bugs start winning.",
+    body: "Riffs between builds. The guitar comes out exactly when the bugs start winning.",
   },
   {
     icon: MoonStar,
@@ -175,7 +174,7 @@ export const BEYOND = [
   },
 ];
 export const FLIP_FACTS = [
-  "certified cinephile — movies & series, religiously",
+  "certified cinephile. movies and series, religiously",
   "plays guitar when the bugs win",
   "the master plan? genuinely figuring it out",
 ];
@@ -198,7 +197,7 @@ export const PROJECTS: Project[] = [
     id: "portfolio",
     kind: "project",
     title: "This portfolio",
-    body: "The site you're reading — Next.js, TypeScript and a hand-written stylesheet. View routing, a canvas constellation, physics toys, and more secrets than it admits to.",
+    body: "The site you're reading. Next.js, TypeScript and a hand-written stylesheet, with view routing, a canvas constellation, physics toys, and more secrets than it admits to.",
     tags: ["Next.js", "TypeScript", "Tailwind CSS"],
     cat: "web",
     url: asset("/"),
@@ -219,7 +218,7 @@ export const PROJECTS: Project[] = [
     id: "spent",
     kind: "project",
     title: "Spent",
-    body: "An expense and debt tracker that behaves like a native iOS app. Local-first, installable as a PWA, synced across devices.",
+    body: "An expense and debt tracker that feels like a native iOS app. Works offline, installs as a PWA, syncs across devices.",
     tags: ["Next.js", "React", "Tailwind CSS", "Firebase"],
     cat: "web",
     url: "https://mrcreoid.github.io/spent/",
@@ -245,12 +244,12 @@ export const ACHIEVEMENTS: Achievement[] = [];
 export const QUICK_CHIPS = [
   {
     label: "internship",
-    msg: "Hi Pratyush! I'd love to talk about an internship opportunity — ",
+    msg: "Hi Pratyush! I'd like to talk about an internship. ",
   },
-  { label: "collab", msg: "Hey! I have an idea we could build together — " },
+  { label: "collab", msg: "Hey! I have an idea we could build together. " },
   {
     label: "just saying hi",
-    msg: "Hey Pratyush, just saying hi! Found your site and ",
+    msg: "Hey Pratyush, just saying hi. Found your site and ",
   },
 ];
 /* ---------------- secret typing game ---------------- */
@@ -264,5 +263,5 @@ export const GAME_LINES = [
   'git commit -m "fixed it for real this time"',
   "Do. Or do not. There is no try {}.",
   "df.groupby('mood').agg({'bugs': 'sum'})",
-  "I'll be back. — me, closing the editor at 3 a.m.",
+  "I'll be back. (me, closing the editor at 3 a.m.)",
 ];

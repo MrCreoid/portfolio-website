@@ -1,6 +1,6 @@
 "use client";
 
-import type { MouseEvent } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import { NAV, type View } from "@/lib/data";
 import { usePortfolio } from "@/components/portfolio-provider";
 
@@ -13,6 +13,17 @@ export function useNavClick() {
   };
 }
 
+/** A label that rolls up out of its own box on hover, a copy rolling in
+ *  under it. The parent's :hover drives it, so it works inside any control. */
+export function Roll({ children }: { children: ReactNode }) {
+  return (
+    <span className="roll">
+      <span>{children}</span>
+      <span aria-hidden="true">{children}</span>
+    </span>
+  );
+}
+
 export function Header() {
   const { view, menuOpen, setMenuOpen } = usePortfolio();
   const nav = useNavClick();
@@ -23,19 +34,22 @@ export function Header() {
         <span className="logo-mark">
           P<em>G</em>
         </span>
-        <span className="logo-sub">Portfolio — 2026</span>
+        <span className="logo-sub" data-scramble>
+          Portfolio — 2026
+        </span>
       </button>
 
       {/* the nav and the burger share column 3; only one is ever visible */}
       <nav className="nav" aria-label="Main">
-        {NAV.map((item) => (
+        {NAV.map((item, i) => (
           <button
             key={item.id}
             className={`nav-link${view === item.id ? " is-active" : ""}`}
             onClick={nav(item.id)}
             aria-current={view === item.id ? "page" : undefined}
           >
-            {item.label}
+            <i aria-hidden="true">0{i + 1}</i>
+            <Roll>{item.label}</Roll>
           </button>
         ))}
         <span className="nav-indicator" aria-hidden="true" />
@@ -50,6 +64,9 @@ export function Header() {
         <span />
         <span />
       </button>
+
+      {/* how far down the page you are, as a rule under the header */}
+      <span className="progress-rule" aria-hidden="true" />
     </header>
   );
 }
@@ -63,13 +80,14 @@ export function MobileMenu() {
       className={`mobile-menu${menuOpen ? " is-open" : ""}`}
       aria-hidden={!menuOpen}
     >
-      {NAV.map((item) => (
+      {NAV.map((item, i) => (
         <button
           key={item.id}
           className={`m-link${view === item.id ? " is-active" : ""}`}
           onClick={nav(item.id)}
           tabIndex={menuOpen ? 0 : -1}
         >
+          <i aria-hidden="true">0{i + 1}</i>
           {item.label}
         </button>
       ))}
