@@ -60,3 +60,6 @@ EASTER_EGGS.md
 .impeccable/
 .agents/
 skills-lock.json
+
+# verification screenshots
+.verify/
