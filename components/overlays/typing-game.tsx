@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GAME_LINES } from "@/lib/data";
+import { findEgg } from "@/lib/eggs";
 import { confetti, prefersReducedMotion } from "@/lib/fx";
 import { usePortfolio } from "@/components/portfolio-provider";
 
@@ -9,7 +10,7 @@ const BEST_KEY = "pg-best-wpm";
 
 /** The secret level: add ?play to the URL. */
 export function TypingGame() {
-  const { gameOpen, setGameOpen, toast, cozy } = usePortfolio();
+  const { gameOpen, setGameOpen, gameOpenerRef, toast, cozy } = usePortfolio();
   const [target, setTarget] = useState(GAME_LINES[0]);
   const [typed, setTyped] = useState("");
   const [wpm, setWpm] = useState(0);
@@ -43,12 +44,19 @@ export function TypingGame() {
    * setState inside an effect.
    */
   const openGame = useCallback(() => {
+    findEgg("game");
     const stored = localStorage.getItem(BEST_KEY);
     setBest(stored ? Number(stored) : null);
     newLine();
     setGameOpen(true);
     setTimeout(() => inputRef.current?.focus(), 350);
   }, [newLine, setGameOpen]);
+
+  /* the palette's "play the typing test" comes through here, so it gets a
+     seeded round rather than whatever was left on screen last time */
+  useEffect(() => {
+    gameOpenerRef.current = openGame;
+  }, [gameOpenerRef, openGame]);
 
   /* the secret door: anything "play"-ish in the URL */
   useEffect(() => {

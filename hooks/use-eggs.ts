@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { LINKS } from "@/lib/data";
+import { findEgg } from "@/lib/eggs";
 import { matrixRain, rand } from "@/lib/fx";
 import { usePortfolio } from "@/components/portfolio-provider";
 
@@ -37,6 +38,7 @@ export function useTypedSecrets() {
       if (k === "r") {
         clearTimeout(resumeTimer);
         resumeTimer = setTimeout(() => {
+          findEgg("resume");
           toast("you found it. opening the résumé");
           setTimeout(() => open(LINKS.resume, "_blank"), 500);
         }, 750);
@@ -45,22 +47,26 @@ export function useTypedSecrets() {
       if (keyBuffer.endsWith("pratyush")) {
         keyBuffer = "";
         clearTimeout(resumeTimer);
+        findEgg("matrix");
         toast("wake up, neo", 3000);
         matrixRain(cozyRef.current);
       }
       if (keyBuffer.endsWith("patty")) {
         keyBuffer = "";
+        findEgg("cozy");
         const next = !cozyRef.current;
         setCozy(next);
         announceCozy(next, toast);
       }
       if (keyBuffer.endsWith("grid")) {
         keyBuffer = "";
+        findEgg("grid");
         const on = document.body.classList.toggle("show-grid");
         toast(on ? "twelve columns. always were." : "grid off");
       }
       if (keyBuffer.endsWith("sudo")) {
         keyBuffer = "";
+        findEgg("sudo");
         toast("ah, a person of culture. permissions granted.");
         document.body.classList.add("sudo-gold");
         setTimeout(() => document.body.classList.remove("sudo-gold"), 4000);
@@ -153,6 +159,7 @@ export function useKonami(onAchievement: () => void) {
       if (pos !== SEQ.length) return;
       pos = 0;
 
+      findEgg("crt");
       const next = !crtRef.current;
       crtRef.current = next;
       setCrt(next);

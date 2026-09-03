@@ -24,6 +24,7 @@ import {
   Toast,
   Transition,
 } from "@/components/overlays/overlays";
+import { Palette } from "@/components/overlays/palette";
 import { TypingGame } from "@/components/overlays/typing-game";
 import {
   useBentoSpotlight,
@@ -146,6 +147,7 @@ function Site() {
       <CrtOverlay />
       <GridOverlay />
       <TypingGame />
+      <Palette />
     </>
   );
 }

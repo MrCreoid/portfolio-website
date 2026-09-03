@@ -4675,3 +4675,154 @@ body.is-idle .hero-title .h-letter > i {
     translate: 0 0;
   }
 }
+
+/* ---------- the command palette ---------- */
+/* ⌘K. A real <dialog> in the top layer, so nothing on the page can sit over
+   it and Esc is the browser's job, not ours. Deliberately un-animated: a
+   control you hit a dozen times a day should be there on the frame you asked
+   for it, not 200ms later. */
+.pal {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: clamp(3rem, 14vh, 9rem) clamp(0.8rem, 3vw, 2rem) 2rem;
+  border: 0;
+  background: transparent;
+  color: var(--paper);
+  overflow: hidden;
+}
+/* only [open] — the UA's `dialog:not([open]) { display: none }` still has to win */
+.pal[open] {
+  display: grid;
+  align-content: start;
+  justify-items: center;
+}
+.pal::backdrop {
+  background: rgba(8, 5, 6, 0.9);
+}
+/* the square has no way into the top layer, so the native pointer comes back
+   inside the box — the same trade the preview frame makes */
+.pal,
+.pal * {
+  cursor: auto !important;
+}
+.pal-row,
+.pal-row * {
+  cursor: pointer !important;
+}
+body:has(.pal[open]) .cursor-dot,
+body:has(.pal[open]) .cursor-ring {
+  opacity: 0;
+}
+
+.pal-box {
+  width: min(38rem, 100%);
+  background: var(--ink);
+  border: 1px solid var(--paper);
+}
+.pal-input,
+.pal-kicker {
+  display: block;
+  width: 100%;
+  padding: 1rem 1.1rem;
+  border-bottom: 1px solid var(--rule-2);
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  color: var(--paper);
+}
+.pal-input::placeholder {
+  color: var(--paper-4);
+}
+/* the box is already a frame and the field is focused from the first frame —
+   a standing red ring around it would just be a second border. The caret
+   carries the focus instead, the way the contact fields do. */
+.pal-input:focus,
+.pal-input:focus-visible {
+  outline: none;
+}
+.pal-input {
+  caret-color: var(--red);
+}
+.pal-kicker {
+  font-size: 0.62rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+.pal-list {
+  max-height: min(31rem, 56vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.pal-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 0.62rem 1.1rem;
+  border-bottom: 1px solid var(--rule);
+}
+.pal-row:last-child {
+  border-bottom: 0;
+}
+.pal-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.92rem;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+.pal-meta {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--paper-3);
+  white-space: nowrap;
+}
+/* the selection is a printed reverse, not a highlight — no transition, the
+   caret has to keep up with a held arrow key */
+.pal-row.is-on {
+  background: var(--paper);
+  color: var(--ink);
+}
+.pal-row.is-on .pal-meta {
+  color: var(--ink);
+}
+/* an egg still out there shows its blocked-out name and the hint only.
+   Scoped to the ledger: on the command page every row is un-found, and a
+   dimmed label goes invisible the moment the selection reverses it. */
+.pal-list.is-eggs .pal-row:not(.is-found) .pal-label {
+  color: var(--paper-4);
+  letter-spacing: 0.06em;
+}
+.pal-empty {
+  padding: 1.3rem 1.1rem;
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  color: var(--paper-2);
+}
+.pal-foot {
+  display: flex;
+  gap: 1.4rem;
+  padding: 0.7rem 1.1rem;
+  border-top: 1px solid var(--rule-2);
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--paper-4);
+}
+@media (max-width: 34em) {
+  .pal-row {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}

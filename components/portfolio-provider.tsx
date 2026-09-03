@@ -34,6 +34,10 @@ type PortfolioValue = {
   openLightbox: (t: LightboxTarget) => void;
   gameOpen: boolean;
   setGameOpen: (v: boolean) => void;
+  /** the typing game seeds its own round, so opening it goes through the
+      opener it registers here rather than through `setGameOpen` */
+  gameOpenerRef: RefObject<() => void>;
+  playGame: () => void;
   menuOpen: boolean;
   setMenuOpen: (v: boolean | ((p: boolean) => boolean)) => void;
   toastMsg: string;
@@ -70,6 +74,9 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
 
   const transitionRef = useRef<HTMLDivElement | null>(null);
   const animating = useRef(false);
+
+  const gameOpenerRef = useRef<() => void>(() => setGameOpen(true));
+  const playGame = useCallback(() => gameOpenerRef.current(), []);
 
   const toast = useCallback((msg: string, ms = 2400) => {
     setToastMsg(msg);
@@ -194,13 +201,15 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       openLightbox: setLightbox,
       gameOpen,
       setGameOpen,
+      gameOpenerRef,
+      playGame,
       menuOpen,
       setMenuOpen,
       toastMsg,
       toastShown,
       transitionRef,
     }),
-    [view, goTo, openDeepLink, toast, cozy, crt, preview, lightbox, gameOpen, menuOpen, toastMsg, toastShown],
+    [view, goTo, openDeepLink, toast, playGame, cozy, crt, preview, lightbox, gameOpen, menuOpen, toastMsg, toastShown],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

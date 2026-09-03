@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { findEgg } from "@/lib/eggs";
 import { confetti } from "@/lib/fx";
 import { useBottomSecret } from "@/hooks/use-ambient";
 import { usePortfolio } from "@/components/portfolio-provider";
@@ -22,6 +23,7 @@ export function Footer() {
     if (clicks.current <= 4) {
       toast(REPLIES[clicks.current - 1]);
     } else {
+      findEgg("nope");
       confetti(e.clientX, e.clientY - 20, 50, cozy);
       toast("fine. you win.");
       clicks.current = 0;

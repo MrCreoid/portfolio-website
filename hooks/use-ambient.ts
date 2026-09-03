@@ -2,6 +2,7 @@
 
 import { useEffect, type RefObject } from "react";
 import type WebGLFluidEnhanced from "webgl-fluid-enhanced";
+import { findEgg } from "@/lib/eggs";
 import {
   SPRING,
   hasFinePointer,
@@ -422,6 +423,7 @@ export function useDvdScreensaver() {
 
     const start = () => {
       if (overlay || document.hidden) return;
+      findEgg("dvd");
       overlay = document.createElement("div");
       overlay.className = "dvd";
       overlay.innerHTML = `<span class="dvd-logo">PG</span><span class="dvd-hint">move anything to wake the site</span>`;
@@ -562,6 +564,7 @@ export function useBottomSecret(onReveal: () => void) {
         holdTimer = setTimeout(() => {
           if (innerHeight + scrollY >= document.body.offsetHeight - 4) {
             shown = true;
+            findEgg("bottom");
             onReveal();
           }
         }, 700);
