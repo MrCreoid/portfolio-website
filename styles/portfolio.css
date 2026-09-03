@@ -39,17 +39,6 @@ html:root {
   --red-2: #ff5a4c;
   --red-deep: #8e0c20;
 
-  /* legacy aliases — the toys and overlays still read these */
-  --bg: var(--ink);
-  --bg-2: var(--ink-2);
-  --surface: var(--ink-2);
-  --surface-2: var(--ink-3);
-  --line: var(--rule);
-  --text: var(--paper);
-  --muted: var(--paper-3);
-  --accent: var(--red);
-  --accent-2: var(--red-2);
-  --accent-3: var(--red-deep);
   --glow: rgba(255, 34, 51, 0.3);
 
   --font-display: var(--font-archivo), "Archivo", "Helvetica Neue", sans-serif;
@@ -69,6 +58,24 @@ html:root {
   --ease-smooth: cubic-bezier(0.65, 0, 0.35, 1);
   --ease-slam: cubic-bezier(0.76, 0, 0.24, 1);
   --snap: 160ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Legacy aliases — the toys and overlays still read these. They live on
+   `body`, NOT on the root: a custom property is substituted at the element
+   that declares it, so `--accent: var(--red)` written at :root would bake in
+   the default red and a theme setting `--red` on body could never reach it.
+   Declared here, they resolve against whichever `--red` body ended up with. */
+body {
+  --bg: var(--ink);
+  --bg-2: var(--ink-2);
+  --surface: var(--ink-2);
+  --surface-2: var(--ink-3);
+  --line: var(--rule);
+  --text: var(--paper);
+  --muted: var(--paper-3);
+  --accent: var(--red);
+  --accent-2: var(--red-2);
+  --accent-3: var(--red-deep);
 }
 
 /* Lenis owns the scroll; these two lines are all it needs from the page */
@@ -1416,7 +1423,6 @@ body.is-locked .header {
    would otherwise swallow every event over the right half of the hero, the
    portrait included */
 .h-letter,
-.h-dot,
 .hero-dot,
 .hero-sub,
 .hero-cta .btn,
@@ -1436,7 +1442,7 @@ body.is-locked .header {
   height: auto;
   /* graded down to the ink plate; hover releases the photograph's own colour,
      which is already this site's red because it was shot at sunset */
-  filter: grayscale(1) contrast(1.16) brightness(0.94);
+  filter: var(--photo-ink, grayscale(1) contrast(1.16) brightness(0.94));
   transition: filter 0.55s var(--ease-out);
   /* a hard crop, not a dissolve: the figure is cut off square at the rule,
      the way a plate is cropped to its column in print */
@@ -1446,7 +1452,7 @@ body.is-locked .header {
    but the photograph inside it is a cut-out, and hovering the empty corner of a
    box is not hovering the person */
 .hero-portrait.is-lit img {
-  filter: grayscale(0) contrast(1.04) brightness(1);
+  filter: var(--photo-ink-lit, grayscale(0) contrast(1.04) brightness(1));
 }
 .hero-portrait > img {
   animation: breathe 7s ease-in-out infinite;
@@ -1489,6 +1495,7 @@ body.is-locked .header {
 .portrait-gl {
   position: absolute;
   display: block;
+  filter: var(--photo-ink, none);
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.5s var(--ease-out);
@@ -1588,8 +1595,7 @@ body.is-locked .header {
 .hero-dot {
   color: var(--red);
 }
-.h-letter,
-.h-dot {
+.h-letter {
   display: inline-block;
   cursor: grab;
   will-change: transform;
@@ -1608,8 +1614,7 @@ body.is-locked .header {
 .hero-title:not(.is-lit) .hero-dot {
   opacity: 0;
 }
-.h-letter.is-grabbed,
-.h-dot.is-grabbed {
+.h-letter.is-grabbed {
   cursor: grabbing;
   color: var(--red);
   z-index: 5;
@@ -2064,60 +2069,82 @@ body.is-locked .header {
   }
 }
 
-/* ---------- the chapter ---------- */
-/* The same three .col-items, but each given a page of its own rather than a
-   cell in a row: a field, its numeral set huge behind it, and one sentence of
-   serif that types itself as the field arrives. Ordinary vertical scroll — the
-   section is authored by the size of the type, not by holding the page still. */
-.chapter {
-  position: relative;
-}
-.chapter .cols-3.is-ruled {
-  display: block;
-}
-.chapter .cols-3.is-ruled .col-item {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: clamp(20rem, 58vh, 34rem);
-  padding-inline: 0;
-  padding-block: clamp(2rem, 5vw, 4rem);
-  border-left: 0;
+/* ---------- what I do ---------- */
+/* Three disciplines, read at a glance. This was three full-height pages with
+   a sentence that typed itself as the field arrived, which meant you never
+   saw more than one and a half of them and the one you were looking at was
+   usually a sentence cut off mid-word. It is an index now, in the language
+   the skills and the work are already set in. */
+.wid {
   border-top: 1px solid var(--rule);
-  background: none;
 }
-.chapter .cols-3.is-ruled .col-item:first-child {
-  border-top: 0;
-  padding-top: 0;
+.wid-row {
+  display: grid;
+  grid-template-columns: 4rem minmax(0, 17rem) minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0 clamp(1rem, 3vw, 2.5rem);
+  padding: clamp(1.5rem, 3.2vw, 2.6rem) 0;
+  border-bottom: 1px solid var(--rule);
+  transition: background var(--snap);
 }
-/* the folio numeral, at the size of the field and sitting behind it */
-.chapter .col-ghost {
-  inset: 50% auto auto auto;
-  right: 0;
-  translate: 0 -50%;
-  font-size: clamp(9rem, 34vw, 26rem);
-  line-height: 0.78;
-  color: rgb(var(--paper-rgb) / 0.045);
+.wid-row:hover {
+  background: rgb(var(--paper-rgb) / 0.03);
 }
-.chapter .col-item:hover .col-ghost {
-  color: rgb(var(--red-rgb) / 0.1);
+.wid-no {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--red);
+  transition:
+    background var(--snap),
+    color var(--snap),
+    padding var(--snap);
 }
-.chapter .col-head {
-  max-width: 34ch;
+/* the numeral takes the second plate on contact, the way a passed date does */
+.wid-row:hover .wid-no {
+  background: var(--red);
+  color: var(--ink);
+  padding: 0.2em 0.45em;
+  margin-left: -0.45em;
 }
-.chapter .col-item h3 {
-  font-size: clamp(1.8rem, 5.2vw, 4rem);
-}
-.chapter .col-item:hover h3 {
-  translate: 0 0;
-}
-/* the copy is set as editorial serif and types itself as the field arrives */
-.chapter .col-item p {
-  font-family: var(--font-serif);
-  font-size: clamp(1.15rem, 2.4vw, 2rem);
-  line-height: 1.28;
+.wid-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.5rem, 3.4vw, 2.6rem);
+  line-height: 0.95;
+  letter-spacing: -0.032em;
+  text-transform: uppercase;
   color: var(--paper);
-  max-width: 34ch;
+  transition: translate 0.4s var(--ease-out-hard);
+}
+.wid-row:hover .wid-name {
+  translate: 0.5rem 0;
+}
+.wid-note {
+  font-family: var(--font-serif);
+  font-size: clamp(1.05rem, 1.5vw, 1.28rem);
+  line-height: 1.42;
+  color: var(--paper-2);
+  max-width: 54ch;
+}
+.wid-mark {
+  align-self: center;
+  color: var(--red);
+  opacity: 0.4;
+  transition: opacity var(--snap);
+}
+.wid-row:hover .wid-mark {
+  opacity: 1;
+}
+@media (max-width: 62em) {
+  .wid-row {
+    grid-template-columns: 2.6rem minmax(0, 1fr) auto;
+  }
+  .wid-note {
+    grid-column: 2 / -1;
+    margin-top: 0.75rem;
+  }
 }
 
 /* ---------- stats ---------- */
@@ -2588,11 +2615,11 @@ body.is-locked .header {
   /* in colour, unlike the hero: the hero portrait is an ink plate that
      releases its colour on hover, and two grey prints of one shoot read as
      the same photograph twice. This one is the photograph. */
-  filter: contrast(1.04);
+  filter: var(--photo-ink, contrast(1.04));
   transition: filter 0.5s var(--ease-out);
 }
 .photo-frame:hover .photo-img {
-  filter: contrast(0.98) brightness(1.05);
+  filter: var(--photo-ink-lit, contrast(0.98) brightness(1.05));
 }
 .flip-back h4 {
   font-family: var(--font-mono);
@@ -4333,16 +4360,113 @@ body.is-locked .header {
   width: 7px;
   height: 7px;
 }
-.matrix-canvas {
+/* the press run: type the name and the page is caught mid-print — the second
+   plate is out of register, and the crop marks and colour bar the trim would
+   have cut off are still on the sheet */
+.press {
   position: fixed;
   inset: 0;
   z-index: 9800;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.6s;
+  transition: opacity 0.5s var(--ease-out);
 }
-.matrix-canvas.is-on {
+.press.is-on {
   opacity: 1;
+}
+/* a crop mark is two hairlines that stop short of the corner they mark */
+.press-crop {
+  position: absolute;
+  width: 42px;
+  height: 42px;
+}
+.press-crop::before,
+.press-crop::after {
+  content: "";
+  position: absolute;
+  background: var(--paper-3);
+}
+.press-crop::before {
+  left: 0;
+  top: 20px;
+  width: 42px;
+  height: 1px;
+}
+.press-crop::after {
+  top: 0;
+  left: 20px;
+  width: 1px;
+  height: 42px;
+}
+.press-tl {
+  left: 18px;
+  top: 18px;
+}
+.press-tr {
+  right: 18px;
+  top: 18px;
+}
+.press-bl {
+  left: 18px;
+  bottom: 18px;
+}
+.press-br {
+  right: 18px;
+  bottom: 18px;
+}
+/* the colour bar, the strip a printer reads density off */
+/* both sit in the bottom band, clear of the nav above and the readout in the
+   corner — the furniture is meant to be at the trim, not over the page */
+.press-bar {
+  position: absolute;
+  right: 74px;
+  bottom: 56px;
+  width: min(22rem, 34vw);
+  height: 12px;
+  background: linear-gradient(
+    to right,
+    var(--paper) 0 12.5%,
+    var(--red) 12.5% 25%,
+    var(--red-deep) 25% 37.5%,
+    #14b8c4 37.5% 50%,
+    #6b7280 50% 62.5%,
+    var(--ink-3) 62.5% 75%,
+    var(--red-2) 75% 87.5%,
+    var(--paper-4) 87.5% 100%
+  );
+}
+.press-slug {
+  position: absolute;
+  left: 74px;
+  bottom: 58px;
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.24em;
+  color: var(--paper-4);
+}
+/* the slip itself: a red plate and a cyan one, printed off the black. One
+   rule reaches every glyph on the page, which is what a plate out of
+   register actually does — no duplicated layers, no second render. */
+body.is-press * {
+  animation: misregister 2.6s var(--ease-out) both;
+}
+@keyframes misregister {
+  0% {
+    text-shadow: none;
+  }
+  12% {
+    text-shadow:
+      9px -3px 0 rgba(255, 34, 51, 0.85),
+      -8px 3px 0 rgba(20, 184, 196, 0.6);
+  }
+  70% {
+    text-shadow:
+      9px -3px 0 rgba(255, 34, 51, 0.85),
+      -8px 3px 0 rgba(20, 184, 196, 0.6);
+  }
+  100% {
+    text-shadow: none;
+  }
 }
 
 /* sudo: golden cursor */
@@ -4363,14 +4487,22 @@ body.is-cozy {
   --red-2: #fbbf24;
   --red-deep: #b45309;
   --paper: #f6ecdd;
+  /* the paper tints and the rules are rgba literals, so they have to be
+     restated or every hairline on the page stays the cold default cream */
+  --paper-2: rgba(246, 236, 221, 0.72);
+  --paper-3: rgba(246, 236, 221, 0.68);
+  --paper-4: rgba(246, 236, 221, 0.52);
+  --rule: rgba(246, 236, 221, 0.15);
+  --rule-2: rgba(246, 236, 221, 0.3);
+  --rule-3: rgba(246, 236, 221, 0.55);
   --ink: #0c0803;
   --ink-2: #140d05;
   --ink-3: #1c1308;
   --glow: rgba(245, 158, 11, 0.3);
 }
-body.is-cozy .bg-shader {
-  filter: hue-rotate(-18deg) saturate(0.72) brightness(0.82);
-}
+/* the field itself is recoloured at the source (see GradientBackground) — a
+   hue-rotate on the red one only ever landed on magenta, which was the one
+   colour the warm room could not have */
 .cozy-flash {
   position: fixed;
   inset: 0;
@@ -4451,6 +4583,16 @@ body.is-crt * {
 body.is-crt .bg-shader,
 body.is-crt .bg-scrim {
   display: none;
+}
+/* The photographs were shot at sunset, so in the default red they simply are
+   the palette. In green phosphor a raw orange plate is the one thing on the
+   page that never got the memo — so both of them print in the ink too. The
+   canvas takes the same filter as the <img>, since the shader releases the
+   photograph's own colour and knows nothing about the theme. */
+body.is-crt {
+  --photo-ink: grayscale(1) sepia(1) hue-rotate(102deg) saturate(2.6) brightness(0.78)
+    contrast(1.06);
+  --photo-ink-lit: grayscale(1) sepia(1) hue-rotate(102deg) saturate(2.6) brightness(0.92);
 }
 .crt-overlay {
   position: fixed;
@@ -4638,7 +4780,7 @@ body.is-idle .hero-title .h-letter > i {
   .noise,
   .cozy-float,
   .trail-bit,
-  .matrix-canvas,
+  .press,
   .dvd,
   .crt-overlay,
   .scroll-hint {
@@ -4727,8 +4869,7 @@ body:has(.pal[open]) .cursor-ring {
   background: var(--ink);
   border: 1px solid var(--paper);
 }
-.pal-input,
-.pal-kicker {
+.pal-input {
   display: block;
   width: 100%;
   padding: 1rem 1.1rem;
@@ -4751,12 +4892,6 @@ body:has(.pal[open]) .cursor-ring {
 }
 .pal-input {
   caret-color: var(--red);
-}
-.pal-kicker {
-  font-size: 0.62rem;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: var(--red);
 }
 .pal-list {
   max-height: min(31rem, 56vh);
@@ -4798,13 +4933,6 @@ body:has(.pal[open]) .cursor-ring {
 }
 .pal-row.is-on .pal-meta {
   color: var(--ink);
-}
-/* an egg still out there shows its blocked-out name and the hint only.
-   Scoped to the ledger: on the command page every row is un-found, and a
-   dimmed label goes invisible the moment the selection reverses it. */
-.pal-list.is-eggs .pal-row:not(.is-found) .pal-label {
-  color: var(--paper-4);
-  letter-spacing: 0.06em;
 }
 .pal-empty {
   padding: 1.3rem 1.1rem;

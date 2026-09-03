@@ -240,13 +240,7 @@ export function Hero() {
           </span>
           <span className="line line-3" data-parallax="0.3">
             <SplitText text="Garg" accent />
-            {/* the wrapper is the physics body, the inner glyph is what the
-                entrance and the ripple animate — the same split every letter
-                uses, under its own class so the marquee's slot count (one per
-                letter of the name, no punctuation) still lines up */}
-            <span className="h-dot">
-              <span className="hero-dot">.</span>
-            </span>
+            <span className="hero-dot">.</span>
           </span>
         </h1>
 
@@ -344,34 +338,26 @@ export function Hero() {
         <Band words={[...MARQUEE].reverse()} />
       </div>
 
-      <div className="container section" data-scope>
+      <div className="container section">
         <SectionHead title="What I do" meta="Three things, mostly" />
-        {/* three fields, each given a page of its own: the numeral set behind
-            it at 40vw, and its sentence typing itself as the field arrives */}
-        <div className="chapter" data-chapter>
-          <div className="cols-3 is-ruled">
-            {WHAT_I_DO.map((card, i) => (
-              <article className="col-item" data-reveal="wipe" key={card.title}>
-                <span className="col-ghost" aria-hidden="true">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <span className="col-head">
-                  <span className="col-index">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <card.icon
-                    className="col-mark"
-                    size={18}
-                    strokeWidth={1.5}
-                    aria-hidden="true"
-                  />
-                </span>
-                <h3>{card.title}</h3>
-                <p data-type>{card.body}</p>
-              </article>
-            ))}
-          </div>
-        </div>
+        {/* an index, not three pages: numeral, name, one line of what it
+            means, the mark on the right — the same shape the skills and the
+            work are set in, and all three readable without scrolling */}
+        <ol className="wid">
+          {WHAT_I_DO.map((card, i) => (
+            <li className="wid-row" data-reveal="wipe" key={card.title}>
+              <span className="wid-no">{String(i + 1).padStart(2, "0")}</span>
+              <h3 className="wid-name">{card.title}</h3>
+              <p className="wid-note">{card.body}</p>
+              <card.icon
+                className="wid-mark"
+                size={20}
+                strokeWidth={1.5}
+                aria-hidden="true"
+              />
+            </li>
+          ))}
+        </ol>
       </div>
 
       <div className="container section">

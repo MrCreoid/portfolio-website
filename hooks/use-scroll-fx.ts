@@ -97,53 +97,6 @@ const inkFill = (el: HTMLElement) => {
   });
 };
 
-/** Panel copy that types itself in as its panel arrives.
- *
- *  A tween rather than a timer loop so gsap.context() can revert it when the
- *  view unmounts mid-sentence. The paragraph's full height is measured and
- *  pinned before the first character is cleared — otherwise the panel would
- *  grow line by line and shove the title around as the sentence lands. */
-const proxies = new WeakMap<Element, { n: number }>();
-const typeIn = (p: HTMLElement) => {
-  const full = (p.dataset.full ??= p.textContent ?? "");
-  // measured from the full sentence every time, so a resize between passes
-  // re-reserves at the new measure rather than holding the old one
-  p.style.minHeight = "";
-  p.textContent = full;
-  p.style.minHeight = `${p.offsetHeight}px`;
-  let o = proxies.get(p);
-  if (o) gsap.killTweensOf(o);
-  else proxies.set(p, (o = { n: 0 }));
-  o.n = 0;
-  p.textContent = "";
-  gsap.to(o, {
-    n: full.length,
-    duration: full.length * 0.018,
-    ease: "none",
-    onUpdate: () => (p.textContent = full.slice(0, Math.round(o!.n))),
-  });
-};
-
-/** Each field of the chapter types its sentence in as it arrives.
- *
- *  A ScrollTrigger per field rather than one across the block: the sentence
- *  belongs to the field, and a field that has been scrolled back to should say
- *  itself again. */
-const chapter = (root: HTMLElement) => {
-  for (const el of $$("[data-chapter]", root)) {
-    for (const item of $$(".col-item", el)) {
-      const p = item.querySelector<HTMLElement>("[data-type]");
-      if (!p) continue;
-      ScrollTrigger.create({
-        trigger: item,
-        start: "top 72%",
-        onEnter: () => typeIn(p),
-        onEnterBack: () => typeIn(p),
-      });
-    }
-  }
-};
-
 /**
  * The scroll chrome that lives outside any one view: Lenis itself, the header
  * that ducks on the way down and returns on the way up, the red progress rule
@@ -303,7 +256,6 @@ export function useViewScrollFx(view: View, ready: boolean) {
           onLeaveBack: () => el.classList.remove("is-passed"),
         });
       }
-      chapter(root);
     }, root);
 
     // the marquee runs on the scroll's own velocity: faster when you scroll

@@ -2,7 +2,6 @@
 
 import { useEffect, type RefObject } from "react";
 import type WebGLFluidEnhanced from "webgl-fluid-enhanced";
-import { findEgg } from "@/lib/eggs";
 import {
   SPRING,
   hasFinePointer,
@@ -50,8 +49,12 @@ export function useCursor(rootRef: RefObject<HTMLDivElement | null>) {
     let trailCount = 0;
     let raf = 0;
 
+    /* The square used to balloon on contact — a 74px plate under the pointer
+       covers the very control it is labelling. It stays close to its resting
+       size instead; `blend` is the only one that has to be big, because it is
+       the thing inverting the display type it crosses. */
     const size = () =>
-      mode === "blend" ? 96 : mode === "label" ? 74 : mode === "hover" ? 46 : 30;
+      mode === "blend" ? 70 : mode === "label" ? 52 : mode === "hover" ? 34 : 30;
 
     const update = (target: EventTarget | null) => {
       const t = target instanceof Element ? target : null;
@@ -423,7 +426,6 @@ export function useDvdScreensaver() {
 
     const start = () => {
       if (overlay || document.hidden) return;
-      findEgg("dvd");
       overlay = document.createElement("div");
       overlay.className = "dvd";
       overlay.innerHTML = `<span class="dvd-logo">PG</span><span class="dvd-hint">move anything to wake the site</span>`;
@@ -564,7 +566,6 @@ export function useBottomSecret(onReveal: () => void) {
         holdTimer = setTimeout(() => {
           if (innerHeight + scrollY >= document.body.offsetHeight - 4) {
             shown = true;
-            findEgg("bottom");
             onReveal();
           }
         }, 700);

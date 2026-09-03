@@ -150,54 +150,44 @@ export function scramble(el: HTMLElement, ms = 420) {
   requestAnimationFrame(tick);
 }
 
-/* ---------------- EGG: matrix rain (type "pratyush") ---------------- */
+/* ---------------- EGG: the press run (type "pratyush") ---------------- */
 
-let matrixOn = false;
+let pressOn = false;
 
-export function matrixRain(cozy: boolean, duration = 7000) {
-  if (matrixOn || prefersReducedMotion()) return;
-  matrixOn = true;
+/**
+ * The whole site is a print metaphor — a 12-column grid whose rules are
+ * visible, cream ink on near-black paper, red used the way a printer uses a
+ * second plate. So the reward for finding your way here is the press itself
+ * getting it wrong: the plates slip out of register, the crop marks and the
+ * colour bar the trim would have hidden come up at the corners, and the
+ * registration pulls itself back together.
+ *
+ * The misregistration is one `text-shadow` on everything rather than a stack
+ * of duplicated layers — the page is already text, and a red and a cyan copy
+ * of every glyph is exactly what a slipped plate looks like.
+ */
+export function pressRun(duration = 2600) {
+  if (pressOn || prefersReducedMotion()) return;
+  pressOn = true;
 
-  const c = document.createElement("canvas");
-  c.className = "matrix-canvas";
-  document.body.appendChild(c);
-  const ctx = c.getContext("2d")!;
-  const DPR = Math.min(devicePixelRatio || 1, 2);
-  const W = (c.width = innerWidth * DPR);
-  const H = (c.height = innerHeight * DPR);
-  c.style.width = innerWidth + "px";
-  c.style.height = innerHeight + "px";
-  requestAnimationFrame(() => c.classList.add("is-on"));
-
-  const FS = 15 * DPR;
-  const cols = Math.ceil(W / FS);
-  const drops = Array.from({ length: cols }, () => rand(-40, 0));
-  const glyphs = "PRATYUSH01{}[]<>=+*/#$_アイウエオカキクケコサシスセソタチツテト";
-  ctx.font = `${FS}px monospace`;
-
-  let stopping = false;
-  (function rainFrame() {
-    ctx.fillStyle = "rgba(8, 4, 5, 0.22)";
-    ctx.fillRect(0, 0, W, H);
-    for (let i = 0; i < cols; i++) {
-      const ch = glyphs[(Math.random() * glyphs.length) | 0];
-      const y = drops[i] * FS;
-      ctx.fillStyle = cozy ? "rgba(251, 191, 36, 0.95)" : "rgba(255, 125, 107, 0.95)";
-      ctx.fillText(ch, i * FS, y);
-      ctx.fillStyle = cozy ? "rgba(245, 158, 11, 0.4)" : "rgba(255, 34, 51, 0.4)";
-      ctx.fillText(ch, i * FS, y - FS);
-      drops[i]++;
-      if (y > H && Math.random() > 0.975) drops[i] = rand(-25, 0);
-    }
-    if (!stopping) requestAnimationFrame(rainFrame);
-  })();
+  const furniture = document.createElement("div");
+  furniture.className = "press";
+  furniture.innerHTML =
+    '<i class="press-crop press-tl"></i><i class="press-crop press-tr"></i>' +
+    '<i class="press-crop press-bl"></i><i class="press-crop press-br"></i>' +
+    '<span class="press-bar" aria-hidden="true"></span>' +
+    '<span class="press-slug">PLATE 2 OF 2 &nbsp;·&nbsp; K + PANTONE 185 &nbsp;·&nbsp; REGISTRATION</span>';
+  document.body.appendChild(furniture);
+  void furniture.offsetWidth;
+  document.body.classList.add("is-press");
+  furniture.classList.add("is-on");
 
   setTimeout(() => {
-    c.classList.remove("is-on");
+    document.body.classList.remove("is-press");
+    furniture.classList.remove("is-on");
     setTimeout(() => {
-      stopping = true;
-      c.remove();
-      matrixOn = false;
+      furniture.remove();
+      pressOn = false;
     }, 700);
   }, duration);
 }

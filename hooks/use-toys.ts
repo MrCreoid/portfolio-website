@@ -76,353 +76,82 @@ export function useEyebrowRotator(ref: RefObject<HTMLSpanElement | null>) {
   }, [ref]);
 }
 
-/** matter-js is ~90kB and only earns it once somebody actually grabs a letter,
- *  so the module is pulled on the first pointerdown and cached from then on. */
-let matterPromise: Promise<typeof import("matter-js")> | null = null;
-const loadMatter = () =>
-  (matterPromise ??= import("matter-js").then(
-    (m) => (m as unknown as { default?: typeof import("matter-js") }).default ?? m,
-  ));
-
 /**
- * Grab a letter of the name and fling it — and it is a real object from then
- * on. It falls, it tumbles, it lands on the floor of the window, and anything
- * it hits on the way comes loose too: every letter is in the simulation, but
- * asleep and static until something knocks it awake, so touching one letter
- * does not drop the whole name.
- *
- * The world exists only while it is being played with. 1.2s after the last
- * body stops moving — or on Esc, a scroll, or a shake of the window — the
- * letters spring back to the baseline and the engine is thrown away.
- *
- * Reduced motion keeps the old behaviour: a drag, a flick, a snap back.
+ * Grab a letter of the name and fling it — it springs back.
+ * The letters themselves are rendered by <SplitText>; this only wires physics.
  */
 export function useGrabbableLetters() {
   useEffect(() => {
-    // the full stop belongs to the name as much as the letters do — left out,
-    // it hangs in the air on its own once everything around it has fallen
-    const letters = Array.from(
-      document.querySelectorAll<HTMLElement>(".h-letter, .h-dot"),
-    );
-    if (!letters.length) return;
-    const flat = prefersReducedMotion();
-
-    /* a letter in transit to the marquee belongs to the Flip, not to us */
-    const busy = (el: HTMLElement) => Boolean(el.parentElement?.closest(".is-flying"));
-
-    /* `ox/oy` is the grab point inside the letter, so it never jumps to its
-       own centre. `sx/sy`+`bx/by` and the running velocity are what the drag
-       runs on before matter-js has finished loading — the first grab has to
-       feel the same as every one after it. */
-    type Held = {
-      i: number;
-      x: number;
-      y: number;
-      ox: number;
-      oy: number;
-      sx: number;
-      sy: number;
-      bx: number;
-      by: number;
-      vx: number;
-      vy: number;
-      lx: number;
-      ly: number;
-      lt: number;
-    };
-    type World = {
-      M: typeof import("matter-js");
-      engine: import("matter-js").Engine;
-      bodies: import("matter-js").Body[];
-      home: { x: number; y: number }[];
-      raf: number;
-      prev: number;
-      still: number;
-      wake: Set<import("matter-js").Body>;
-    };
-
-    let world: World | null = null;
-    let held: Held | null = null;
-    /* a letter let go of before the engine arrived — the world starts it at
-       the speed the hand actually threw it */
-    let flick: { i: number; vx: number; vy: number } | null = null;
-    let building = false;
-    let dead = false;
-
-    /* ---- the flat path: the pre-physics drag, kept for reduced motion ---- */
-    const flatState = { ox: 0, oy: 0, sx: 0, sy: 0, dx: 0, dy: 0, el: null as HTMLElement | null };
-    let flatTimer: ReturnType<typeof setTimeout> | undefined;
-
-    /* ---- home ---- */
-
-    const settle = () => {
-      if (!world) return;
-      cancelAnimationFrame(world.raf);
-      world = null;
-      held = null;
-      letters.forEach((el) => {
-        el.style.transition = `transform 0.9s ${SPRING}`;
-        el.style.transform = "translate(0px, 0px) rotate(0deg)";
-        el.classList.remove("is-grabbed");
-      });
-      // once the spring has landed the inline styles are noise, and clearing
-      // them is what lets the next grab measure a clean layout rect
-      clearTimeout(flatTimer);
-      flatTimer = setTimeout(() => {
-        letters.forEach((el) => {
-          el.style.transition = "";
-          el.style.transform = "";
-        });
-      }, 950);
-    };
-
-    /* ---- the world ---- */
-
-    const build = async () => {
-      if (world || building || dead) return;
-      building = true;
-      const M = await loadMatter();
-      building = false;
-      if (world || dead) return;
-
-      // where each letter is *now* (it may be mid-spring), and where its
-      // baseline actually is — the body starts at the first, goes home to
-      // the second
-      const offset = letters.map((el) => {
-        const m = new DOMMatrixReadOnly(getComputedStyle(el).transform);
-        return { x: m.e, y: m.f };
-      });
-      letters.forEach((el) => {
-        el.style.transition = "none";
-        el.style.transform = "none";
-      });
-      const home = letters.map((el) => {
-        const r = el.getBoundingClientRect();
-        return { x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width, h: r.height };
-      });
-
-      const engine = M.Engine.create({ enableSleeping: true });
-      engine.gravity.scale = 0.0016;
-
-      // the body is the ink, not the line box — a glyph's box is far taller
-      // and a shade wider than the letter you can see, and bodies that start
-      // out overlapping shove each other apart the instant the world starts
-      const bodies = home.map((h, i) => {
-        const body = M.Bodies.rectangle(
-          h.x + offset[i].x,
-          h.y + offset[i].y,
-          h.w * 0.84,
-          h.h * 0.62,
-          {
-            label: "letter",
-            restitution: 0.26,
-            friction: 0.4,
-            frictionAir: 0.014,
-            density: 0.0018,
-            sleepThreshold: 40,
-          },
-        );
-        // NOT `isStatic` in the options: Bodies.rectangle applies that flag
-        // before Body.setStatic ever runs, so the setter sees a body that is
-        // already static and never files the mass it is meant to give back.
-        // The body then un-statics with mass Infinity and goes NaN on the
-        // first step. Made dynamic and frozen afterwards, it thaws correctly.
-        M.Body.setStatic(body, true);
-        return body;
-      });
-
-      // the box the letters are allowed to exist in: the floor and sides of
-      // the window, and a slab filling everything above the header's rule.
-      // Slabs rather than lines — a thin wall is a wall a fast body misses.
-      const W = innerWidth;
-      const H = innerHeight;
-      const T = 400;
-      const lid = document.querySelector(".header")?.getBoundingClientRect().bottom ?? 0;
-      const wall = (x: number, y: number, w: number, h: number) =>
-        M.Bodies.rectangle(x, y, w, h, { isStatic: true, friction: 0.6, restitution: 0.1 });
-      // the body is the ink, and a glyph hangs well below its own box, so the
-      // floor stands off the bottom edge by enough that a letter lands ON the
-      // window rather than half through it. Tune this, not the body height —
-      // the body height is what keeps neighbours from overlapping at rest.
-      const drop = Math.max(...home.map((h) => h.h)) * 0.2;
-      const walls = [
-        wall(W / 2, H - drop + T / 2, W * 3, T), // floor
-        wall(-T / 2, H / 2, T, H * 3), // left
-        wall(W + T / 2, H / 2, T, H * 3), // right
-        wall(W / 2, lid - T / 2, W * 3, T), // the header's underside
-      ];
-
-      M.Composite.add(engine.world, [...bodies, ...walls]);
-
-      world = { M, engine, bodies, home, raf: 0, prev: performance.now(), still: 0, wake: new Set() };
-
-      // a moving letter knocks a resting one loose — this is the only way a
-      // letter you never touched joins the pile
-      M.Events.on(engine, "collisionStart", (ev) => {
-        if (!world) return;
-        for (const pair of ev.pairs) {
-          for (const [hit, rest] of [
-            [pair.bodyA, pair.bodyB],
-            [pair.bodyB, pair.bodyA],
-          ]) {
-            if (hit.isStatic || rest.label !== "letter" || !rest.isStatic) continue;
-            if (hit.speed < 1.2) continue;
-            world.wake.add(rest);
-          }
-        }
-      });
-
-      if (held) M.Body.setStatic(bodies[held.i], false);
-      if (flick) {
-        const b = bodies[flick.i];
-        M.Body.setStatic(b, false);
-        // the drag measures px per millisecond; a matter step is one frame
-        M.Body.setVelocity(b, { x: flick.vx * 16.7, y: flick.vy * 16.7 });
-        flick = null;
-      }
-      world.raf = requestAnimationFrame(tick);
-    };
-
-    const tick = () => {
-      if (!world) return;
-      const { M, engine, bodies, home } = world;
-      const now = performance.now();
-      const dt = Math.min(now - world.prev, 33);
-      world.prev = now;
-
-      // the held body is driven, not pulled: its position is the pointer's,
-      // and its velocity is whatever that move implied — which is exactly the
-      // velocity it should leave with, so a release never snaps
-      if (held) {
-        const b = bodies[held.i];
-        const x = held.x - held.ox;
-        const y = held.y - held.oy;
-        M.Sleeping.set(b, false);
-        M.Body.setVelocity(b, { x: x - b.position.x, y: y - b.position.y });
-        M.Body.setPosition(b, { x, y });
-        M.Body.setAngularVelocity(b, 0);
-      }
-
-      M.Engine.update(engine, dt);
-
-      // waking happens between steps: setStatic mid-solve corrupts the pair
-      if (world.wake.size) {
-        world.wake.forEach((b) => M.Body.setStatic(b, false));
-        world.wake.clear();
-      }
-
-      let moving = Boolean(held);
-      for (let i = 0; i < bodies.length; i++) {
-        const b = bodies[i];
-        if (b.isStatic) continue;
-        letters[i].style.transform = `translate(${b.position.x - home[i].x}px, ${
-          b.position.y - home[i].y
-        }px) rotate(${b.angle}rad)`;
-        if (!b.isSleeping && b.speed > 0.14) moving = true;
-      }
-
-      world.still = moving ? 0 : world.still + dt;
-      if (world.still > 1200) {
-        settle();
-        return;
-      }
-      world.raf = requestAnimationFrame(tick);
-    };
-
-    /* ---- pointer ---- */
-
+    const letters = Array.from(document.querySelectorAll<HTMLElement>(".h-letter"));
     const cleanups: (() => void)[] = [];
 
-    letters.forEach((el, i) => {
+    letters.forEach((el) => {
+      // per-letter state so simultaneous grabs never share or fight over data
+      const st = {
+        ox: 0,
+        oy: 0,
+        sx: 0,
+        sy: 0,
+        dx: 0,
+        dy: 0,
+        vx: 0,
+        vy: 0,
+        lastX: 0,
+        lastY: 0,
+        lastT: 0,
+        flingTimer: undefined as ReturnType<typeof setTimeout> | undefined,
+      };
+
       const down = (e: PointerEvent) => {
-        if (busy(el)) return;
+        // hands off while the letters are in transit to the marquee
+        if (el.parentElement?.closest(".is-flying")) return;
         e.preventDefault();
+        clearTimeout(st.flingTimer); // a re-grab cancels any pending spring-home
         el.setPointerCapture(e.pointerId);
         el.classList.add("is-grabbed");
-
-        if (flat) {
-          clearTimeout(flatTimer);
-          const m = new DOMMatrixReadOnly(getComputedStyle(el).transform);
-          Object.assign(flatState, {
-            el,
-            ox: m.e,
-            oy: m.f,
-            sx: e.clientX,
-            sy: e.clientY,
-            dx: m.e,
-            dy: m.f,
-          });
-          el.style.transition = "none";
-          return;
-        }
-
-        clearTimeout(flatTimer);
-        const r = el.getBoundingClientRect();
+        // resume from wherever the letter currently is (it may be mid-spring)
         const m = new DOMMatrixReadOnly(getComputedStyle(el).transform);
-        held = {
-          i,
-          x: e.clientX,
-          y: e.clientY,
-          ox: e.clientX - (r.left + r.width / 2),
-          oy: e.clientY - (r.top + r.height / 2),
-          sx: e.clientX,
-          sy: e.clientY,
-          bx: m.e,
-          by: m.f,
-          vx: 0,
-          vy: 0,
-          lx: e.clientX,
-          ly: e.clientY,
-          lt: performance.now(),
-        };
+        st.ox = m.e;
+        st.oy = m.f;
+        st.dx = st.ox;
+        st.dy = st.oy;
+        st.sx = e.clientX;
+        st.sy = e.clientY;
+        st.vx = st.vy = 0;
+        st.lastX = e.clientX;
+        st.lastY = e.clientY;
+        st.lastT = performance.now();
         el.style.transition = "none";
-        if (world) world.M.Body.setStatic(world.bodies[i], false);
-        else void build();
+        el.style.transform = `translate(${st.ox}px, ${st.oy}px) rotate(${st.ox * 0.08}deg)`;
       };
 
       const move = (e: PointerEvent) => {
         if (!el.classList.contains("is-grabbed")) return;
-        if (flat) {
-          flatState.dx = flatState.ox + (e.clientX - flatState.sx);
-          flatState.dy = flatState.oy + (e.clientY - flatState.sy);
-          el.style.transform = `translate(${flatState.dx}px, ${flatState.dy}px)`;
-          return;
-        }
-        if (!held) return;
-        held.x = e.clientX;
-        held.y = e.clientY;
+        st.dx = st.ox + (e.clientX - st.sx);
+        st.dy = st.oy + (e.clientY - st.sy);
         const t = performance.now();
-        const dt = Math.min(Math.max(t - held.lt, 1), 60);
-        held.vx = (e.clientX - held.lx) / dt;
-        held.vy = (e.clientY - held.ly) / dt;
-        held.lx = e.clientX;
-        held.ly = e.clientY;
-        held.lt = t;
-        // until the engine is up the drag is drawn by hand, so the first grab
-        // of the session is not the one that feels dead
-        if (!world) {
-          el.style.transform = `translate(${held.bx + (e.clientX - held.sx)}px, ${
-            held.by + (e.clientY - held.sy)
-          }px)`;
-        }
+        const dt = Math.min(Math.max(t - st.lastT, 1), 60);
+        st.vx = (e.clientX - st.lastX) / dt;
+        st.vy = (e.clientY - st.lastY) / dt;
+        st.lastX = e.clientX;
+        st.lastY = e.clientY;
+        st.lastT = t;
+        el.style.transform = `translate(${st.dx}px, ${st.dy}px) rotate(${st.dx * 0.08}deg)`;
       };
 
       const release = () => {
         if (!el.classList.contains("is-grabbed")) return;
         el.classList.remove("is-grabbed");
-        if (flat) {
-          el.style.transition = `transform 0.5s ${SPRING}`;
-          el.style.transform = "translate(0px, 0px)";
-          return;
-        }
-        if (held?.i !== i) return;
-        if (!world) {
-          // a stale reading from a pause must not launch the letter
-          const stale = performance.now() - held.lt > 80;
-          const cap = (v: number) => Math.max(Math.min(v, 2.5), -2.5);
-          flick = stale ? null : { i, vx: cap(held.vx), vy: cap(held.vy) };
-        }
-        held = null;
+        // stale velocity from a pause shouldn't launch the letter
+        if (performance.now() - st.lastT > 80) st.vx = st.vy = 0;
+        const fx = st.dx + Math.max(Math.min(st.vx * 60, 220), -220);
+        const fy = st.dy + Math.max(Math.min(st.vy * 60, 220), -220);
+        el.style.transition = "transform 0.09s ease-out";
+        el.style.transform = `translate(${fx}px, ${fy}px) rotate(${fx * 0.1}deg)`;
+        st.flingTimer = setTimeout(() => {
+          el.style.transition = `transform 0.9s ${SPRING}`;
+          el.style.transform = "translate(0,0) rotate(0deg)";
+        }, 90);
       };
 
       el.addEventListener("pointerdown", down);
@@ -430,7 +159,9 @@ export function useGrabbableLetters() {
       el.addEventListener("pointerup", release);
       el.addEventListener("pointercancel", release);
       el.addEventListener("lostpointercapture", release);
+
       cleanups.push(() => {
+        clearTimeout(st.flingTimer);
         el.removeEventListener("pointerdown", down);
         el.removeEventListener("pointermove", move);
         el.removeEventListener("pointerup", release);
@@ -439,33 +170,7 @@ export function useGrabbableLetters() {
       });
     });
 
-    /* ---- everything that ends it early ---- */
-
-    // Esc puts the name back. So does a shake of the window: the walls are
-    // measured once, so any resize has to end the world anyway — which makes
-    // wiggling it the reset it looks like it should be.
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") settle();
-    };
-    // and scrolling hands the letters to the marquee Flip, which cannot share
-    // a transform with a physics body
-    const onScroll = () => {
-      if (world && scrollY > 24) settle();
-    };
-    addEventListener("keydown", onKey);
-    addEventListener("resize", settle);
-    addEventListener("scroll", onScroll, { passive: true });
-
-    return () => {
-      dead = true;
-      cleanups.forEach((fn) => fn());
-      removeEventListener("keydown", onKey);
-      removeEventListener("resize", settle);
-      removeEventListener("scroll", onScroll);
-      clearTimeout(flatTimer);
-      if (world) cancelAnimationFrame(world.raf);
-      world = null;
-    };
+    return () => cleanups.forEach((fn) => fn());
   }, []);
 }
 

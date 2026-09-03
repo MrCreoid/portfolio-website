@@ -6,6 +6,7 @@ import { GradientBackground } from "@/components/ui/paper-design-shader-backgrou
 import { prefersReducedMotion } from "@/lib/fx";
 import { useCursor, useInk, useParticles } from "@/hooks/use-ambient";
 import { useMounted } from "@/hooks/use-mounted";
+import { usePortfolio } from "@/components/portfolio-provider";
 
 /**
  * Everything behind the content, bottom to top: the shader field (with a CSS
@@ -19,6 +20,7 @@ import { useMounted } from "@/hooks/use-mounted";
  * the look on its own.
  */
 export function Ambient({ view }: { view: View }) {
+  const { cozy } = usePortfolio();
   const particlesRef = useRef<HTMLCanvasElement | null>(null);
   const inkRef = useRef<HTMLCanvasElement | null>(null);
   useParticles(particlesRef);
@@ -29,7 +31,7 @@ export function Ambient({ view }: { view: View }) {
   return (
     <>
       <div className="bg-shader" data-view={view} aria-hidden="true">
-        {shader && <GradientBackground />}
+        {shader && <GradientBackground cozy={cozy} />}
       </div>
       <div className="bg-scrim" aria-hidden="true" />
       {/* the fluid sim owns this canvas; the wrapper is what carries the

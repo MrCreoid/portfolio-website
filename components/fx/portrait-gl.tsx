@@ -107,8 +107,10 @@ const fragment = /* glsl */ `
   }
 `;
 
+/* off `body`, not the root: the themes redefine `--red` on body, and the
+   halftone has to dissolve into whatever ink the page is currently set in */
 const readRed = () => {
-  const hex = getComputedStyle(document.documentElement).getPropertyValue("--red").trim();
+  const hex = getComputedStyle(document.body).getPropertyValue("--red").trim();
   const m = /^#([0-9a-f]{6})$/i.exec(hex);
   if (!m) return [1, 0.13, 0.2];
   const n = parseInt(m[1], 16);
