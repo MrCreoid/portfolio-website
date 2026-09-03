@@ -286,14 +286,38 @@ export function useBentoSpotlight() {
     const measure = () => {
       rects = cells.map((c) => c.getBoundingClientRect());
     };
+    // which cell the pointer is in, so the tilt and the plate's origin belong
+    // to that one alone — the spotlight is the only thing the whole sheet shares
+    let inside = -1;
     const paint = () => {
       frame = 0;
+      let now = -1;
       for (let i = 0; i < cells.length; i++) {
         const r = rects[i];
         if (!r) continue;
         cells[i].style.setProperty("--mx", px - r.left + "px");
         cells[i].style.setProperty("--my", py - r.top + "px");
+        if (px >= r.left && px < r.right && py >= r.top && py < r.bottom) now = i;
       }
+      if (now < 0) {
+        inside = -1;
+        return;
+      }
+      const r = rects[now];
+      // −1 to 1 across the cell, which is what the tilt and the numeral's
+      // counter-drift are written in terms of
+      const cell = cells[now];
+      cell.style.setProperty("--tx", (((px - r.left) / r.width) * 2 - 1).toFixed(3));
+      cell.style.setProperty("--ty", (((py - r.top) / r.height) * 2 - 1).toFixed(3));
+      if (now === inside) return;
+      inside = now;
+      // the edge it came in over: the plate rises from the side you entered
+      const l = px - r.left;
+      const t = py - r.top;
+      const h = Math.min(l, r.width - l);
+      const v = Math.min(t, r.height - t);
+      cell.dataset.from =
+        h < v ? (l < r.width - l ? "left" : "right") : t < r.height - t ? "top" : "bottom";
     };
     const move = (e: MouseEvent) => {
       px = e.clientX;
@@ -304,7 +328,10 @@ export function useBentoSpotlight() {
       measure();
       grid.classList.add("is-lit");
     };
-    const off = () => grid.classList.remove("is-lit");
+    const off = () => {
+      grid.classList.remove("is-lit");
+      inside = -1;
+    };
 
     grid.addEventListener("mousemove", move);
     grid.addEventListener("mouseenter", on);

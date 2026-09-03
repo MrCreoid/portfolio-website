@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion, useReducedMotion } from "motion/react";
 import { LINKS, PROJECTS, PROJECT_FILTERS, type Project } from "@/lib/data";
 import { usePortfolio } from "@/components/portfolio-provider";
 import { SectionHead } from "@/components/layout/section-head";
@@ -48,16 +47,13 @@ function ProjectCell({
   index: number;
 }) {
   const { openPreview } = usePortfolio();
-  const reduced = useReducedMotion();
 
   return (
-    <motion.article
+    <article
       className={`b-cell ${project.featured ? "b-featured" : "b-proj"}${filtered ? " is-filtered" : ""}`}
       style={{ gridArea: area }}
       data-cat={project.cat}
       data-reveal="wipe"
-      whileHover={reduced ? undefined : { y: -6 }}
-      transition={{ type: "spring", stiffness: 380, damping: 30, mass: 0.7 }}
     >
       {/* the red plate wipes up from the bottom edge on hover — a second
           printing plate, not a glow */}
@@ -108,7 +104,7 @@ function ProjectCell({
           </a>
         </div>
       </div>
-    </motion.article>
+    </article>
   );
 }
 

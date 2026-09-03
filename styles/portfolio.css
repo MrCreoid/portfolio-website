@@ -3139,6 +3139,9 @@ body.is-locked .header {
   gap: 0;
   border-top: 1px solid var(--rule);
   border-left: 1px solid var(--rule);
+  /* one vanishing point for the whole sheet, so a tilted cell leans within the
+     grid rather than in a space of its own */
+  perspective: 1200px;
 }
 .b-cell {
   position: relative;
@@ -3148,6 +3151,17 @@ body.is-locked .header {
   border-bottom: 1px solid var(--rule);
   padding: clamp(1.3rem, 2.4vw, 2.25rem);
   will-change: transform;
+  transform-style: preserve-3d;
+  transition: transform 0.4s var(--ease-out);
+}
+/* The cell lifts and leans away from the pointer, four degrees at the corners.
+   The lift used to be a spring from `motion`, which wrote its own inline
+   transform and left no room for the lean — one property here does both. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .b-cell:hover {
+    transform: translateY(-6px) rotateX(calc(var(--ty, 0) * -4deg))
+      rotateY(calc(var(--tx, 0) * 4deg));
+  }
 }
 .b-cell.is-filtered {
   display: none;
@@ -3171,9 +3185,11 @@ body.is-locked .header {
   font-size: clamp(8rem, 18vw, 16rem);
 }
 @media (hover: hover) {
+  /* the numeral pulls against the pointer rather than with it, which is what
+     makes it read as sitting behind the cell instead of painted on it */
   .b-cell:hover .b-no {
     color: rgb(0 0 0 / 0.16);
-    translate: 0 -0.05em;
+    translate: calc(var(--tx, 0) * -12px) calc(-0.05em + var(--ty, 0) * -12px);
   }
 }
 /* the spotlight follows the pointer across the whole sheet (--mx/--my are
@@ -3194,7 +3210,8 @@ body.is-locked .header {
 .bento.is-lit .b-cell::after {
   opacity: 1;
 }
-/* the red plate: wipes up from the bottom edge on hover */
+/* the red plate: it rises from the edge the pointer came in over, so the wipe
+   answers the movement that caused it instead of always climbing from the foot */
 .b-plate {
   position: absolute;
   inset: auto 0 0 0;
@@ -3205,11 +3222,26 @@ body.is-locked .header {
   transition: transform 0.5s var(--ease-out);
   pointer-events: none;
 }
+.b-cell[data-from="top"] .b-plate {
+  transform-origin: top;
+}
+.b-cell[data-from="left"] .b-plate {
+  transform: scaleX(0);
+  transform-origin: left;
+}
+.b-cell[data-from="right"] .b-plate {
+  transform: scaleX(0);
+  transform-origin: right;
+}
 /* only where a real pointer can hover — on touch, :hover sticks after a tap
    and would leave the plate up for good */
 @media (hover: hover) {
   .b-cell:hover .b-plate {
     transform: scaleY(1);
+  }
+  .b-cell[data-from="left"]:hover .b-plate,
+  .b-cell[data-from="right"]:hover .b-plate {
+    transform: scaleX(1);
   }
 }
 .b-cell-in {
