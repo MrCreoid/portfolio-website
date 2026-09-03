@@ -17,6 +17,86 @@ const $$ = <T extends Element = HTMLElement>(s: string, c: ParentNode = document
 const repeatWidth = (track: HTMLElement) =>
   (track.scrollWidth + (parseFloat(getComputedStyle(track).columnGap) || 0)) / 2;
 
+/**
+ * One edge of ink travelling through a paragraph.
+ *
+ * The words are laid end to end in reading order — each line's own width added
+ * to the ones above it — and the scroll drives a single head along that path.
+ * A word behind the head is inked, one ahead of it is not, and the one the head
+ * is crossing carries the edge itself, so the fill is continuous rather than
+ * stepped word by word.
+ *
+ * Geometry comes from layout offsets rather than rects: the paragraph may be
+ * carrying a parallax transform, and offsets are the one measure that ignores
+ * it. Only the words whose fill actually changed are written, which on any
+ * given frame is the one or two under the head.
+ */
+const inkFill = (el: HTMLElement) => {
+  const words = splitWords(el);
+  if (!words.length) return;
+
+  let starts: number[] = [];
+  let widths: number[] = [];
+  let total = 1;
+  const last: number[] = new Array(words.length).fill(-1);
+
+  const measure = () => {
+    const geo = words.map((w) => ({ t: w.offsetTop, l: w.offsetLeft, w: w.offsetWidth }));
+    // reading order, and a new line wherever the top steps down
+    const order = geo.map((_, i) => i).sort((a, b) => geo[a].t - geo[b].t || geo[a].l - geo[b].l);
+    starts = new Array(words.length).fill(0);
+    widths = geo.map((g) => g.w || 1);
+    let cum = 0;
+    for (let i = 0; i < order.length; ) {
+      const top = geo[order[i]].t;
+      let j = i;
+      while (j < order.length && geo[order[j]].t - top < 4) j++;
+      const line = order.slice(i, j);
+      const left = Math.min(...line.map((k) => geo[k].l));
+      let right = left;
+      for (const k of line) {
+        starts[k] = cum + (geo[k].l - left);
+        right = Math.max(right, geo[k].l + geo[k].w);
+      }
+      cum += right - left;
+      i = j;
+    }
+    total = cum || 1;
+    last.fill(-1);
+  };
+
+  const state = { p: 0 };
+  const paint = () => {
+    const head = state.p * total;
+    for (let i = 0; i < words.length; i++) {
+      const v = Math.round(Math.max(0, Math.min(1, (head - starts[i]) / widths[i])) * 100);
+      if (v === last[i]) continue;
+      last[i] = v;
+      words[i].style.setProperty("--fill", `${v}%`);
+    }
+  };
+
+  measure();
+  paint();
+  gsap.to(state, {
+    p: 1,
+    ease: "none",
+    onUpdate: paint,
+    scrollTrigger: {
+      trigger: el,
+      // Both ends are clamped into the scroll, and the far one is a distance
+      // rather than a second position: a paragraph already on screen when the
+      // view opens has both positions behind it, and two clamped positions
+      // collapse onto scroll 0 — a zero-length trigger that never moves.
+      start: "clamp(top 88%)",
+      end: "clamp(+=55%)",
+      scrub: true,
+      invalidateOnRefresh: true,
+      onRefresh: measure,
+    },
+  });
+};
+
 /** Panel copy that types itself in as its panel arrives.
  *
  *  A tween rather than a timer loop so gsap.context() can revert it when the
@@ -86,6 +166,11 @@ const chapter = (root: HTMLElement, mm: gsap.MatchMedia) => {
           anticipatePin: 1,
           scrub: 1,
           end: "+=250%",
+          // the pin adds 250% of a viewport to the page, and every trigger
+          // below it measures its own start against that. Without this they
+          // are refreshed first, against a page the spacer has not stretched
+          // yet, and fire a chapter's worth of scroll too early.
+          refreshPriority: 1,
           snap: { snapTo: 1 / last, duration: 0.3, ease: "power2.inOut" },
           invalidateOnRefresh: true,
           onUpdate: (self) => {
@@ -235,6 +320,9 @@ export function useViewScrollFx(view: View, ready: boolean) {
             scrollTrigger: { trigger: el.parentElement, start: "top 72%", end: "bottom 60%", scrub: true },
           },
         );
+      }
+      for (const el of $$("[data-ink]", root)) {
+        inkFill(el);
       }
       for (const el of $$("[data-pass]", root)) {
         ScrollTrigger.create({ trigger: el, start: "top 62%", toggleClass: "is-passed" });
