@@ -914,10 +914,14 @@ body.show-grid .grid-overlay {
   --cx: 50%;
   --cy: 50%;
 }
+/* cut on a diagonal: the whole rack is sheared, so the five leading edges and
+   their red rules lie on one 6° line rather than five level ones. Scaled up
+   because a sheared rectangle no longer covers the corners it used to. */
 .t-slats {
   position: absolute;
   inset: 0;
   display: flex;
+  transform: skewY(-6deg) scaleY(1.3);
 }
 .t-slats i {
   flex: 1;
@@ -938,6 +942,29 @@ body.show-grid .grid-overlay {
 }
 .t-slats i:nth-child(5) {
   transition-delay: 0.2s;
+}
+/* the folio number under the destination: where it sits in the set */
+.t-folio {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  translate: 0 clamp(2.2rem, 7vw, 6.5rem);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  color: var(--red);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.transition.is-covering .t-folio {
+  opacity: 1;
+  transition-delay: 0.42s;
+}
+.transition.is-covering.is-leaving .t-folio {
+  opacity: 0;
+  transition-delay: 0s;
 }
 /* the destination, set huge across the slats */
 .t-logo {
@@ -969,9 +996,23 @@ body.show-grid .grid-overlay {
   translate: 0 0;
   transition-delay: 0.3s;
 }
+/* they lift in the order they landed in reverse: last down, first up */
 .transition.is-covering.is-leaving .t-slats i {
   transform-origin: bottom;
   transform: scaleY(0);
+  transition-delay: 0.2s;
+}
+.transition.is-covering.is-leaving .t-slats i:nth-child(2) {
+  transition-delay: 0.15s;
+}
+.transition.is-covering.is-leaving .t-slats i:nth-child(3) {
+  transition-delay: 0.1s;
+}
+.transition.is-covering.is-leaving .t-slats i:nth-child(4) {
+  transition-delay: 0.05s;
+}
+.transition.is-covering.is-leaving .t-slats i:nth-child(5) {
+  transition-delay: 0s;
 }
 .transition.is-covering.is-leaving .t-logo {
   opacity: 0;

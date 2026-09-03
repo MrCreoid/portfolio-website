@@ -13,7 +13,7 @@ import {
 } from "react";
 import { NAV, SITE_TITLE, VIEWS, View } from "@/lib/data";
 import { inkBurst } from "@/hooks/use-ambient";
-import { prefersReducedMotion, setParticleTheme, wait } from "@/lib/fx";
+import { prefersReducedMotion, scramble, setParticleTheme, wait } from "@/lib/fx";
 import { scrollTop } from "@/lib/scroll";
 
 type PreviewTarget = { url: string; title: string } | null;
@@ -109,8 +109,21 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       // the ink goes first: a splat thrown from the click the slats are about
       // to wipe over
       inkBurst(cx ?? innerWidth / 2, cy ?? innerHeight / 2, 12, 1.5, 90);
+      // the destination resolves out of noise rather than simply being there,
+      // and its folio number underneath says where it sits in the set
       const logo = el.querySelector<HTMLElement>(".t-logo");
-      if (logo) logo.textContent = NAV.find((n) => n.id === name)?.label ?? name;
+      if (logo) {
+        const label = NAV.find((n) => n.id === name)?.label ?? name;
+        logo.dataset.text = label;
+        logo.textContent = label;
+        delete logo.dataset.busy;
+        scramble(logo, 380);
+      }
+      const folio = el.querySelector<HTMLElement>(".t-folio");
+      if (folio) {
+        const n = VIEWS.indexOf(name) + 1;
+        folio.textContent = `${String(n).padStart(2, "0")} / ${String(VIEWS.length).padStart(2, "0")}`;
+      }
       el.classList.add("is-covering");
       await wait(760);
 

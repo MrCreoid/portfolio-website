@@ -40,6 +40,7 @@ export function Transition() {
         <i />
       </div>
       <div className="t-logo" />
+      <div className="t-folio" />
     </div>
   );
 }
