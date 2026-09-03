@@ -1295,12 +1295,28 @@ body.is-locked .header {
 }
 .ch {
   display: inline-block;
+  /* the glyph arrives condensed and opens to its full width as it rises, so
+     the type reads as being set rather than merely moved into place */
+  font-variation-settings: "wdth" var(--wdth, 62);
   transform: translateY(112%) rotate(5deg);
   transform-origin: 0 100%;
-  transition: transform 0.9s var(--ease-out-hard) calc(var(--d, 0ms) + var(--i, 0) * 26ms);
+  transition:
+    transform 0.9s var(--ease-out-hard) calc(var(--d, 0ms) + var(--i, 0) * 26ms),
+    font-variation-settings 0.9s var(--ease-out-hard)
+      calc(var(--d, 0ms) + var(--i, 0) * 26ms);
 }
 [data-reveal].is-in .ch {
   transform: translateY(0) rotate(0deg);
+  --wdth: 100;
+}
+/* under the pointer the width follows it frame by frame — the pointer's own
+   movement is the animation, so the reveal's easing must not lag behind it,
+   and the stretched glyphs need out of the clipping box the rise used */
+.sec-title.is-pinched .ch {
+  transition-property: transform;
+}
+.sec-title.is-pinched .cw {
+  overflow: visible;
 }
 
 /* ============================================================
@@ -4529,6 +4545,8 @@ body.is-crt .crt-overlay {
     transform: none;
     opacity: 1;
     translate: 0 0;
+    /* the rise never runs, so the glyphs must not be left condensed */
+    --wdth: 100;
   }
   .h-letter > i,
   .hero-dot {

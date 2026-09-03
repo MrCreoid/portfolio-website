@@ -193,6 +193,81 @@ export function useMagneticTilt() {
  * position as --mx/--my, so a cell can react to where the cursor actually is
  * rather than merely that it is somewhere inside.
  */
+/**
+ * The pinch. Archivo carries its `wdth` axis, so a title can be stretched
+ * rather than scaled: the glyph under the pointer opens toward wdth 118 on a
+ * gaussian falloff and its neighbours follow it part of the way, which reads
+ * as the line being pulled apart under a thumb.
+ *
+ * Rects are measured on entry, not per frame — the writes reflow the title's
+ * own line, so reading it back every frame would be a layout thrash on the one
+ * interaction that has to feel weightless. Not the hero title: those letters
+ * already answer the pointer with a grab and a ripple.
+ */
+export function useTypePinch() {
+  useEffect(() => {
+    if (!hasFinePointer() || prefersReducedMotion()) return;
+    const RADIUS = 90;
+    const REACH = 18;
+
+    const cleanups = $$<HTMLElement>(".sec-title").map((title) => {
+      const chars = $$<HTMLElement>(".ch", title);
+      if (!chars.length) return () => {};
+      let rects: DOMRect[] = [];
+      let frame = 0;
+      let px = 0;
+      let py = 0;
+
+      const measure = () => {
+        rects = chars.map((c) => c.getBoundingClientRect());
+      };
+      const paint = () => {
+        frame = 0;
+        for (let i = 0; i < chars.length; i++) {
+          const r = rects[i];
+          if (!r) continue;
+          const dx = px - (r.left + r.width / 2);
+          const dy = py - (r.top + r.height / 2);
+          const f = Math.exp(-(dx * dx + dy * dy) / (RADIUS * RADIUS));
+          chars[i].style.setProperty("--wdth", (100 + REACH * f).toFixed(1));
+        }
+      };
+      const move = (e: PointerEvent) => {
+        px = e.clientX;
+        py = e.clientY;
+        if (!frame) frame = requestAnimationFrame(paint);
+      };
+      const on = () => {
+        measure();
+        title.classList.add("is-pinched");
+        addEventListener("scroll", measure, { passive: true });
+        addEventListener("resize", measure);
+      };
+      const off = () => {
+        cancelAnimationFrame(frame);
+        frame = 0;
+        title.classList.remove("is-pinched");
+        // back to the reveal's own 100, rather than an inline copy of it
+        chars.forEach((c) => c.style.removeProperty("--wdth"));
+        removeEventListener("scroll", measure);
+        removeEventListener("resize", measure);
+      };
+
+      title.addEventListener("pointerenter", on);
+      title.addEventListener("pointermove", move);
+      title.addEventListener("pointerleave", off);
+      return () => {
+        off();
+        title.removeEventListener("pointerenter", on);
+        title.removeEventListener("pointermove", move);
+        title.removeEventListener("pointerleave", off);
+      };
+    });
+
+    return () => cleanups.forEach((fn) => fn());
+  }, []);
+}
+
 export function useBentoSpotlight() {
   useEffect(() => {
     const grid = document.getElementById("bento");

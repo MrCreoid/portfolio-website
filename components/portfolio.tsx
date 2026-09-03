@@ -30,6 +30,7 @@ import {
   useMagneticTilt,
   useNavIndicator,
   useScramble,
+  useTypePinch,
   useViewEnter,
 } from "@/hooks/use-view-effects";
 import { useNameToMarquee, useScrollChrome, useViewScrollFx } from "@/hooks/use-scroll-fx";
@@ -92,6 +93,7 @@ function Site() {
   useHeroLetters(view === "home" && ready);
   useMagneticTilt();
   useBentoSpotlight();
+  useTypePinch();
   useScramble();
   useDvdScreensaver();
   useTabPout();

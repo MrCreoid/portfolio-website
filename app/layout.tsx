@@ -7,10 +7,14 @@ import "./globals.css";
    serif for the editorial lede and the film reviews, a mono for every label,
    number and piece of metadata. Nothing else. */
 
+/* Variable, and with the width axis included: the section titles open from a
+   condensed 62 to 100 as they rise, and stretch past it under the pointer.
+   No `weight` here on purpose — asking for static weights loads the static
+   family, and `axes` is only available on the variable one. */
 const archivo = Archivo({
   variable: "--font-archivo",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
+  axes: ["wdth"],
   display: "swap",
 });
 
