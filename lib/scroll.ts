@@ -1,6 +1,7 @@
 "use client";
 
 import { gsap } from "gsap";
+import { Flip } from "gsap/Flip";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import { prefersReducedMotion } from "@/lib/fx";
@@ -11,8 +12,8 @@ import { prefersReducedMotion } from "@/lib/fx";
    disagree about what frame it is. Everything scroll-linked imports from here.
    ============================================================ */
 
-gsap.registerPlugin(ScrollTrigger);
-export { gsap, ScrollTrigger };
+gsap.registerPlugin(ScrollTrigger, Flip);
+export { Flip, gsap, ScrollTrigger };
 
 let lenis: Lenis | null = null;
 

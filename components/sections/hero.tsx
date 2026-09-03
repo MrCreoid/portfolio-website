@@ -53,19 +53,50 @@ function SplitText({
   );
 }
 
-/** One scrolling band. The list is doubled so the loop is seamless. */
-function Band({ words }: { words: string[] }) {
+/** The name, as it reads once the hero letters have landed in the band. */
+export const HERO_NAME = "I'M PRATYUSH GARG";
+
+/** Fifteen empty slots at the head of the band — one per letter of the name.
+ *  They hold the space and the type size; the letters themselves fly in from
+ *  the hero and land on them. */
+function NameSlots() {
+  return (
+    <span className="m-name" aria-hidden="true">
+      {Array.from(HERO_NAME).map((ch, i) =>
+        ch === " " ? (
+          <Fragment key={i}> </Fragment>
+        ) : (
+          <span className="m-t" key={i}>
+            {ch}
+          </span>
+        ),
+      )}
+    </span>
+  );
+}
+
+/** One scrolling band. The list is doubled so the loop is seamless — which is
+ *  also why the name slots are repeated: both halves must be identical. */
+function Band({ words, name = false }: { words: string[]; name?: boolean }) {
   return (
     <div className="marquee">
       <div className="marquee-track">
-        {[0, 1].map((pass) =>
-          words.map((word) => (
-            <Fragment key={`${pass}-${word}`}>
-              <span>{word}</span>
-              <i>/</i>
-            </Fragment>
-          )),
-        )}
+        {[0, 1].map((pass) => (
+          <Fragment key={pass}>
+            {name && (
+              <Fragment>
+                <NameSlots />
+                <i>/</i>
+              </Fragment>
+            )}
+            {words.map((word) => (
+              <Fragment key={`${pass}-${word}`}>
+                <span>{word}</span>
+                <i>/</i>
+              </Fragment>
+            ))}
+          </Fragment>
+        ))}
       </div>
     </div>
   );
@@ -196,7 +227,7 @@ export function Hero() {
 
         {/* the composition: a small "I'M", the given name full-bleed, the
             surname indented so the block reads as three staggered steps */}
-        <h1 className="hero-title" data-cursor="blend" data-fade>
+        <h1 className="hero-title" data-cursor="blend">
           <span className="line line-1" data-parallax="0.1">
             <SplitText text="I'm" />
           </span>
@@ -299,7 +330,7 @@ export function Hero() {
 
       {/* two bands running against each other */}
       <div className="marquee-block" aria-hidden="true">
-        <Band words={MARQUEE} />
+        <Band words={MARQUEE} name />
         <Band words={[...MARQUEE].reverse()} />
       </div>
 

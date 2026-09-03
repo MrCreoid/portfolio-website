@@ -1804,6 +1804,27 @@ body.is-locked .header {
     color: var(--paper);
   }
 }
+/* The fifteen slots the hero's letters fly into. They hold the space and the
+   type size of the name; the glyphs that land on them are the hero's own. */
+.m-name {
+  white-space: pre;
+  pointer-events: none;
+}
+/* Inline-block, not inline: Flip measures and fits transformable boxes, and an
+   inline box is neither. The line-height matches the hero title's own 0.78 so
+   each slot is the letter's box to scale — otherwise the band's 1.55 line box
+   stretches every glyph that lands on it by a third. */
+.m-t {
+  display: inline-block;
+  line-height: 0.78;
+  letter-spacing: normal;
+  visibility: hidden;
+}
+/* a letter in transit is not a letter you can grab */
+.hero-title.is-flying .h-letter {
+  cursor: default;
+}
+
 /* the second band is quieter so the pair reads as one graphic, not two */
 .marquee + .marquee .marquee-track span {
   font-weight: 700;

@@ -98,6 +98,8 @@ export function useGrabbableLetters() {
       };
 
       const down = (e: PointerEvent) => {
+        // hands off while the letters are in transit to the marquee
+        if (el.parentElement?.closest(".is-flying")) return;
         e.preventDefault();
         clearTimeout(st.flingTimer); // a re-grab cancels any pending spring-home
         el.setPointerCapture(e.pointerId);

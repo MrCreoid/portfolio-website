@@ -3,11 +3,19 @@
 import { useEffect } from "react";
 import type Lenis from "lenis";
 import type { View } from "@/lib/data";
-import { gsap, ScrollTrigger, getLenis, startLenis } from "@/lib/scroll";
+import { Flip, gsap, ScrollTrigger, getLenis, startLenis } from "@/lib/scroll";
 import { prefersReducedMotion, splitWords } from "@/lib/fx";
 
 const $$ = <T extends Element = HTMLElement>(s: string, c: ParentNode = document) =>
   Array.from(c.querySelectorAll<T>(s));
+
+/** How far a doubled marquee track travels before it repeats.
+ *
+ *  Not `scrollWidth / 2`: the track is a flex row with a gap, and `scrollWidth`
+ *  has no trailing gap after the last item — so the naive half is short by half
+ *  a gap, and the band jumps back by that much on every cycle. */
+const repeatWidth = (track: HTMLElement) =>
+  (track.scrollWidth + (parseFloat(getComputedStyle(track).columnGap) || 0)) / 2;
 
 /**
  * The scroll chrome that lives outside any one view: Lenis itself, the header
@@ -147,9 +155,9 @@ export function useViewScrollFx(view: View, ready: boolean) {
     // fast, backwards when you scroll up, barely moving when you stop
     const tracks = $$(".marquee-track", root);
     const pos = tracks.map(() => 0);
-    let halves = tracks.map((t) => t.scrollWidth / 2);
+    let halves = tracks.map(repeatWidth);
     const measure = () => {
-      halves = tracks.map((t) => t.scrollWidth / 2);
+      halves = tracks.map(repeatWidth);
     };
     const tick = (_t: number, dt: number) => {
       const l = getLenis();
@@ -183,4 +191,132 @@ export function useViewScrollFx(view: View, ready: boolean) {
       }
     };
   }, [view, ready]);
+}
+
+/**
+ * The name becomes the marquee.
+ *
+ * As the hero leaves, the fifteen letters of "I'M PRATYUSH GARG" lift off their
+ * lines, fly, and land on the fifteen empty slots at the head of the red band —
+ * which then carries them along with everything else. Scroll back up and they
+ * fly home.
+ *
+ * The geometry is measured once per refresh with GSAP's `Flip.fit`, and only
+ * the two things that move afterwards are tracked per frame: the band's own
+ * translation, and the parallax on the title's three lines. Neither costs a
+ * layout read.
+ */
+export function useNameToMarquee(active: boolean) {
+  useEffect(() => {
+    if (!active || prefersReducedMotion()) return;
+    const title = document.querySelector<HTMLElement>(".hero-title");
+    const hero = document.querySelector<HTMLElement>(".hero");
+    const track = document.querySelector<HTMLElement>(".marquee-track");
+    if (!title || !hero || !track) return;
+
+    const letters = $$(".h-letter > i", title);
+    // the band is doubled for the loop, so only the first copy of each slot is
+    // a landing site — the second is there to keep the two halves identical
+    const slots = $$(".m-t", track).slice(0, letters.length);
+    const lines = $$(".line", title);
+    if (letters.length !== slots.length || !letters.length) return;
+
+    type Fit = { x: number; y: number; scaleX: number; scaleY: number };
+    let fits: Fit[] = [];
+    let lineOf: number[] = [];
+    let baseY: number[] = [];
+    let trackX0 = 0;
+    let half = 1;
+    let ready = false;
+
+    /** The inline transform the marquee driver wrote this frame — read from the
+     *  attribute, never from getComputedStyle, so nothing is recalculated. */
+    const trackX = () => Number(/translate3d\(([-\d.]+)px/.exec(track.style.transform)?.[1] ?? 0);
+    const lineY = (i: number) => Number(gsap.getProperty(lines[i], "y")) || 0;
+
+    const measure = () => {
+      // Flip.fit reads boxes, so the letters have to be standing at home
+      gsap.set(letters, { clearProps: "transform" });
+      lineOf = letters.map((el) => lines.indexOf(el.closest(".line") as HTMLElement));
+      baseY = lines.map((_, i) => lineY(i));
+      trackX0 = trackX();
+      half = repeatWidth(track) || 1;
+      wasHome = false;
+      fits = letters.map(
+        (el, i) => Flip.fit(el, slots[i], { scale: true, absolute: true, getVars: true }) as Fit,
+      );
+      ready = fits.every((f) => f && isFinite(f.x) && isFinite(f.y));
+      apply();
+    };
+
+    const state = { p: 0 };
+    // 0.02 per letter, so the last one leaves a beat after the first
+    const STAGGER = 0.02;
+    const span = 1 - STAGGER * (letters.length - 1);
+
+    let wasHome = false;
+    const apply = () => {
+      if (!ready) return;
+      const p = state.p;
+      // at rest the letters are home and nothing needs writing — this runs on
+      // every frame the home view is on screen, which is most of them
+      if (p < 0.0005) {
+        if (wasHome) return;
+        wasHome = true;
+        gsap.set(letters, { clearProps: "transform" });
+        title.classList.remove("is-flying");
+        return;
+      }
+      wasHome = false;
+      title.classList.add("is-flying");
+      // the band repeats every half its width, so a landed letter that would
+      // travel a full repeat simply continues on the next copy of its slot
+      const raw = trackX() - trackX0;
+      const dx = ((((raw + half / 2) % half) + half) % half) - half / 2;
+      const drifts = lines.map((_, i) => lineY(i) - baseY[i]);
+
+      letters.forEach((el, i) => {
+        const f = fits[i];
+        const t = Math.max(0, Math.min(1, (p - i * STAGGER) / span));
+        const drift = drifts[lineOf[i]];
+        // the stagger belongs to the flight itself. The band's travel and the
+        // title's parallax are the page moving underneath all fifteen at once,
+        // so they carry the shared progress — stagger them and the name splays
+        // apart in mid-air instead of flying as a name.
+        gsap.set(el, {
+          x: f.x * t + dx * p,
+          y: f.y * t - drift * p,
+          scaleX: 1 + (f.scaleX - 1) * t,
+          scaleY: 1 + (f.scaleY - 1) * t,
+          force3D: true,
+        });
+      });
+    };
+
+    const tween = gsap.to(state, {
+      p: 1,
+      ease: "none",
+      scrollTrigger: {
+        trigger: hero,
+        start: "40% top",
+        end: "bottom top",
+        scrub: 0.6,
+        invalidateOnRefresh: true,
+      },
+    });
+
+    gsap.ticker.add(apply);
+    ScrollTrigger.addEventListener("refresh", measure);
+    const raf = requestAnimationFrame(measure);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      gsap.ticker.remove(apply);
+      ScrollTrigger.removeEventListener("refresh", measure);
+      tween.scrollTrigger?.kill();
+      tween.kill();
+      gsap.set(letters, { clearProps: "transform" });
+      title.classList.remove("is-flying");
+    };
+  }, [active]);
 }

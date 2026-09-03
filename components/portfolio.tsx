@@ -32,7 +32,7 @@ import {
   useScramble,
   useViewEnter,
 } from "@/hooks/use-view-effects";
-import { useScrollChrome, useViewScrollFx } from "@/hooks/use-scroll-fx";
+import { useNameToMarquee, useScrollChrome, useViewScrollFx } from "@/hooks/use-scroll-fx";
 import { useHeroLetters } from "@/hooks/use-toys";
 import {
   useDvdScreensaver,
@@ -85,6 +85,7 @@ function Site() {
   useNavIndicator(view, ready);
   useScrollChrome(ready);
   useViewScrollFx(view, ready);
+  useNameToMarquee(view === "home" && ready);
   useHeroLetters(view === "home" && ready);
   useMagneticTilt();
   useBentoSpotlight();
