@@ -135,10 +135,17 @@ for (const { name, w, h, mobile } of WIDTHS) {
   const span = Date.now() - t0;
   const { frames, long } = await page.evaluate(() => ({ frames: window.__f.slice(5), long: window.__long }));
 
-  const ratio = p95(frames) / (p95(idle) || 1);
+  // Idle is sampled again afterwards and the slower of the two is the baseline.
+  // This host runs the page at 120Hz until something makes it work, then drops
+  // to 60 and stays there — so a flick that costs the main thread nothing still
+  // reads as 1.7x against an idle sampled before the drop. Long-task time is
+  // the check that a real regression trips.
+  const idleAfter = await sample(80);
+  const base = Math.max(p95(idle), p95(idleAfter)) || 1;
+  const ratio = p95(frames) / base;
   const blocked = (long / span) * 100;
   console.log(
-    `  · scroll: ${frames.length} frames, p95 ${p95(frames).toFixed(0)}ms vs idle ${p95(idle).toFixed(0)}ms ` +
+    `  · scroll: ${frames.length} frames, p95 ${p95(frames).toFixed(0)}ms vs idle ${p95(idle).toFixed(0)}/${p95(idleAfter).toFixed(0)}ms ` +
       `(${ratio.toFixed(2)}×), ${long.toFixed(0)}ms long tasks over ${span}ms (${blocked.toFixed(1)}% blocked)`,
   );
   if (p95(frames) > 20) problems.push(note(`  ✗ scroll p95 ${p95(frames).toFixed(1)}ms (want ≤20)`));

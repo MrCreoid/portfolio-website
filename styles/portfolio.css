@@ -3151,7 +3151,6 @@ body.is-locked .header {
   border-bottom: 1px solid var(--rule);
   padding: clamp(1.3rem, 2.4vw, 2.25rem);
   will-change: transform;
-  transform-style: preserve-3d;
   transition: transform 0.4s var(--ease-out);
 }
 /* The cell lifts and leans away from the pointer, four degrees at the corners.
