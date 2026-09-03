@@ -12,7 +12,7 @@ import {
   type RefObject,
 } from "react";
 import { NAV, SITE_TITLE, VIEWS, View } from "@/lib/data";
-import { inkBurst } from "@/hooks/use-ambient";
+import { inkBurst, refreshInk } from "@/hooks/use-ambient";
 import { prefersReducedMotion, scramble, setParticleTheme, wait } from "@/lib/fx";
 import { scrollTop } from "@/lib/scroll";
 
@@ -181,6 +181,9 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setParticleTheme(crt, cozy);
+    // the constellation reads the theme every frame; the fluid was built with
+    // one palette and has to be told the plate changed colour
+    refreshInk();
   }, [crt, cozy]);
 
   useEffect(() => () => clearTimeout(toastTimer.current), []);

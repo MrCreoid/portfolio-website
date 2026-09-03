@@ -234,8 +234,8 @@ export function useViewScrollFx(view: View, ready: boolean) {
       }
       // the line down the left rule: one draw across the whole view, from
       // the top of the page to where the footer takes over
-      const line = root.querySelector<HTMLElement>(".view-line > i");
-      if (line) {
+      const line = $$(".view-line > i", root);
+      if (line.length) {
         gsap.fromTo(
           line,
           { scaleY: 0 },

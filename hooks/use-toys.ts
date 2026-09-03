@@ -40,6 +40,15 @@ export function useTypewriter(ref: RefObject<HTMLSpanElement | null>) {
   }, [ref]);
 }
 
+/* The rotator reads this rather than the constant, so a line can be added to
+   the set at runtime — the birthday egg is the only thing that does. */
+const eyebrowLines = [...EYEBROW_LINES];
+
+/** Puts a line into the rotation. Idempotent: React remounts the rotator. */
+export function addEyebrowLine(line: string) {
+  if (!eyebrowLines.includes(line)) eyebrowLines.unshift(line);
+}
+
 /** The status line above the name swaps itself out every few seconds. */
 export function useEyebrowRotator(ref: RefObject<HTMLSpanElement | null>) {
   useEffect(() => {
@@ -59,8 +68,8 @@ export function useEyebrowRotator(ref: RefObject<HTMLSpanElement | null>) {
         ],
         { duration: 320, easing: "ease-in", fill: "forwards" },
       ).onfinish = () => {
-        i = (i + 1) % EYEBROW_LINES.length;
-        el.textContent = EYEBROW_LINES[i];
+        i = (i + 1) % eyebrowLines.length;
+        el.textContent = eyebrowLines[i];
         el.animate(
           [
             { transform: "translateY(115%)", opacity: 0 },

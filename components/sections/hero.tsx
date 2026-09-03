@@ -19,6 +19,7 @@ import {
   usePortraitAlphaHover,
   useTypewriter,
 } from "@/hooks/use-toys";
+import { PortraitAscii } from "@/components/fx/portrait-ascii";
 import { PortraitGL } from "@/components/fx/portrait-gl";
 import { usePortfolio } from "@/components/portfolio-provider";
 import { Roll, useNavClick } from "@/components/layout/header";
@@ -329,6 +330,8 @@ export function Hero() {
           <img className="portrait-ghost ghost-c" src={asset("/assets/portrait-color.webp")} alt="" aria-hidden="true" />
           {/* and over all of it, the same photograph again as a shader */}
           <PortraitGL src={asset("/assets/portrait-color.webp")} />
+          {/* which the character wall covers until you point at him */}
+          <PortraitAscii src={asset("/assets/portrait-color.webp")} />
         </div>
       </div>
 
@@ -370,7 +373,9 @@ export function Hero() {
                 onClick={nav("projects")}
                 data-cursor="open"
                 data-reveal="wipe"
-                data-shot={asset(`/assets/shots/${project.id}.webp`)}
+                data-shot={
+                  project.shot ? asset(`/assets/shots/${project.id}.webp`) : undefined
+                }
               >
                 <span className="work-no">
                   {String(i + 1).padStart(2, "0")}

@@ -43,6 +43,7 @@ import {
   useTabPout,
 } from "@/hooks/use-ambient";
 import {
+  useBirthday,
   useConsoleGreeting,
   useCozyMode,
   useKonami,
@@ -102,6 +103,7 @@ function Site() {
   useTabPout();
   useFilmPosterWobble();
   useTypedSecrets();
+  useBirthday();
   useCozyMode();
   useKonami(showAchievement);
   useConsoleGreeting();
@@ -130,10 +132,11 @@ function Site() {
               className={`view${view === name ? " is-active" : ""}`}
               id={`view-${name}`}
             >
-              {/* one red line down the left rule of the view, drawn by the
-                  scroll — the timeline's rail is a thicker segment of it */}
+              {/* a red line down both margins of the view, drawn by the
+                  scroll — the timeline's rail is a thicker segment of the left */}
               <span className="view-line container" aria-hidden="true">
-                <i />
+                <i className="vl-a" />
+                <i className="vl-b" />
               </span>
               <Section />
             </section>

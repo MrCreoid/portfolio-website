@@ -484,10 +484,15 @@ button:hover .arrow {
   pointer-events: none;
   translate: -50% -50%;
 }
+/* Both carry a paper hairline as well as their red. Half the controls on this
+   page fill with the same red on hover — the bento plate, the primary button,
+   a passed date — and a red square on a red plate is an invisible square. Two
+   plates, which is what the rest of the page is printed in anyway. */
 .cursor-dot {
   width: 5px;
   height: 5px;
   background: var(--red);
+  box-shadow: 0 0 0 1px rgb(var(--paper-rgb) / 0.5);
   transition:
     scale 0.18s var(--ease-spring),
     opacity 0.2s;
@@ -496,6 +501,7 @@ button:hover .arrow {
   width: 30px;
   height: 30px;
   border: 1px solid var(--rule-3);
+  box-shadow: inset 0 0 0 1px rgb(var(--paper-rgb) / 0.45);
   transition:
     border-color 0.26s,
     background-color 0.26s,
@@ -546,6 +552,7 @@ body[data-cur="label"] .cursor-dot {
 body[data-cur="blend"] .cursor-ring {
   background: var(--paper);
   border-color: var(--paper);
+  box-shadow: none;
   mix-blend-mode: difference;
 }
 body[data-cur="blend"] .cursor-dot {
@@ -1442,7 +1449,7 @@ body.is-locked .header {
   height: auto;
   /* graded down to the ink plate; hover releases the photograph's own colour,
      which is already this site's red because it was shot at sunset */
-  filter: var(--photo-ink, grayscale(1) contrast(1.16) brightness(0.94));
+  filter: var(--photo-ink, grayscale(1) contrast(1.04) brightness(1.14));
   transition: filter 0.55s var(--ease-out);
   /* a hard crop, not a dissolve: the figure is cut off square at the rule,
      the way a plate is cropped to its column in print */
@@ -1514,6 +1521,33 @@ body.is-locked .header {
    down — they remain the fallback wherever the canvas never mounts */
 .hero-portrait.has-gl .portrait-ghost {
   opacity: 0;
+}
+
+/* The character wall. At rest the hero is set in type like everything else on
+   the page; the photograph is what you get for pointing at him. These rules
+   come after .has-gl on purpose — same specificity, and this is the one that
+   has to win while the wall is up. */
+.portrait-ascii {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.55s var(--ease-out);
+  animation: breathe 7s ease-in-out infinite;
+}
+.hero-portrait.has-ascii .portrait-ascii {
+  opacity: 1;
+}
+.hero-portrait.has-ascii .portrait-gl,
+.hero-portrait.has-ascii > img {
+  opacity: 0;
+}
+/* point at him and the type dissolves into the person */
+.hero-portrait.has-ascii.is-lit .portrait-ascii {
+  opacity: 0;
+}
+.hero-portrait.has-ascii.is-lit .portrait-gl {
+  opacity: 1;
 }
 
 .hero-rail {
@@ -3073,51 +3107,118 @@ body.is-locked .header {
 }
 
 /* the filed plate — the form's slot, kept, with the receipt set into it */
-.form-filed {
-  border-top: 2px solid var(--red);
-  border-bottom: 1px solid var(--rule);
-  padding: clamp(1.6rem, 4vw, 2.6rem) 0 clamp(1.6rem, 4vw, 2.4rem);
+/* ---------- the receipt ---------- */
+/* What comes back when a message is filed: a paper plate on a page printed in
+   ink, so it reads as a physical docket rather than a green tick. The barcode
+   is genuinely the reference number in Code 39 (see lib/barcode.ts). */
+.receipt {
+  position: relative;
+  background: var(--paper);
+  color: var(--ink);
+  padding: clamp(1.6rem, 4vw, 2.4rem) clamp(1.4rem, 3.4vw, 2.2rem);
+  /* the torn edge of a till roll, in the only way a square system allows:
+     a row of notches cut out of the foot */
+  border-top: 3px solid var(--red);
 }
-.filed-stamp {
-  display: inline-block;
+.rc-stamp {
+  position: absolute;
+  top: clamp(1.2rem, 3vw, 2rem);
+  right: clamp(1.2rem, 3vw, 2rem);
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: var(--ink);
+  color: var(--paper);
   background: var(--red);
-  padding: 0.32rem 0.6rem;
-  margin-bottom: 1.4rem;
+  padding: 0.34rem 0.62rem;
+  rotate: -7deg;
+  transform-origin: 50% 50%;
+  animation: stamp-slam 240ms var(--ease-slam) both;
 }
-.form-filed h4 {
+/* it lands, it does not fade in */
+@keyframes stamp-slam {
+  0% {
+    scale: 1.6;
+    opacity: 0;
+  }
+  100% {
+    scale: 1;
+    opacity: 1;
+  }
+}
+.rc-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--red-deep);
+}
+.receipt h4 {
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  font-size: clamp(1.5rem, 3.6vw, 2.3rem);
   line-height: 0.95;
   letter-spacing: -0.035em;
   text-transform: uppercase;
-  color: var(--paper);
-  margin-bottom: 0.9rem;
+  margin: 0.5rem 0 1.4rem;
 }
-.form-filed p {
-  font-family: var(--font-serif);
-  font-size: clamp(1.02rem, 1.7vw, 1.3rem);
-  line-height: 1.45;
-  color: var(--paper-2);
-  max-width: 40ch;
-  margin-bottom: 1.6rem;
+.rc-lines {
+  border-top: 1px solid rgb(8 5 6 / 0.18);
+  margin-bottom: 1.5rem;
 }
-.filed-again {
+.rc-lines > div {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  gap: 1rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid rgb(8 5 6 / 0.12);
+}
+.rc-lines dt,
+.rc-lines dd {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.rc-lines dt {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: rgb(8 5 6 / 0.5);
+}
+.rc-bar {
+  display: block;
+  width: 100%;
+  height: 3.1rem;
+  fill: var(--ink);
+}
+.rc-ref {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.4em;
+  text-align: center;
+  margin: 0.4rem 0 1.5rem;
+}
+.rc-note {
+  font-family: var(--font-serif);
+  font-size: clamp(1rem, 1.6vw, 1.18rem);
+  line-height: 1.45;
+  color: rgb(8 5 6 / 0.7);
+  max-width: 40ch;
+  margin-bottom: 1.3rem;
+}
+.rc-again {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--paper-3);
+  color: var(--red-deep);
   transition: color var(--snap);
 }
-.filed-again:hover {
-  color: var(--red-2);
+.rc-again:hover {
+  color: var(--ink);
 }
 
 .lb-link {
@@ -3177,6 +3278,7 @@ body.is-locked .header {
   grid-template-areas:
     "feat feat feat feat a a"
     "feat feat feat feat b b"
+    "c    c    c    c    c  c"
     "gh   gh   gh   gh   gh gh";
   /* No gap and no fill: the cells share their rules rather than each floating
      as its own bordered box. That is the difference between an archive sheet
@@ -3753,6 +3855,66 @@ body.is-locked .header {
   flex-direction: column;
   gap: 1.4rem;
 }
+/* one question at a time, and the question is the label */
+.cf-ask {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--paper-2);
+}
+.cf-ask b {
+  font-weight: 700;
+  color: var(--red);
+}
+.cf-ask i {
+  margin-left: auto;
+  font-style: normal;
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  color: var(--paper-4);
+}
+.cf-rule {
+  display: block;
+  height: 1px;
+  background: var(--rule);
+  margin-top: -0.7rem;
+}
+.cf-rule > i {
+  display: block;
+  height: 100%;
+  background: var(--red);
+  transform-origin: left;
+  transition: transform 0.5s var(--ease-out-hard);
+}
+.cf-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.6rem;
+  margin-top: 0.2rem;
+}
+.cf-back {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--paper-3);
+  transition: color var(--snap);
+}
+.cf-back:hover {
+  color: var(--paper);
+}
+.cf-hint {
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--paper-4);
+  margin-top: -0.9rem;
+}
 .quick-chips {
   display: flex;
   flex-wrap: wrap;
@@ -3846,9 +4008,8 @@ body.is-locked .header {
   font-size: 0.6rem;
   color: var(--red);
 }
-.contact-form .btn {
-  align-self: flex-start;
-  margin-top: 0.5rem;
+.cf-actions .btn {
+  margin-top: 0;
 }
 
 @media (max-width: 46em) {
@@ -4360,113 +4521,54 @@ body.is-locked .header {
   width: 7px;
   height: 7px;
 }
-/* the press run: type the name and the page is caught mid-print — the second
-   plate is out of register, and the crop marks and colour bar the trim would
-   have cut off are still on the sheet */
-.press {
+/* Editorial mode: type the name and every block of copy in the view becomes
+   editable, marked up the way a proof is — dashed red, offset off the text so
+   the rule never touches a letter. */
+body.is-editorial [contenteditable="true"] {
+  outline: 1px dashed rgb(var(--red-rgb) / 0.5);
+  outline-offset: 6px;
+  cursor: text !important;
+  border-radius: 0;
+  transition: outline-color var(--snap);
+}
+body.is-editorial [contenteditable="true"]:hover {
+  outline-color: rgb(var(--red-rgb) / 0.85);
+}
+body.is-editorial [contenteditable="true"]:focus {
+  outline: 1px solid var(--red);
+  outline-offset: 6px;
+  background: rgb(var(--paper-rgb) / 0.04);
+}
+.proof-bar {
   position: fixed;
-  inset: 0;
-  z-index: 9800;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.5s var(--ease-out);
-}
-.press.is-on {
-  opacity: 1;
-}
-/* a crop mark is two hairlines that stop short of the corner they mark */
-.press-crop {
-  position: absolute;
-  width: 42px;
-  height: 42px;
-}
-.press-crop::before,
-.press-crop::after {
-  content: "";
-  position: absolute;
-  background: var(--paper-3);
-}
-.press-crop::before {
   left: 0;
-  top: 20px;
-  width: 42px;
-  height: 1px;
-}
-.press-crop::after {
-  top: 0;
-  left: 20px;
-  width: 1px;
-  height: 42px;
-}
-.press-tl {
-  left: 18px;
-  top: 18px;
-}
-.press-tr {
-  right: 18px;
-  top: 18px;
-}
-.press-bl {
-  left: 18px;
-  bottom: 18px;
-}
-.press-br {
-  right: 18px;
-  bottom: 18px;
-}
-/* the colour bar, the strip a printer reads density off */
-/* both sit in the bottom band, clear of the nav above and the readout in the
-   corner — the furniture is meant to be at the trim, not over the page */
-.press-bar {
-  position: absolute;
-  right: 74px;
-  bottom: 56px;
-  width: min(22rem, 34vw);
-  height: 12px;
-  background: linear-gradient(
-    to right,
-    var(--paper) 0 12.5%,
-    var(--red) 12.5% 25%,
-    var(--red-deep) 25% 37.5%,
-    #14b8c4 37.5% 50%,
-    #6b7280 50% 62.5%,
-    var(--ink-3) 62.5% 75%,
-    var(--red-2) 75% 87.5%,
-    var(--paper-4) 87.5% 100%
-  );
-}
-.press-slug {
-  position: absolute;
-  left: 74px;
-  bottom: 58px;
+  right: 0;
+  bottom: 0;
+  z-index: 9500;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 0.65rem clamp(1rem, 3vw, 2.2rem);
+  background: var(--red);
+  color: var(--ink);
   font-family: var(--font-mono);
-  font-size: 0.56rem;
-  letter-spacing: 0.24em;
-  color: var(--paper-4);
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  translate: 0 100%;
+  transition: translate 0.35s var(--ease-out-hard);
 }
-/* the slip itself: a red plate and a cyan one, printed off the black. One
-   rule reaches every glyph on the page, which is what a plate out of
-   register actually does — no duplicated layers, no second render. */
-body.is-press * {
-  animation: misregister 2.6s var(--ease-out) both;
+.proof-bar.is-on {
+  translate: 0 0;
 }
-@keyframes misregister {
-  0% {
-    text-shadow: none;
-  }
-  12% {
-    text-shadow:
-      9px -3px 0 rgba(255, 34, 51, 0.85),
-      -8px 3px 0 rgba(20, 184, 196, 0.6);
-  }
-  70% {
-    text-shadow:
-      9px -3px 0 rgba(255, 34, 51, 0.85),
-      -8px 3px 0 rgba(20, 184, 196, 0.6);
-  }
-  100% {
-    text-shadow: none;
-  }
+.proof-bar b {
+  font-weight: 700;
+  letter-spacing: 0.22em;
+}
+/* the readout would sit under the rule */
+body.is-editorial .readout {
+  bottom: 3.4rem;
 }
 
 /* sudo: golden cursor */
@@ -4502,7 +4604,12 @@ body.is-cozy {
 }
 /* the field itself is recoloured at the source (see GradientBackground) — a
    hue-rotate on the red one only ever landed on magenta, which was the one
-   colour the warm room could not have */
+   colour the warm room could not have. The photographs print in the amber too:
+   left in colour they were the one red object in an amber room. */
+body.is-cozy {
+  --photo-ink: grayscale(1) sepia(1) saturate(2.1) brightness(1.06) contrast(0.98);
+  --photo-ink-lit: grayscale(1) sepia(1) saturate(2.1) brightness(1.2);
+}
 .cozy-flash {
   position: fixed;
   inset: 0;
@@ -4590,9 +4697,9 @@ body.is-crt .bg-scrim {
    canvas takes the same filter as the <img>, since the shader releases the
    photograph's own colour and knows nothing about the theme. */
 body.is-crt {
-  --photo-ink: grayscale(1) sepia(1) hue-rotate(102deg) saturate(2.6) brightness(0.78)
-    contrast(1.06);
-  --photo-ink-lit: grayscale(1) sepia(1) hue-rotate(102deg) saturate(2.6) brightness(0.92);
+  --photo-ink: grayscale(1) sepia(1) hue-rotate(102deg) saturate(2.4) brightness(1.05)
+    contrast(0.98);
+  --photo-ink-lit: grayscale(1) sepia(1) hue-rotate(102deg) saturate(2.4) brightness(1.18);
 }
 .crt-overlay {
   position: fixed;
@@ -4780,7 +4887,7 @@ body.is-idle .hero-title .h-letter > i {
   .noise,
   .cozy-float,
   .trail-bit,
-  .press,
+  .proof-bar,
   .dvd,
   .crt-overlay,
   .scroll-hint {
@@ -4975,18 +5082,24 @@ body:has(.pal[open]) .cursor-ring {
   top: 0;
   bottom: 0;
   border-left: 1px solid var(--rule);
+  border-right: 1px solid var(--rule);
   z-index: 1;
   pointer-events: none;
 }
 .view-line > i {
   position: absolute;
-  left: -1px;
   top: 0;
   bottom: 0;
   width: 1px;
   background: var(--red);
   transform: scaleY(0);
   transform-origin: top;
+}
+.vl-a {
+  left: -1px;
+}
+.vl-b {
+  right: -1px;
 }
 /* the stations: a square on the line at every section head, hollow until the
    reader is past it */

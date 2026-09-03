@@ -187,6 +187,15 @@ const palette = () => [hex(particleTheme.line), hex(particleTheme.dot)];
 
 let fluid: WebGLFluidEnhanced | null = null;
 let plate: HTMLCanvasElement | null = null;
+/** The live config factory, kept so a theme change can re-apply it. Without
+ *  this the dye stayed the red it was built with until the window resized. */
+let inkConfig: (() => Parameters<WebGLFluidEnhanced["setConfig"]>[0]) | null = null;
+
+/** Called when cozy or CRT flips: the palette comes from `particleTheme`, so
+ *  the sim only needs telling that it moved. */
+export function refreshInk() {
+  if (fluid && inkConfig) fluid.setConfig(inkConfig());
+}
 
 /** One splat, in client coordinates. The sim reads x against the backing store
  *  and y against the CSS box — its own inconsistency, not ours. */
@@ -251,6 +260,7 @@ export function useInk(ref: RefObject<HTMLCanvasElement | null>) {
       if (dead) return;
       fluid = new Fluid(host);
       plate = canvas;
+      inkConfig = config;
       fluid.setConfig(config());
       fluid.start();
       layer.dataset.ink = "on";
@@ -278,6 +288,7 @@ export function useInk(ref: RefObject<HTMLCanvasElement | null>) {
       fluid?.stop();
       fluid = null;
       plate = null;
+      inkConfig = null;
       removeEventListener("pointerdown", onDown);
       removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibility);

@@ -33,6 +33,8 @@ export const LINKS = {
   githubHandle: "github.com/MrCreoid",
   resume: asset("/assets/resume.pdf"),
 };
+/** Day and month only — the year is never needed and never shown. */
+export const BIRTHDAY = { day: 27, month: 5 };
 export const EYEBROW_LINES = [
   "open to internships & collabs",
   "fueled by curiosity, mostly",
@@ -189,6 +191,9 @@ export type Project = {
   body: string;
   tags: string[];
   cat: string;
+  /** `public/assets/shots/<id>.webp`. Leave it off and the work-index row
+   *  carries no image for the trail to throw — better than a 404 per hover. */
+  shot?: boolean;
   /** powers the in-site preview window; "#" or empty renders the empty state */
   url: string;
   repo: string;
@@ -196,7 +201,20 @@ export type Project = {
 /** ▼▼ add a project by adding an object ▼▼ */
 export const PROJECTS: Project[] = [
   {
+    id: "mcp-vetter",
+    shot: true,
+    kind: "featured",
+    featured: true,
+    title: "MCP Vetting Agent",
+    body: "An AI security auditor for AI tools. Hand it a third-party MCP server and it clones the repo, reads the tools it declares, then runs AST rules and Docker-sandboxed probes against it in parallel — findings mapped to the OWASP Agentic Top 10. If the verdict is HIGH it drafts the security issue and then stops, and waits for a person to say yes.",
+    tags: ["Python", "TypeScript", "FastMCP", "Docker"],
+    cat: "ai",
+    url: "https://ui-blond-six.vercel.app/",
+    repo: "https://github.com/hemv-857/mcp-vetter-agent",
+  },
+  {
     id: "portfolio",
+    shot: true,
     kind: "project",
     title: "This portfolio",
     body: "The site you're reading. Next.js, TypeScript and a hand-written stylesheet, with view routing, a canvas constellation, physics toys, and more secrets than it admits to.",
@@ -207,8 +225,8 @@ export const PROJECTS: Project[] = [
   },
   {
     id: "attendance",
-    kind: "featured",
-    featured: true,
+    shot: true,
+    kind: "project",
     title: "Attendance Tracker",
     body: "An attendance tracker for college students. Set your weekly timetable once, then mark each class as it happens.",
     tags: ["React", "TypeScript", "Tailwind CSS", "Firebase"],
@@ -218,6 +236,7 @@ export const PROJECTS: Project[] = [
   },
   {
     id: "spent",
+    shot: true,
     kind: "project",
     title: "Spent",
     body: "An expense and debt tracker that feels like a native iOS app. Works offline, installs as a PWA, syncs across devices.",
@@ -227,7 +246,7 @@ export const PROJECTS: Project[] = [
     repo: "https://github.com/MrCreoid/spent",
   },
 ];
-export const PROJECT_FILTERS = ["all", "web"];
+export const PROJECT_FILTERS = ["all", "ai", "web"];
 /* ---------------- achievements ---------------- */
 export type Achievement = {
   kind: string;

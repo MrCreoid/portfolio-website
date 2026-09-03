@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { LINKS } from "@/lib/data";
-import { pressRun, rand } from "@/lib/fx";
+import { BIRTHDAY, LINKS } from "@/lib/data";
+import { confetti, rand } from "@/lib/fx";
+import { addEyebrowLine } from "@/hooks/use-toys";
 import { usePortfolio } from "@/components/portfolio-provider";
 
 /**
- * Typed secrets: "pratyush" → the press run, "patty" → cozy mode,
+ * Typed secrets: "pratyush" → editorial mode, "patty" → cozy mode,
  * "sudo" → gold cursor, a lone "R" → the résumé.
  */
 export function useTypedSecrets() {
@@ -45,9 +46,7 @@ export function useTypedSecrets() {
       if (keyBuffer.endsWith("pratyush")) {
         keyBuffer = "";
         clearTimeout(resumeTimer);
-        toast("the plates slipped. hold still.", 2600);
-        pressRun();
-        setTimeout(() => toast("registration corrected. nice find."), 2700);
+        editorialMode(toast);
       }
       if (keyBuffer.endsWith("patty")) {
         keyBuffer = "";
@@ -74,6 +73,84 @@ export function useTypedSecrets() {
       removeEventListener("keydown", onKey);
     };
   }, [toast, setCozy]);
+}
+
+/**
+ * Editorial mode — the reward for typing the name is the job.
+ *
+ * Every heading, paragraph and list item in the view you are on becomes
+ * editable, dashed in red the way a proof is marked up, and a rule at the foot
+ * says what is going on. Rewrite the headline, rename the projects, put
+ * something rude in the lede. Nothing is saved and nothing is sent: it is your
+ * copy of the archive for as long as the tab is open, and Esc (or a reload)
+ * hands it back.
+ *
+ * Not a two-second effect you watch — the toys on this site are the ones you
+ * get to keep playing with.
+ */
+const PROOF = "h2, h3, h4, p, li, blockquote, dd, figcaption";
+
+function editorialMode(toast: (m: string, ms?: number) => void) {
+  if (document.body.classList.contains("is-editorial")) return;
+  const view = document.querySelector(".view.is-active");
+  if (!view) return;
+
+  // the hero name is fifteen separate <i>s driven by the marquee Flip, and the
+  // split-glyph headings are spans with their own stagger — neither survives
+  // having a caret put in it, so the proof stops at whole blocks of copy
+  const marked = Array.from(view.querySelectorAll<HTMLElement>(PROOF)).filter(
+    (el) => !el.closest(".chars, .marquee, .h-letter, .receipt") && el.textContent?.trim(),
+  );
+  marked.forEach((el) => {
+    el.contentEditable = "true";
+    el.spellcheck = false;
+  });
+
+  const bar = document.createElement("div");
+  bar.className = "proof-bar";
+  bar.innerHTML =
+    '<span><b>Editorial mode</b> — the archive is yours. Nothing is saved.</span>' +
+    "<span>esc to hand it back</span>";
+  document.body.append(bar);
+  document.body.classList.add("is-editorial");
+  requestAnimationFrame(() => bar.classList.add("is-on"));
+  toast("you have the pen. rewrite anything.", 4000);
+
+  const off = (e: KeyboardEvent) => {
+    if (e.key !== "Escape") return;
+    marked.forEach((el) => {
+      el.contentEditable = "false";
+      el.blur();
+    });
+    document.body.classList.remove("is-editorial");
+    bar.classList.remove("is-on");
+    setTimeout(() => bar.remove(), 400);
+    removeEventListener("keydown", off);
+    toast("back to my words, then.");
+  };
+  addEventListener("keydown", off);
+}
+
+/**
+ * Once a year, and only for the person whose birthday it is — the visitor gets
+ * a page that is quietly pleased with itself and a line in the rotation.
+ */
+export function useBirthday() {
+  const { cozy } = usePortfolio();
+  useEffect(() => {
+    const now = new Date();
+    if (now.getDate() !== BIRTHDAY.day || now.getMonth() + 1 !== BIRTHDAY.month) return;
+    const year = String(now.getFullYear());
+    try {
+      if (localStorage.getItem("pg-bday") === year) return;
+      localStorage.setItem("pg-bday", year);
+    } catch {
+      /* private mode: it fires every load, which is the harmless failure */
+    }
+    addEyebrowLine("it's my birthday, apparently");
+    const t = setTimeout(() => confetti(innerWidth / 2, innerHeight / 3, 44, cozy), 3400);
+    return () => clearTimeout(t);
+  }, [cozy]);
 }
 
 /** Cozy mode's warm flash + the ☕🎬🎸 drifting up the screen. */
