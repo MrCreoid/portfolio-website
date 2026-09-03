@@ -2757,6 +2757,21 @@ body.is-locked .header {
   color: var(--red);
   align-self: start;
 }
+/* the card prints when the rail reaches it: a clip edge runs down the title,
+   then the body a beat behind it, the whole card set in 600ms */
+.tl-card h3,
+.tl-card p {
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 0.4s var(--ease-out-hard) var(--print, 0ms);
+}
+.tl-item.is-passed .tl-card h3 {
+  --print: 100ms;
+  clip-path: inset(0 0 0 0);
+}
+.tl-item.is-passed .tl-card p {
+  --print: 200ms;
+  clip-path: inset(0 0 0 0);
+}
 .tl-card h3 {
   font-family: var(--font-display);
   font-weight: 800;
@@ -4595,6 +4610,10 @@ body.is-crt .crt-overlay {
   [data-reveal] {
     opacity: 1;
     translate: 0 0;
+    clip-path: none;
+  }
+  .tl-card h3,
+  .tl-card p {
     clip-path: none;
   }
   .ch,
