@@ -339,6 +339,7 @@ export function Hero() {
                 onClick={nav("projects")}
                 data-cursor="open"
                 data-reveal="wipe"
+                data-shot={asset(`/assets/shots/${project.id}.webp`)}
               >
                 <span className="work-no">
                   {String(i + 1).padStart(2, "0")}

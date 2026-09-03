@@ -4,6 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { VIEWS } from "@/lib/data";
 import { PortfolioProvider, usePortfolio } from "@/components/portfolio-provider";
 import { Ambient, Cursor } from "@/components/fx/ambient";
+import { ImageTrail } from "@/components/fx/image-trail";
 import { Preloader } from "@/components/fx/preloader";
 import { Header, MobileMenu } from "@/components/layout/header";
 import { Rail } from "@/components/layout/rail";
@@ -100,6 +101,10 @@ function Site() {
     <>
       <Ambient view={view} />
       <Cursor />
+      {/* outside <main>: the active view carries a per-frame skew, and a
+          transformed ancestor would anchor the trail to it instead of the
+          viewport */}
+      <ImageTrail scope=".work-index" />
       <Preloader onDone={onPreloaderDone} />
       <Transition />
 

@@ -575,6 +575,32 @@ body.cursor-down .cursor-ring {
   height: 100%;
 }
 
+/* ---------- the work trail ---------- */
+/* Five prints of the same screenshot chasing the cursor across the work index.
+   Fixed and pointer-transparent: it can never move the page or eat a click. */
+.trail {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 260ms var(--ease-out);
+}
+.trail.is-on {
+  opacity: 1;
+}
+.trail img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: clamp(11rem, 17vw, 19rem);
+  height: auto;
+  /* a plate on the page, cropped square and ruled — not a floating photo */
+  border: 1px solid var(--rule-2);
+  will-change: transform;
+}
+
 /* ---------- scroll telemetry ---------- */
 .readout {
   position: fixed;
