@@ -240,7 +240,13 @@ export function Hero() {
           </span>
           <span className="line line-3" data-parallax="0.3">
             <SplitText text="Garg" accent />
-            <span className="hero-dot">.</span>
+            {/* the wrapper is the physics body, the inner glyph is what the
+                entrance and the ripple animate — the same split every letter
+                uses, under its own class so the marquee's slot count (one per
+                letter of the name, no punctuation) still lines up */}
+            <span className="h-dot">
+              <span className="hero-dot">.</span>
+            </span>
           </span>
         </h1>
 

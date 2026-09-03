@@ -1416,6 +1416,7 @@ body.is-locked .header {
    would otherwise swallow every event over the right half of the hero, the
    portrait included */
 .h-letter,
+.h-dot,
 .hero-dot,
 .hero-sub,
 .hero-cta .btn,
@@ -1587,7 +1588,8 @@ body.is-locked .header {
 .hero-dot {
   color: var(--red);
 }
-.h-letter {
+.h-letter,
+.h-dot {
   display: inline-block;
   cursor: grab;
   will-change: transform;
@@ -1606,7 +1608,8 @@ body.is-locked .header {
 .hero-title:not(.is-lit) .hero-dot {
   opacity: 0;
 }
-.h-letter.is-grabbed {
+.h-letter.is-grabbed,
+.h-dot.is-grabbed {
   cursor: grabbing;
   color: var(--red);
   z-index: 5;
