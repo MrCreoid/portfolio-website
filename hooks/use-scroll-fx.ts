@@ -336,8 +336,11 @@ export function useNameToMarquee(active: boolean) {
       trackX0 = trackX();
       half = repeatWidth(track) || 1;
       wasHome = false;
+      // no `absolute` here: Flip applies position:absolute to the element as a
+      // side effect even in getVars mode, and fifteen absolutely positioned
+      // glyphs collapse their spans to nothing and stack on the line's origin
       fits = letters.map(
-        (el, i) => Flip.fit(el, slots[i], { scale: true, absolute: true, getVars: true }) as Fit,
+        (el, i) => Flip.fit(el, slots[i], { scale: true, getVars: true }) as Fit,
       );
       ready = fits.every((f) => f && isFinite(f.x) && isFinite(f.y));
       apply();

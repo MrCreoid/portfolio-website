@@ -56,6 +56,22 @@ for (const { name, w, h, mobile } of WIDTHS) {
   });
   const { page, errors } = await open(ctx, HASH && `#${HASH}`);
   await page.screenshot({ path: `${OUT}/${name}.png` });
+  // the name has to still be a name. Flip.fit's `absolute` once left fifteen
+  // glyphs stacked on their line's origin, and every other check still passed
+  // while the hero read as two coloured blobs
+  const hero = await page.evaluate(() => {
+    const L = [...document.querySelectorAll(".h-letter > i")];
+    if (!L.length) return null;
+    const lefts = L.map((g) => g.getBoundingClientRect().left);
+    return {
+      span: Math.min(...L.map((g) => g.parentElement.getBoundingClientRect().width)),
+      spread: Math.max(...lefts) - Math.min(...lefts),
+    };
+  });
+  if (hero && hero.span < 4)
+    problems.push(note(`  ✗ ${name}px  the hero letters are collapsed (narrowest ${hero.span.toFixed(1)}px)`));
+  if (hero && hero.spread < w * 0.25)
+    problems.push(note(`  ✗ ${name}px  the hero name spans only ${hero.spread.toFixed(0)}px of ${w}`));
   await page.evaluate(() => scrollTo(0, 0));
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   await page.waitForTimeout(1200);
