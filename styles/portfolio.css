@@ -1341,6 +1341,31 @@ body.is-locked .header {
   opacity: 0.6;
 }
 
+/* the shader plate: the same photograph, sampled by a fragment shader. It is
+   sized and cropped from the <img> in JS, so it lands on it at every width. */
+.portrait-gl {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-out);
+  animation: breathe 7s ease-in-out infinite;
+}
+/* nothing swaps until the texture is on the GPU — until then the <img> is both
+   the LCP element and the whole picture */
+.hero-portrait.has-gl .portrait-gl {
+  opacity: 1;
+}
+.hero-portrait.has-gl > img {
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-out);
+}
+/* the misregister is done properly in the shader now, so the CSS plates stand
+   down — they remain the fallback wherever the canvas never mounts */
+.hero-portrait.has-gl .portrait-ghost {
+  opacity: 0;
+}
+
 .hero-rail {
   position: relative;
   z-index: 1;

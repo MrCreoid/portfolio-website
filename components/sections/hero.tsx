@@ -19,6 +19,7 @@ import {
   usePortraitAlphaHover,
   useTypewriter,
 } from "@/hooks/use-toys";
+import { PortraitGL } from "@/components/fx/portrait-gl";
 import { usePortfolio } from "@/components/portfolio-provider";
 import { Roll, useNavClick } from "@/components/layout/header";
 import { SectionHead } from "@/components/layout/section-head";
@@ -291,6 +292,8 @@ export function Hero() {
           <img className="portrait-ghost ghost-r" src={asset("/assets/portrait-color.webp")} alt="" aria-hidden="true" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="portrait-ghost ghost-c" src={asset("/assets/portrait-color.webp")} alt="" aria-hidden="true" />
+          {/* and over all of it, the same photograph again as a shader */}
+          <PortraitGL src={asset("/assets/portrait-color.webp")} />
         </div>
       </div>
 

@@ -324,6 +324,11 @@ export function useGuitarString(
  * the image's alpha channel at the pointer instead: the frame is drawn once
  * into a small offscreen canvas, and each move reads one pixel from it.
  */
+/** What the alpha hit-test knows about the pointer, published for the shader
+ *  portrait to read each frame. One listener, two consumers — the CSS plates
+ *  and the WebGL plane are never fed by two competing handlers. */
+export const portraitPointer = { x: 0.5, y: 0.5, speed: 0, lit: 0 };
+
 export function usePortraitAlphaHover() {
   useEffect(() => {
     const wrap = document.querySelector<HTMLElement>(".hero-portrait");
@@ -354,18 +359,30 @@ export function usePortraitAlphaHover() {
     else img.addEventListener("load", build, { once: true });
 
     const move = (e: MouseEvent) => {
-      if (!data || !ctx) return;
       const r = img.getBoundingClientRect();
+      const nx = (e.clientX - r.left) / r.width;
+      const ny = (e.clientY - r.top) / r.height;
+      // how hard the thumb is moving, in element widths per event
+      portraitPointer.speed = Math.min(1, Math.hypot(nx - portraitPointer.x, ny - portraitPointer.y) * 7);
+      portraitPointer.x = nx;
+      portraitPointer.y = ny;
+      if (!data || !ctx) return;
       // the two colour plates slide against the pointer while he is lit
-      wrap.style.setProperty("--gx", (((e.clientX - r.left) / r.width) * 2 - 1).toFixed(3));
-      wrap.style.setProperty("--gy", (((e.clientY - r.top) / r.height) * 2 - 1).toFixed(3));
-      const x = Math.floor(((e.clientX - r.left) / r.width) * W);
-      const y = Math.floor(((e.clientY - r.top) / r.height) * ctx.canvas.height);
+      wrap.style.setProperty("--gx", (nx * 2 - 1).toFixed(3));
+      wrap.style.setProperty("--gy", (ny * 2 - 1).toFixed(3));
+      const x = Math.floor(nx * W);
+      const y = Math.floor(ny * ctx.canvas.height);
       if (x < 0 || y < 0 || x >= W || y >= ctx.canvas.height) return;
       const alpha = data[(y * W + x) * 4 + 3];
-      wrap.classList.toggle("is-lit", alpha > 40);
+      const lit = alpha > 40;
+      portraitPointer.lit = lit ? 1 : 0;
+      wrap.classList.toggle("is-lit", lit);
     };
-    const leave = () => wrap.classList.remove("is-lit");
+    const leave = () => {
+      portraitPointer.lit = 0;
+      portraitPointer.speed = 0;
+      wrap.classList.remove("is-lit");
+    };
 
     wrap.addEventListener("mousemove", move);
     wrap.addEventListener("mouseleave", leave);
