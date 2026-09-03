@@ -227,7 +227,7 @@ export function Hero() {
 
         {/* the composition: a small "I'M", the given name full-bleed, the
             surname indented so the block reads as three staggered steps */}
-        <h1 className="hero-title" data-cursor="blend">
+        <h1 className="hero-title" data-cursor="blend" data-word="grab">
           <span className="line line-1" data-parallax="0.1">
             <SplitText text="I'm" />
           </span>

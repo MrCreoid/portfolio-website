@@ -544,6 +544,11 @@ body[data-cur="blend"] .cursor-ring {
 body[data-cur="blend"] .cursor-dot {
   scale: 0;
 }
+/* the square keeps its word: difference inverts the label along with the
+   plate it sits on, so it stays legible over the type and off it */
+body[data-cur="blend"] .cursor-label {
+  opacity: 1;
+}
 body.cursor-down .cursor-ring {
   scale: 0.8;
 }
@@ -552,6 +557,35 @@ body.cursor-down .cursor-ring {
   .cursor-ring {
     display: none;
   }
+}
+/* The native cursor, switched off wherever the square is actually drawn — a
+   fine pointer with motion allowed, the same conditions useCursor mounts
+   under. It has to be !important: `cursor` is inherited, so `body { none }`
+   never reaches an <a> or a .h-letter that carries a cursor of its own, and
+   those are exactly the elements that end up wearing two.
+   It comes back only where it says something the square cannot: the caret in
+   a field (every input here is a text one), and the previewed page, whose
+   own cursor our square has no way of following into an iframe. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  *,
+  *::before,
+  *::after {
+    cursor: none !important;
+  }
+  input,
+  textarea {
+    cursor: text !important;
+  }
+  .pv-body,
+  .pv-body iframe {
+    cursor: auto !important;
+  }
+}
+/* and at the preview's edge the square stands down, rather than hanging in
+   the air where the pointer left it on its way into the frame */
+body:has(.pv-body:hover) .cursor-dot,
+body:has(.pv-body:hover) .cursor-ring {
+  opacity: 0;
 }
 
 /* ---------- the ink plate ---------- */

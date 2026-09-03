@@ -69,7 +69,10 @@ export function useCursor(rootRef: RefObject<HTMLDivElement | null>) {
       else mode = "idle";
 
       stuck = mode === "stick" ? small : null;
+      // the blended square carries its word too, so the name reads as one
+      // territory rather than flickering between a plate and a square
       if (mode === "label") label.textContent = word ?? "";
+      else if (mode === "blend") label.textContent = blend?.dataset.word ?? "";
       document.body.dataset.cur = mode;
     };
 
