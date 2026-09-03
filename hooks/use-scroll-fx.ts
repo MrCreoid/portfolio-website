@@ -100,8 +100,7 @@ const inkFill = (el: HTMLElement) => {
 /**
  * The scroll chrome that lives outside any one view: Lenis itself, the header
  * that ducks on the way down and returns on the way up, the red progress rule
- * under it, the telemetry readout, and the velocity skew — the page shears
- * with the speed of the scroll and settles when it stops.
+ * under it, and the telemetry readout.
  */
 export function useScrollChrome(ready: boolean) {
   useEffect(() => {
@@ -113,8 +112,6 @@ export function useScrollChrome(ready: boolean) {
     const rule = document.querySelector<HTMLElement>(".progress-rule");
     const val = document.querySelector<HTMLElement>(".readout-val");
     let hidden = false;
-    let target = 0;
-    let skew = 0;
 
     const onScroll = (l: Lenis) => {
       const down = l.direction === 1 && l.scroll > 120;
@@ -124,26 +121,18 @@ export function useScrollChrome(ready: boolean) {
       }
       if (rule) rule.style.transform = `scaleX(${l.progress})`;
       if (val) val.textContent = String(Math.round(l.progress * 100)).padStart(3, "0");
-      target = Math.max(-2.5, Math.min(2.5, l.velocity * 0.04));
     };
-    // written straight onto the active view's transform: a custom property on
-    // <html> invalidated every element's style once per frame
-    const tick = () => {
-      skew += (target - skew) * 0.2;
-      target *= 0.85;
-      if (Math.abs(skew) < 0.002 && target === 0) return;
-      const view = document.querySelector<HTMLElement>(".view.is-active");
-      if (view) view.style.transform = `skewY(${skew.toFixed(3)}deg)`;
-    };
+    /* The velocity skew is gone. It wrote a skewY() onto the whole active view
+       every frame from the scroll speed, which sheared every line of type on
+       the page as you moved — the single loudest "interaction demo" signal
+       here, a full-page repaint per frame, and the thing that made the site
+       hardest to read once a reader had zoomed in. */
 
     lenis.on("scroll", onScroll);
-    gsap.ticker.add(tick);
     document.fonts?.ready.then(() => ScrollTrigger.refresh());
 
     return () => {
       lenis.off("scroll", onScroll);
-      gsap.ticker.remove(tick);
-      document.querySelector<HTMLElement>(".view.is-active")?.style.removeProperty("transform");
       header?.classList.remove("is-hidden");
     };
   }, [ready]);

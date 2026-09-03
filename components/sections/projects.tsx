@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { LINKS, PROJECTS, PROJECT_FILTERS, type Project } from "@/lib/data";
+import { useEffect, useRef, useState } from "react";
+import { LINKS, PROJECTS, type Project } from "@/lib/data";
 import { usePortfolio } from "@/components/portfolio-provider";
 import { SectionHead } from "@/components/layout/section-head";
 
@@ -35,24 +35,14 @@ export function GithubIcon({ size = 14 }: { size?: number }) {
  * There are no project screenshots in the repo, so the cells are typographic
  * rather than image-led.
  */
-function ProjectCell({
-  project,
-  filtered,
-  area,
-  index,
-}: {
-  project: Project;
-  filtered: boolean;
-  area: string;
-  index: number;
-}) {
+function ProjectCell({ project, index }: { project: Project; index: number }) {
   const { openPreview } = usePortfolio();
 
   return (
     <article
-      className={`b-cell ${project.featured ? "b-featured" : "b-proj"}${filtered ? " is-filtered" : ""}`}
-      style={{ gridArea: area }}
+      className={`b-cell ${project.featured ? "b-featured" : "b-proj"}`}
       data-cat={project.cat}
+      data-cursor="open"
       data-reveal="wipe"
     >
       {/* the red plate wipes up from the bottom edge on hover — a second
@@ -108,12 +98,6 @@ function ProjectCell({
   );
 }
 
-/** Named slots, so the grid stays uneven instead of tiling into equal boxes.
- *  Slot 0 is the tall one, so whatever is flagged featured has to sort into it
- *  — otherwise the big box goes to whichever project happens to be first in
- *  the data file and the featured title gets crushed into a narrow cell. */
-const AREAS = ["feat", "a", "b", "c", "d", "e"];
-
 const byFeatured = (a: Project, b: Project) =>
   Number(Boolean(b.featured)) - Number(Boolean(a.featured));
 
@@ -123,6 +107,33 @@ export function Projects() {
   // a filter bar with one real category can never change anything — don't ship
   // a control that does nothing. It returns on its own once a second cat exists.
   const showFilters = cats.length > 1;
+  const filters = ["all", ...cats];
+
+  /* Filtering removes the cell from the output rather than hiding it in CSS.
+     The grid used to name fixed slots and `display: none` the misses, which
+     left a hole wherever a filtered cell had been — and filtering to a
+     category the featured project is not in emptied the tall slot entirely.
+     An auto-fit track list has nothing to leave a hole in. */
+  const shown = [...PROJECTS].sort(byFeatured).filter((p) => filter === "all" || p.cat === filter);
+
+  /* A cell brought back by a filter has to be visible at once.
+     `useViewEnter` reveals what is above the fold and hands the rest to an
+     IntersectionObserver that unobserves each element as it fires — so a cell
+     rendered after that pass is never observed, and stays at opacity 0 clipped
+     to a single pixel: invisible, and untouchable by the pointer. Changing a
+     filter is a deliberate act on content already on screen; the result should
+     simply be there. The first run is skipped so the page's own entrance
+     stagger still plays. */
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    document
+      .querySelectorAll<HTMLElement>("#bento [data-reveal]")
+      .forEach((el) => el.classList.add("is-in"));
+  }, [filter]);
 
   return (
     <div className="container section-top">
@@ -133,7 +144,7 @@ export function Projects() {
 
       {showFilters && (
         <div className="b-filters" data-reveal role="group" aria-label="Filter projects">
-          {PROJECT_FILTERS.map((f) => (
+          {filters.map((f) => (
             <button
               key={f}
               className={`b-filter${filter === f ? " is-active" : ""}`}
@@ -147,16 +158,10 @@ export function Projects() {
         </div>
       )}
 
-      {/* keeps the id the cursor-tracking hook looks for */}
-      <div className="bento" id="bento">
-        {[...PROJECTS].sort(byFeatured).map((p, i) => (
-          <ProjectCell
-            key={p.id}
-            project={p}
-            index={i}
-            area={AREAS[i] ?? "auto"}
-            filtered={filter !== "all" && p.cat !== filter}
-          />
+      {/* keeps the id the edge-origin hook looks for */}
+      <div className="bento" id="bento" data-shown={shown.length}>
+        {shown.map((p, i) => (
+          <ProjectCell key={p.id} project={p} index={i} />
         ))}
 
         {/* real link, real handle — no invented contribution graph */}

@@ -83,7 +83,9 @@ export function useViewEnter(view: View, ready: boolean) {
       frames.push(requestAnimationFrame(tick));
     };
 
-    const counters = $$<HTMLElement>("[data-count]", root);
+    /* `.stat-num` scoped on purpose: this writes textContent, so anything else
+       that ever wore a bare [data-count] would have its children deleted. */
+    const counters = $$<HTMLElement>(".stat-num [data-count]", root);
     const countIo = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
@@ -267,84 +269,33 @@ export function useTypePinch() {
     return () => cleanups.forEach((fn) => fn());
   }, []);
 }
-
-export function useBentoSpotlight() {
+/**
+ * The red plate rises from the edge the pointer came in over, so the wipe
+ * answers the movement that caused it instead of always climbing from the
+ * foot. One rect read per entry — this used to be a per-frame loop over every
+ * cell that also drove a tilt and a spotlight shared across the whole sheet;
+ * both are gone, and the loop went with them.
+ */
+export function useBentoEdge() {
   useEffect(() => {
     const grid = document.getElementById("bento");
     if (!grid || !hasFinePointer()) return;
-    const cells = $$<HTMLElement>(".b-cell", grid);
 
-    // rects are measured once on entry and on resize, and the writes are
-    // batched into one frame: the old version forced a layout per cell per
-    // mousemove, which is a reflow storm on the one interaction meant to feel
-    // effortless
-    let rects: DOMRect[] = [];
-    let frame = 0;
-    let px = 0;
-    let py = 0;
-
-    const measure = () => {
-      rects = cells.map((c) => c.getBoundingClientRect());
-    };
-    // which cell the pointer is in, so the tilt and the plate's origin belong
-    // to that one alone — the spotlight is the only thing the whole sheet shares
-    let inside = -1;
-    const paint = () => {
-      frame = 0;
-      let now = -1;
-      for (let i = 0; i < cells.length; i++) {
-        const r = rects[i];
-        if (!r) continue;
-        cells[i].style.setProperty("--mx", px - r.left + "px");
-        cells[i].style.setProperty("--my", py - r.top + "px");
-        if (px >= r.left && px < r.right && py >= r.top && py < r.bottom) now = i;
-      }
-      if (now < 0) {
-        inside = -1;
-        return;
-      }
-      const r = rects[now];
-      // −1 to 1 across the cell, which is what the tilt and the numeral's
-      // counter-drift are written in terms of
-      const cell = cells[now];
-      cell.style.setProperty("--tx", (((px - r.left) / r.width) * 2 - 1).toFixed(3));
-      cell.style.setProperty("--ty", (((py - r.top) / r.height) * 2 - 1).toFixed(3));
-      if (now === inside) return;
-      inside = now;
-      // the edge it came in over: the plate rises from the side you entered
-      const l = px - r.left;
-      const t = py - r.top;
+    const enter = (e: MouseEvent) => {
+      const cell = (e.target as HTMLElement | null)?.closest<HTMLElement>(".b-cell");
+      if (!cell) return;
+      const r = cell.getBoundingClientRect();
+      const l = e.clientX - r.left;
+      const t = e.clientY - r.top;
       const h = Math.min(l, r.width - l);
       const v = Math.min(t, r.height - t);
       cell.dataset.from =
         h < v ? (l < r.width - l ? "left" : "right") : t < r.height - t ? "top" : "bottom";
     };
-    const move = (e: MouseEvent) => {
-      px = e.clientX;
-      py = e.clientY;
-      if (!frame) frame = requestAnimationFrame(paint);
-    };
-    const on = () => {
-      measure();
-      grid.classList.add("is-lit");
-    };
-    const off = () => {
-      grid.classList.remove("is-lit");
-      inside = -1;
-    };
 
-    grid.addEventListener("mousemove", move);
-    grid.addEventListener("mouseenter", on);
-    grid.addEventListener("mouseleave", off);
-    addEventListener("scroll", measure, { passive: true });
-    addEventListener("resize", measure);
-    return () => {
-      cancelAnimationFrame(frame);
-      grid.removeEventListener("mousemove", move);
-      grid.removeEventListener("mouseenter", on);
-      grid.removeEventListener("mouseleave", off);
-      removeEventListener("scroll", measure);
-      removeEventListener("resize", measure);
-    };
+    // mouseover rather than mouseenter: it bubbles, so one listener on the
+    // sheet keeps working after a filter change re-renders the cells
+    grid.addEventListener("mouseover", enter);
+    return () => grid.removeEventListener("mouseover", enter);
   }, []);
 }

@@ -16,7 +16,6 @@ import { Achievements } from "@/components/sections/achievements";
 import { Contact } from "@/components/sections/contact";
 import {
   CrtOverlay,
-  GridOverlay,
   Lightbox,
   McToast,
   PreviewWindow,
@@ -27,7 +26,7 @@ import {
 import { Palette } from "@/components/overlays/palette";
 import { TypingGame } from "@/components/overlays/typing-game";
 import {
-  useBentoSpotlight,
+  useBentoEdge,
   useMagneticTilt,
   useNavIndicator,
   useScramble,
@@ -95,7 +94,7 @@ function Site() {
   useNameToMarquee(view === "home" && ready);
   useHeroLetters(view === "home" && ready);
   useMagneticTilt();
-  useBentoSpotlight();
+  useBentoEdge();
   useTypePinch();
   useScramble();
   useIdle();
@@ -153,7 +152,6 @@ function Site() {
       <Lightbox />
       <McToast shown={achievement} />
       <CrtOverlay />
-      <GridOverlay />
       <TypingGame />
       <Palette />
     </>

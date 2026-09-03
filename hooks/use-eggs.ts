@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { BIRTHDAY, LINKS } from "@/lib/data";
+import { findEgg } from "@/lib/eggs";
 import { confetti, rand } from "@/lib/fx";
 import { addEyebrowLine } from "@/hooks/use-toys";
 import { usePortfolio } from "@/components/portfolio-provider";
@@ -38,6 +39,7 @@ export function useTypedSecrets() {
       if (k === "r") {
         clearTimeout(resumeTimer);
         resumeTimer = setTimeout(() => {
+          findEgg("resume");
           toast("you found it. opening the résumé");
           setTimeout(() => open(LINKS.resume, "_blank"), 500);
         }, 750);
@@ -46,21 +48,19 @@ export function useTypedSecrets() {
       if (keyBuffer.endsWith("pratyush")) {
         keyBuffer = "";
         clearTimeout(resumeTimer);
+        findEgg("editorial");
         editorialMode(toast);
       }
       if (keyBuffer.endsWith("patty")) {
         keyBuffer = "";
+        findEgg("cozy");
         const next = !cozyRef.current;
         setCozy(next);
         announceCozy(next, toast);
       }
-      if (keyBuffer.endsWith("grid")) {
-        keyBuffer = "";
-        const on = document.body.classList.toggle("show-grid");
-        toast(on ? "twelve columns. always were." : "grid off");
-      }
       if (keyBuffer.endsWith("sudo")) {
         keyBuffer = "";
+        findEgg("sudo");
         toast("ah, a person of culture. permissions granted.");
         document.body.classList.add("sudo-gold");
         setTimeout(() => document.body.classList.remove("sudo-gold"), 4000);
@@ -147,6 +147,7 @@ export function useBirthday() {
     } catch {
       /* private mode: it fires every load, which is the harmless failure */
     }
+    findEgg("birthday");
     addEyebrowLine("it's my birthday, apparently");
     const t = setTimeout(() => confetti(innerWidth / 2, innerHeight / 3, 44, cozy), 3400);
     return () => clearTimeout(t);
@@ -231,6 +232,7 @@ export function useKonami(onAchievement: () => void) {
       if (pos !== SEQ.length) return;
       pos = 0;
 
+      findEgg("crt");
       const next = !crtRef.current;
       crtRef.current = next;
       setCrt(next);

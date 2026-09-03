@@ -77,14 +77,6 @@ export function Palette() {
         toast(crt ? "back to the future" : "CRT mode engaged. same code exits.");
       },
     },
-    {
-      label: "Toggle the grid",
-      meta: "12 columns",
-      run: () => {
-        const on = document.body.classList.toggle("show-grid");
-        toast(on ? "twelve columns. always were." : "grid off");
-      },
-    },
     { label: "Play the typing test", meta: "secret level", run: playGame },
   ];
 

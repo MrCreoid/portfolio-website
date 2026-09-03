@@ -56,17 +56,6 @@ export function Readout({ view }: { view: string }) {
   );
 }
 
-/** Type "grid" to see the twelve columns everything sits on. */
-export function GridOverlay() {
-  return (
-    <div className="grid-overlay" aria-hidden="true">
-      {Array.from({ length: 12 }, (_, i) => (
-        <i key={i} />
-      ))}
-    </div>
-  );
-}
-
 /** A mini in-site browser — the portfolio can preview itself, recursively. */
 export function PreviewWindow() {
   const { preview, openPreview } = usePortfolio();

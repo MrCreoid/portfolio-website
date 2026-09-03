@@ -105,27 +105,13 @@ html.lenis body {
 
 html {
   -webkit-text-size-adjust: 100%;
-
-  /* THE ZOOM RULE. Every size in this file is a rem, so this one declaration
-     scales the entire design with the window. Browser zoom works by shrinking
-     the CSS viewport (150% on a 1440 screen = a 960px viewport), which used to
-     drop the site through its breakpoints and reflow it. Now the type shrinks
-     with the window instead, the desktop layout keeps its proportions, and
-     cmd-+ just makes the same page bigger.
-
-     16px at >=1280px (unchanged from before), easing down to 14px at 720px —
-     which is the band browser zoom actually lands in: 125-200% on a 1280-1512
-     laptop is a 720-1210px viewport. Phones are pinned back to 16px below the
-     phone breakpoint; a 390px viewport wants the phone layout at full size,
-     not a shrunken desktop one. */
-  font-size: clamp(0.875rem, 0.714rem + 0.357vw, 1rem);
+  /* The root size is left alone on purpose. This used to be a clamp() that
+     shrank the type as the viewport narrowed, which meant browser zoom — which
+     works by shrinking the CSS viewport — was cancelled out: the desktop
+     layout held its proportions and the page never reflowed. Zoom is an
+     accessibility control, not a scaling bug to correct, so the breakpoints
+     below do the work instead and cmd-+ reflows the page the way it should. */
 }
-@media (max-width: 33em) {
-  html {
-    font-size: 1rem;
-  }
-}
-
 body {
   background: var(--ink);
   color: var(--paper);
@@ -542,6 +528,20 @@ body[data-cur="label"] .cursor-ring {
   background: var(--red);
   border-color: var(--red);
 }
+/* …except OPEN, which lives over the project cells, and those fill with the
+   same red on hover. A cream plate with a soft cream halo cannot disappear
+   into a red wipe, a photograph, or the ink. The halo is on the square and
+   nowhere else on the page. */
+body[data-cur="label"][data-word="open"] .cursor-ring {
+  background: var(--paper);
+  border-color: var(--paper);
+  box-shadow:
+    0 0 0 1px rgb(var(--paper-rgb) / 0.55),
+    0 0 14px 3px rgb(var(--paper-rgb) / 0.16);
+}
+body[data-cur="label"][data-word="open"] .cursor-label {
+  color: var(--ink);
+}
 body[data-cur="label"] .cursor-label {
   opacity: 1;
 }
@@ -702,7 +702,8 @@ html.has-rail::-webkit-scrollbar {
 .rail {
   --thumb: 56px;
   position: fixed;
-  right: 1.35rem;
+  /* set by the component from the content's real right edge — see rail.tsx */
+  right: var(--rail-right, 1.35rem);
   top: 7rem;
   bottom: 4.5rem;
   z-index: 92;
@@ -748,6 +749,11 @@ html.has-rail::-webkit-scrollbar {
   width: 16px;
   background: var(--red);
 }
+/* the labels are the widest part of the rail, so they are the first thing to
+   go when the gutter tightens */
+.rail:not(.has-labels) .rail-tick i {
+  display: none;
+}
 .rail-tick i {
   position: absolute;
   right: 1.15rem;
@@ -774,27 +780,6 @@ html.has-rail::-webkit-scrollbar {
   color: var(--paper-2);
 }
 
-/* ---------- the grid (type "grid") ---------- */
-.grid-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9300;
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: var(--gap);
-  width: var(--page);
-  margin-inline: auto;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-.grid-overlay i {
-  background: rgb(var(--red-rgb) / 0.07);
-  border-inline: 1px solid rgb(var(--red-rgb) / 0.35);
-}
-body.show-grid .grid-overlay {
-  opacity: 1;
-}
 
 /* ---------- preloader: the count ---------- */
 /* Five slats of ink, a counter in display type, a rule that fills as it
@@ -1049,8 +1034,8 @@ body.show-grid .grid-overlay {
   background: rgba(8, 5, 6, 0.82);
   backdrop-filter: blur(14px) saturate(1.1);
   -webkit-backdrop-filter: blur(14px) saturate(1.1);
-  border-bottom: 1px solid var(--rule);
   transition: translate 0.5s var(--ease-out-hard);
+  border-bottom: 1px solid var(--rule);
 }
 /* ducks on the way down, returns the moment you scroll back up */
 .header.is-hidden {
@@ -1286,12 +1271,16 @@ body.is-locked .header {
   display: none;
   position: relative;
   z-index: 2;
+  /* The hero portrait is placed to bleed off the right edge, and the container
+     it is measured against is not the width `--edge` assumes, so the bleed can
+     land a few pixels past the viewport and give the whole page a horizontal
+     scrollbar — at every zoom level, differently. `clip` rather than `hidden`:
+     it trims the overhang without turning the view into a scroll container,
+     which would break the sticky and fixed chrome inside it. */
+  overflow-x: clip;
 }
 .view.is-active {
   display: block;
-  /* the shear: the scroll hook writes skewY() here from the scroll velocity */
-  transform-origin: 50% 50%;
-  will-change: transform;
 }
 
 /* ---------- reveal system ---------- */
@@ -1523,30 +1512,78 @@ body.is-locked .header {
   opacity: 0;
 }
 
-/* The character wall. At rest the hero is set in type like everything else on
-   the page; the photograph is what you get for pointing at him. These rules
-   come after .has-gl on purpose — same specificity, and this is the one that
-   has to win while the wall is up. */
-.portrait-ascii {
+/* The portrait, set in type. At rest the hero leads with characters like the
+   rest of the page; the photograph is what you get for pointing at him. These
+   rules come after .has-gl on purpose — same specificity, and this is the one
+   that has to win while the type is up. */
+.hero-portrait {
+  /* so the type can be sized in container units and need no JS at all */
+  container-type: inline-size;
+}
+.portrait-type {
   position: absolute;
-  display: block;
+  inset: 0;
+  display: grid;
+  place-items: center;
   pointer-events: none;
+  transition: opacity 0.5s var(--ease-out);
+}
+.pt-fig {
+  font-family: var(--font-mono);
+  /* a mono advance is ~0.6em, so N columns need N × 0.6em of width. Sizing
+     off the container rather than the viewport means it holds its proportions
+     at every zoom level without a breakpoint. */
+  font-size: calc(88cqw / (var(--pt-cols) * 0.6));
+  line-height: 1;
+  letter-spacing: 0;
+  color: rgb(var(--paper-rgb) / 0.82);
+  white-space: pre;
+  margin: 0;
+}
+/* the crop marks a printer would trim off, and the plate number */
+.pt-crop {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 0 solid var(--red);
+  opacity: 0.75;
+}
+.pt-tl {
+  top: 6%;
+  left: 4%;
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+.pt-br {
+  bottom: 10%;
+  right: 4%;
+  border-bottom-width: 1px;
+  border-right-width: 1px;
+}
+.pt-meta {
+  position: absolute;
+  bottom: 6%;
+  left: 4%;
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+.pt-meta i {
+  font-style: normal;
+  color: rgb(var(--paper-rgb) / 0.4);
+  margin-left: 0.5em;
+}
+.hero-portrait.has-type .portrait-gl,
+.hero-portrait.has-type > img {
   opacity: 0;
-  transition: opacity 0.55s var(--ease-out);
-  animation: breathe 7s ease-in-out infinite;
 }
-.hero-portrait.has-ascii .portrait-ascii {
-  opacity: 1;
-}
-.hero-portrait.has-ascii .portrait-gl,
-.hero-portrait.has-ascii > img {
+/* point at him and the type gives way to the person */
+.hero-portrait.has-type.is-lit .portrait-type {
   opacity: 0;
 }
-/* point at him and the type dissolves into the person */
-.hero-portrait.has-ascii.is-lit .portrait-ascii {
-  opacity: 0;
-}
-.hero-portrait.has-ascii.is-lit .portrait-gl {
+.hero-portrait.has-type.is-lit .portrait-gl {
   opacity: 1;
 }
 
@@ -2060,7 +2097,6 @@ body.is-locked .header {
   gap: 1rem;
   padding-bottom: 0.9rem;
   margin-bottom: 1.1rem;
-  border-bottom: 1px solid var(--rule);
 }
 .col-head .col-index {
   margin-bottom: 0;
@@ -2081,7 +2117,6 @@ body.is-locked .header {
 }
 .cols-3.is-ruled .col-item {
   padding-inline: clamp(1rem, 2.4vw, 2.2rem);
-  border-left: 1px solid var(--rule);
 }
 .cols-3.is-ruled .col-item:first-child {
   border-left: 0;
@@ -2110,7 +2145,8 @@ body.is-locked .header {
    usually a sentence cut off mid-word. It is an index now, in the language
    the skills and the work are already set in. */
 .wid {
-  border-top: 1px solid var(--rule);
+  /* no cap: the rules between the rows are the structure, the box around
+     them was decoration */
 }
 .wid-row {
   display: grid;
@@ -2186,14 +2222,11 @@ body.is-locked .header {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 0;
-  border-top: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
 }
 .stat {
   display: block;
   padding-block: clamp(1.6rem, 3.2vw, 2.6rem);
   padding-inline: clamp(0.9rem, 2vw, 1.8rem);
-  border-left: 1px solid var(--rule);
 }
 .stat:first-child {
   border-left: 0;
@@ -2330,34 +2363,32 @@ body.is-locked .header {
 }
 
 /* ---------- the sign-off ---------- */
-/* a line of outline type slides across the page as you scroll through it */
+/* One line, solid, standing still. The previous version was outlined type on
+   a scroll-driven track: a graphic you waited for rather than a sentence you
+   read, and the -webkit-text-stroke made it thin and hard to hold at any
+   zoom level. */
 .outro {
   position: relative;
-  overflow: hidden;
   padding-block: clamp(3rem, 8vw, 7rem) clamp(4rem, 9vw, 8rem);
   border-top: 1px solid var(--rule);
 }
-.outro-track {
-  display: flex;
-  width: max-content;
-  white-space: nowrap;
+.outro-line {
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: clamp(4rem, 15vw, 15rem);
-  line-height: 0.85;
-  letter-spacing: -0.05em;
+  /* sized to wrap rather than to fill the width — it has to stay readable at
+     200% zoom, where the viewport is a third of what it was */
+  font-size: clamp(2rem, 6.4vw, 5.25rem);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
   text-transform: uppercase;
-  color: transparent;
-  -webkit-text-stroke: 1px rgb(var(--paper-rgb) / 0.5);
-  will-change: transform;
+  color: var(--paper);
+  max-width: 18ch;
+  margin-bottom: clamp(2rem, 5vw, 3.5rem);
+  text-wrap: balance;
 }
-/* the one emphasised word. Red, but drawn rather than filled: at 15vw a solid
-   word is a thousand pixels of flat red across a quarter of the screen, which
-   is a wall, not an emphasis. A heavier stroke says the same thing. */
-.outro-track em {
+.outro-line em {
   font-style: normal;
-  color: transparent;
-  -webkit-text-stroke: 2px var(--red);
+  color: var(--red);
 }
 .outro-cta {
   display: flex;
@@ -2911,7 +2942,6 @@ body.is-locked .header {
    mono so the eye can scan the column without reading it. */
 .skills {
   margin-bottom: clamp(3rem, 7vw, 6rem);
-  border-top: 1px solid var(--rule);
 }
 .skill {
   display: grid;
@@ -2999,8 +3029,6 @@ body.is-locked .header {
   align-items: baseline;
   gap: 0 clamp(1.2rem, 4vw, 3.5rem);
   padding: clamp(2rem, 5vw, 3.5rem) 0;
-  border-top: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
 }
 .ach-empty-no {
   font-family: var(--font-display);
@@ -3049,7 +3077,6 @@ body.is-locked .header {
 /* the colophon closes the left column instead of leaving it to trail off */
 .contact-meta {
   margin-top: clamp(2rem, 4vw, 3rem);
-  border-top: 1px solid var(--rule);
 }
 .contact-meta div {
   display: grid;
@@ -3273,44 +3300,33 @@ body.is-locked .header {
    strip closes the block. No cell is the same shape as another, and no cell
    exists to fill a hole — every one of them carries real content. */
 .bento {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  grid-template-areas:
-    "feat feat feat feat a a"
-    "feat feat feat feat b b"
-    "c    c    c    c    c  c"
-    "gh   gh   gh   gh   gh gh";
+  /* Flex, not grid. A named grid could not survive filtering — a hidden cell
+     left its slot empty, and filtering to a category the featured project is
+     not in emptied the tall slot. `repeat(auto-fit)` does not fix it either:
+     `grid-column: 1 / -1` resolves against the collapsed track count, so the
+     featured cell spanned three of four tracks and the rest were left at a
+     fraction of their width. Wrapped flex items grow to fill whatever row they
+     land in, so a hole is not a state this can be in — at any filter, and at
+     any zoom. */
+  display: flex;
+  flex-wrap: wrap;
   /* No gap and no fill: the cells share their rules rather than each floating
      as its own bordered box. That is the difference between an archive sheet
      and a dashboard of tiles — the grid is one object, ruled into fields. */
   gap: 0;
   border-top: 1px solid var(--rule);
   border-left: 1px solid var(--rule);
-  /* one vanishing point for the whole sheet, so a tilted cell leans within the
-     grid rather than in a space of its own */
-  perspective: 1200px;
 }
 .b-cell {
+  /* a floor, then share what is left — the last row is always full */
+  flex: 1 1 20rem;
+  min-width: 0;
   position: relative;
   overflow: hidden;
   background: none;
   border-right: 1px solid var(--rule);
   border-bottom: 1px solid var(--rule);
   padding: clamp(1.3rem, 2.4vw, 2.25rem);
-  will-change: transform;
-  transition: transform 0.4s var(--ease-out);
-}
-/* The cell lifts and leans away from the pointer, four degrees at the corners.
-   The lift used to be a spring from `motion`, which wrote its own inline
-   transform and left no room for the lean — one property here does both. */
-@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .b-cell:hover {
-    transform: translateY(-6px) rotateX(calc(var(--ty, 0) * -4deg))
-      rotateY(calc(var(--tx, 0) * 4deg));
-  }
-}
-.b-cell.is-filtered {
-  display: none;
 }
 .b-no {
   position: absolute;
@@ -3327,34 +3343,18 @@ body.is-locked .header {
     color 0.4s,
     translate 0.5s var(--ease-out-hard);
 }
+/* the featured project takes a row of its own. After `.b-cell` on purpose:
+   the shorthand there resets flex-basis, so this has to be the later rule. */
+.b-featured {
+  flex: 1 1 100%;
+}
 .b-featured .b-no {
   font-size: clamp(8rem, 18vw, 16rem);
 }
 @media (hover: hover) {
-  /* the numeral pulls against the pointer rather than with it, which is what
-     makes it read as sitting behind the cell instead of painted on it */
   .b-cell:hover .b-no {
     color: rgb(0 0 0 / 0.16);
-    translate: calc(var(--tx, 0) * -12px) calc(-0.05em + var(--ty, 0) * -12px);
   }
-}
-/* the spotlight follows the pointer across the whole sheet (--mx/--my are
-   written per cell by the bento hook) */
-.b-cell::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0;
-  background: radial-gradient(
-    18rem circle at var(--mx, 50%) var(--my, 50%),
-    rgb(var(--paper-rgb) / 0.09),
-    transparent 60%
-  );
-  transition: opacity 0.35s;
-}
-.bento.is-lit .b-cell::after {
-  opacity: 1;
 }
 /* the red plate: it rises from the edge the pointer came in over, so the wipe
    answers the movement that caused it instead of always climbing from the foot */
@@ -4044,6 +4044,16 @@ body.is-locked .header {
   text-transform: uppercase;
   color: var(--paper-4);
 }
+/* the only place the eggs are ever counted, and it never names one */
+.egg-count {
+  display: block;
+  color: var(--paper-4);
+  margin-bottom: 0.35rem;
+}
+.egg-count b {
+  font-weight: 700;
+  color: var(--red);
+}
 .footer-hint {
   text-align: right;
 }
@@ -4081,7 +4091,17 @@ body.is-locked .header {
     text-align: center;
     gap: 0.6rem;
   }
-  .footer-hint {
+  /* the only place the eggs are ever counted, and it never names one */
+.egg-count {
+  display: block;
+  color: var(--paper-4);
+  margin-bottom: 0.35rem;
+}
+.egg-count b {
+  font-weight: 700;
+  color: var(--red);
+}
+.footer-hint {
     text-align: center;
   }
 }
@@ -5082,7 +5102,6 @@ body:has(.pal[open]) .cursor-ring {
   top: 0;
   bottom: 0;
   border-left: 1px solid var(--rule);
-  border-right: 1px solid var(--rule);
   z-index: 1;
   pointer-events: none;
 }
@@ -5097,9 +5116,6 @@ body:has(.pal[open]) .cursor-ring {
 }
 .vl-a {
   left: -1px;
-}
-.vl-b {
-  right: -1px;
 }
 /* the stations: a square on the line at every section head, hollow until the
    reader is past it */

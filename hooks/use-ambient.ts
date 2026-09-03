@@ -2,6 +2,7 @@
 
 import { useEffect, type RefObject } from "react";
 import type WebGLFluidEnhanced from "webgl-fluid-enhanced";
+import { findEgg } from "@/lib/eggs";
 import {
   SPRING,
   hasFinePointer,
@@ -60,7 +61,12 @@ export function useCursor(rootRef: RefObject<HTMLDivElement | null>) {
       const t = target instanceof Element ? target : null;
       const blend = t?.closest<HTMLElement>('[data-cursor="blend"]');
       const tagged = t?.closest<HTMLElement>("[data-cursor]");
-      const word = tagged?.dataset.cursor;
+      /* JSX writes a valueless `data-cursor` out as `data-cursor="true"`, so
+         every bare one of them was putting the square into label mode with the
+         word TRUE across it. A bare tag means "this is interactive", nothing
+         more. */
+      const raw = tagged?.dataset.cursor;
+      const word = raw && raw !== "true" ? raw : undefined;
       const stick = t?.closest<HTMLElement>(STICK);
       const small =
         stick && stick.offsetWidth <= 480 && stick.offsetHeight <= 140 ? stick : null;
@@ -74,9 +80,13 @@ export function useCursor(rootRef: RefObject<HTMLDivElement | null>) {
       stuck = mode === "stick" ? small : null;
       // the blended square carries its word too, so the name reads as one
       // territory rather than flickering between a plate and a square
-      if (mode === "label") label.textContent = word ?? "";
-      else if (mode === "blend") label.textContent = blend?.dataset.word ?? "";
+      const text = mode === "label" ? (word ?? "") : mode === "blend" ? (blend?.dataset.word ?? "") : "";
+      if (mode === "label" || mode === "blend") label.textContent = text;
       document.body.dataset.cur = mode;
+      // the stylesheet needs the verb, not just the mood: OPEN sits over the
+      // project cells, which fill with the cursor's own red on hover
+      if (text) document.body.dataset.word = text.toLowerCase();
+      else delete document.body.dataset.word;
     };
 
     let lastTarget: EventTarget | null = null;
@@ -266,10 +276,10 @@ export function useInk(ref: RefObject<HTMLCanvasElement | null>) {
       layer.dataset.ink = "on";
     });
 
-    /* Nothing is drawn by moving the pointer. Ink is a mark you make — a click,
-       or the origin a view change is thrown from — not a smear that follows the
-       cursor across every page it crosses. */
-    const onDown = (e: PointerEvent) => inkBurst(e.clientX, e.clientY);
+    /* Nothing is drawn by the pointer at all now — not by moving it and not by
+       clicking. The ink fires from `goTo` alone, so it marks a change of view
+       and nothing else. A splat under every click on the page turned a
+       deliberate mark into background noise. */
     const onResize = () => fluid?.setConfig(config());
 
     // a hidden tab has no reason to be integrating a fluid
@@ -280,7 +290,6 @@ export function useInk(ref: RefObject<HTMLCanvasElement | null>) {
       layer.dataset.ink = document.hidden ? "off" : "on";
     };
 
-    addEventListener("pointerdown", onDown, { passive: true });
     addEventListener("resize", onResize);
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
@@ -289,7 +298,6 @@ export function useInk(ref: RefObject<HTMLCanvasElement | null>) {
       fluid = null;
       plate = null;
       inkConfig = null;
-      removeEventListener("pointerdown", onDown);
       removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibility);
     };
@@ -437,6 +445,7 @@ export function useDvdScreensaver() {
 
     const start = () => {
       if (overlay || document.hidden) return;
+      findEgg("dvd");
       overlay = document.createElement("div");
       overlay.className = "dvd";
       overlay.innerHTML = `<span class="dvd-logo">PG</span><span class="dvd-hint">move anything to wake the site</span>`;
@@ -577,6 +586,7 @@ export function useBottomSecret(onReveal: () => void) {
         holdTimer = setTimeout(() => {
           if (innerHeight + scrollY >= document.body.offsetHeight - 4) {
             shown = true;
+            findEgg("bottom");
             onReveal();
           }
         }, 700);

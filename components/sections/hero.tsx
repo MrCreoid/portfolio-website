@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Fragment, useRef, useState, type CSSProperties } from "react";
+import { Fragment, useEffect, useRef, useState, type CSSProperties } from "react";
 import {
   CHIPS,
   EYEBROW_LINES,
@@ -19,7 +19,9 @@ import {
   usePortraitAlphaHover,
   useTypewriter,
 } from "@/hooks/use-toys";
-import { PortraitAscii } from "@/components/fx/portrait-ascii";
+import { findEgg } from "@/lib/eggs";
+import { useMounted } from "@/hooks/use-mounted";
+import { PortraitType } from "@/components/fx/portrait-type";
 import { PortraitGL } from "@/components/fx/portrait-gl";
 import { usePortfolio } from "@/components/portfolio-provider";
 import { Roll, useNavClick } from "@/components/layout/header";
@@ -107,18 +109,61 @@ function Band({ words, name = false }: { words: string[]; name?: boolean }) {
   );
 }
 
+const POPS_KEY = "pg-pops";
+
+/**
+ * The one tactile toy on the page, and the only one that keeps score.
+ *
+ * Two numbers: this sitting, and everything this browser has ever popped. The
+ * lifetime figure is written back on a trailing timer rather than on every
+ * pop — sixteen squares in a row is sixteen synchronous localStorage writes
+ * otherwise, and the whole point of the thing is that it feels immediate.
+ *
+ * `postPop` is the single seam a shared, server-side count would go through.
+ */
+const readPops = () => {
+  try {
+    return Number(localStorage.getItem(POPS_KEY)) || 0;
+  } catch {
+    return 0;
+  }
+};
+
+const postPop = (n: number) => {
+  try {
+    localStorage.setItem(POPS_KEY, String(n));
+  } catch {
+    /* private mode: the session count still works, the lifetime one does not */
+  }
+};
+
 function Bubbles() {
   const { toast } = usePortfolio();
+  const mounted = useMounted();
   const [popped, setPopped] = useState(0);
   const [state, setState] = useState<
     Record<number, "popped" | "reborn" | undefined>
   >({});
+  const flush = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  /* The lifetime total this browser arrived with, read exactly once in a lazy
+     initialiser. An effect that reads storage and calls setState is the
+     cascading render the lint rule exists to stop; the display is gated on
+     `mounted`, so the first client render still matches the server's. */
+  const [base] = useState(() => (typeof window === "undefined" ? 0 : readPops()));
+  const lifetime = base + popped;
+
+  useEffect(() => () => clearTimeout(flush.current), []);
 
   const pop = (i: number) => (e: React.MouseEvent) => {
     if (state[i] === "popped") return;
     setState((s) => ({ ...s, [i]: "popped" }));
+    // one write after the flurry stops, not one per square
+    clearTimeout(flush.current);
+    flush.current = setTimeout(() => postPop(base + popped + 1), 400);
     setPopped((n) => {
       const next = n + 1;
+      if (next === 16) findEgg("bubbles");
       if (next % 25 === 0)
         toast(`${next} pops. your stress doesn't stand a chance`);
       return next;
@@ -142,7 +187,10 @@ function Bubbles() {
         <p className="bubble-label">
           <span>Stress-relief station</span>
           <em>
-            free, unlimited refills · popped: <b>{popped}</b>
+            this sitting: <b>{popped}</b>
+            {mounted && lifetime > popped && (
+              <> · all time: <b>{lifetime}</b></>
+            )}
           </em>
         </p>
         <div className="bubbles" aria-label="Bubble wrap. Pop them." data-cursor="pop">
@@ -330,8 +378,8 @@ export function Hero() {
           <img className="portrait-ghost ghost-c" src={asset("/assets/portrait-color.webp")} alt="" aria-hidden="true" />
           {/* and over all of it, the same photograph again as a shader */}
           <PortraitGL src={asset("/assets/portrait-color.webp")} />
-          {/* which the character wall covers until you point at him */}
-          <PortraitAscii src={asset("/assets/portrait-color.webp")} />
+          {/* which the type covers until you point at him */}
+          <PortraitType />
         </div>
       </div>
 
@@ -421,27 +469,27 @@ export function Hero() {
 
       <Bubbles />
 
-      {/* the sign-off: a line of outline type that slides across the page as
-          you scroll through it, with the one filled word in red */}
-      <div className="outro" data-scope aria-label="Let's build something together">
-        <div className="outro-track" data-drift="-46" aria-hidden="true">
-          {[0, 1].map((k) => (
-            <span key={k}>
-              Let&apos;s build <em>something</em> together&nbsp;—&nbsp;
-            </span>
-          ))}
-        </div>
-        <div className="container outro-cta">
-          <p data-reveal data-ink>
-            Got an idea, an internship, or a bug you want to argue about? The inbox
-            is open, and replies are usually quick.
-          </p>
-          <button className="btn btn-primary magnetic" onClick={nav("contact")} data-reveal>
-            <Roll>Say hello</Roll>
-            <span className="arrow" aria-hidden="true">
-              →
-            </span>
-          </button>
+      {/* the sign-off: one line, set solid and standing still. It used to be
+          outlined type on a track that slid past as you scrolled, which is a
+          wall rather than a sentence — you could not read it without waiting
+          for it. */}
+      <div className="outro">
+        <div className="container">
+          <h2 className="outro-line" data-reveal>
+            Let&apos;s Build Something <em>Useful</em>.
+          </h2>
+          <div className="outro-cta">
+            <p data-reveal data-ink>
+              Got an idea, an internship, or a bug you want to argue about? The inbox
+              is open, and replies are usually quick.
+            </p>
+            <button className="btn btn-primary magnetic" onClick={nav("contact")} data-reveal>
+              <Roll>Say hello</Roll>
+              <span className="arrow" aria-hidden="true">
+                →
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </>

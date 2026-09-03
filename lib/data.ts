@@ -234,19 +234,7 @@ export const PROJECTS: Project[] = [
     url: "https://mrcreoid.github.io/attendance-tracker/",
     repo: "https://github.com/MrCreoid/attendance-tracker",
   },
-  {
-    id: "spent",
-    shot: true,
-    kind: "project",
-    title: "Spent",
-    body: "An expense and debt tracker that feels like a native iOS app. Works offline, installs as a PWA, syncs across devices.",
-    tags: ["Next.js", "React", "Tailwind CSS", "Firebase"],
-    cat: "web",
-    url: "https://mrcreoid.github.io/spent/",
-    repo: "https://github.com/MrCreoid/spent",
-  },
 ];
-export const PROJECT_FILTERS = ["all", "ai", "web"];
 /* ---------------- achievements ---------------- */
 export type Achievement = {
   kind: string;

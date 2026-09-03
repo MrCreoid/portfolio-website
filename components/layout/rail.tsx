@@ -26,6 +26,61 @@ export function Rail({ view, ready }: { view: View; ready: boolean }) {
   const [ticks, setTicks] = useState<Tick[]>([]);
   const railRef = useRef<HTMLDivElement | null>(null);
   const thumbRef = useRef<HTMLSpanElement | null>(null);
+  const [labels, setLabels] = useState(false);
+  const [cramped, setCramped] = useState(false);
+
+  /* The gutter, measured rather than guessed.
+   *
+   * The rail is fixed to the viewport; the content is a centred container whose
+   * width is capped, so the space between them changes with every width and
+   * again at every zoom level. Pinning the rail at a fixed `right` therefore
+   * gave a gutter that was comfortable at one size and touching the text at
+   * another. Instead it is placed a fixed distance outside the content's own
+   * right edge, and the pieces that reach furthest left are dropped before that
+   * distance can close up:
+   *
+   *   tick label   ~27px left of the rail  → needs the widest gutter
+   *   tick         ~5px  left of the rail
+   *   the rule itself
+   */
+  useEffect(() => {
+    if (!on) return;
+    const GUTTER = 32; // the middle of the 28–36px band
+    const LABEL = 27; // how far a tick's label reaches left of the rule
+    const TICK = 5; // and how far a bare tick does
+    const MIN = 8; // the least the rule may sit from the window itself
+
+    const place = () => {
+      const box = document
+        .querySelector(".view.is-active .container")
+        ?.getBoundingClientRect();
+      if (!box) return;
+      // the space between the content's right edge and the window's
+      const edge = innerWidth - box.right;
+      // where the rule has to sit for its widest part to clear the gutter
+      const withLabels = edge - GUTTER - LABEL;
+      const bare = edge - GUTTER - TICK;
+
+      if (bare < MIN) {
+        // even a bare rule would be inside the gutter — it goes entirely
+        setCramped(true);
+        return;
+      }
+      setCramped(false);
+      setLabels(withLabels >= MIN);
+      document.documentElement.style.setProperty(
+        "--rail-right",
+        `${Math.round(withLabels >= MIN ? withLabels : bare)}px`,
+      );
+    };
+
+    place();
+    addEventListener("resize", place);
+    return () => {
+      removeEventListener("resize", place);
+      document.documentElement.style.removeProperty("--rail-right");
+    };
+  }, [on, ready, view]);
 
   useEffect(() => {
     const mq = matchMedia(RAIL);
@@ -129,11 +184,11 @@ export function Rail({ view, ready }: { view: View; ready: boolean }) {
     e.preventDefault();
   };
 
-  if (!on) return null;
+  if (!on || cramped) return null;
 
   return (
     <div
-      className="rail"
+      className={`rail${labels ? " has-labels" : ""}`}
       ref={railRef}
       role="scrollbar"
       aria-controls="main"

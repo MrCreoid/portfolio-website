@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GAME_LINES } from "@/lib/data";
+import { findEgg } from "@/lib/eggs";
 import { confetti, prefersReducedMotion } from "@/lib/fx";
 import { usePortfolio } from "@/components/portfolio-provider";
 
@@ -43,6 +44,7 @@ export function TypingGame() {
    * setState inside an effect.
    */
   const openGame = useCallback(() => {
+    findEgg("game");
     const stored = localStorage.getItem(BEST_KEY);
     setBest(stored ? Number(stored) : null);
     newLine();
