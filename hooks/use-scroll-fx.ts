@@ -17,6 +17,96 @@ const $$ = <T extends Element = HTMLElement>(s: string, c: ParentNode = document
 const repeatWidth = (track: HTMLElement) =>
   (track.scrollWidth + (parseFloat(getComputedStyle(track).columnGap) || 0)) / 2;
 
+/** Panel copy that types itself in as its panel arrives.
+ *
+ *  A tween rather than a timer loop so gsap.context() can revert it when the
+ *  view unmounts mid-sentence. The paragraph's full height is measured and
+ *  pinned before the first character is cleared — otherwise the panel would
+ *  grow line by line and shove the title around as the sentence lands. */
+const proxies = new WeakMap<Element, { n: number }>();
+const typeIn = (p: HTMLElement) => {
+  const full = (p.dataset.full ??= p.textContent ?? "");
+  // measured from the full sentence every time, so a resize between passes
+  // re-reserves at the new measure rather than holding the old one
+  p.style.minHeight = "";
+  p.textContent = full;
+  p.style.minHeight = `${p.offsetHeight}px`;
+  let o = proxies.get(p);
+  if (o) gsap.killTweensOf(o);
+  else proxies.set(p, (o = { n: 0 }));
+  o.n = 0;
+  p.textContent = "";
+  gsap.to(o, {
+    n: full.length,
+    duration: full.length * 0.018,
+    ease: "none",
+    onUpdate: () => (p.textContent = full.slice(0, Math.round(o!.n))),
+  });
+};
+
+/** The pinned horizontal chapter.
+ *
+ *  Only above 900px: below it the section stays the stacked grid it already is
+ *  and nothing here mounts. The page is held for 250% of a viewport while the
+ *  three panels travel one panel-width each, snapping to whole panels. */
+const chapter = (root: HTMLElement, mm: gsap.MatchMedia) => {
+  for (const el of $$("[data-chapter]", root)) {
+    const panels = $$(".col-item", el);
+    const count = el.querySelector<HTMLElement>(".chapter-count");
+    const bar = el.querySelector<HTMLElement>(".chapter-bar > span");
+    if (panels.length < 2) continue;
+    const last = panels.length - 1;
+    const total = String(panels.length).padStart(2, "0");
+
+    mm.add("(min-width: 56.25em)", () => {
+      let at = -1;
+      const step = (i: number) => {
+        if (i === at) return;
+        at = i;
+        if (count) count.textContent = `${String(i + 1).padStart(2, "0")} / ${total}`;
+        const p = panels[i].querySelector<HTMLElement>("[data-type]");
+        if (p) typeIn(p);
+      };
+
+      const tween = gsap.to(panels, {
+        xPercent: -100 * last,
+        ease: "none",
+        scrollTrigger: {
+          trigger: el,
+          pin: true,
+          // not position:fixed — the active view carries a per-frame velocity
+          // skew, and a transformed ancestor is what a fixed child is fixed to.
+          // Transform pinning translates the element instead, which survives it.
+          pinType: "transform",
+          // not flush to the top edge — the section's own head stays in frame
+          // above the pinned strip, so the chapter reads as part of the section
+          start: "top 18%",
+          // anticipatePin: the pin is applied a frame early, so a fast flick
+          // does not paint one frame of the unpinned position on the way in
+          anticipatePin: 1,
+          scrub: 1,
+          end: "+=250%",
+          snap: { snapTo: 1 / last, duration: 0.3, ease: "power2.inOut" },
+          invalidateOnRefresh: true,
+          onUpdate: (self) => {
+            if (bar) bar.style.transform = `scaleX(${self.progress.toFixed(3)})`;
+            step(Math.round(self.progress * last));
+          },
+        },
+      });
+
+      return () => {
+        tween.scrollTrigger?.kill();
+        tween.kill();
+        for (const p of $$<HTMLElement>("[data-type]", el)) {
+          p.style.minHeight = "";
+          if (p.dataset.full) p.textContent = p.dataset.full;
+        }
+      };
+    });
+  }
+};
+
 /**
  * The scroll chrome that lives outside any one view: Lenis itself, the header
  * that ducks on the way down and returns on the way up, the red progress rule
@@ -151,6 +241,9 @@ export function useViewScrollFx(view: View, ready: boolean) {
       }
     }, root);
 
+    const mm = gsap.matchMedia();
+    chapter(root, mm);
+
     // the marquee runs on the scroll's own velocity: faster when you scroll
     // fast, backwards when you scroll up, barely moving when you stop
     const tracks = $$(".marquee-track", root);
@@ -183,6 +276,7 @@ export function useViewScrollFx(view: View, ready: boolean) {
 
     return () => {
       cancelAnimationFrame(raf);
+      mm.revert();
       ctx.revert();
       if (tracks.length) {
         gsap.ticker.remove(tick);

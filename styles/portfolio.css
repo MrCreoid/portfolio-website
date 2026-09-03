@@ -1952,6 +1952,101 @@ body.is-locked .header {
   }
 }
 
+/* ---------- the pinned chapter ---------- */
+/* One horizontal movement in an otherwise vertical page. The markup is the
+   same three .col-items; wide enough, they stop being a grid and become
+   panels that travel sideways while the section is pinned. */
+.chapter {
+  position: relative;
+}
+.chapter-meta {
+  display: none;
+}
+@media (min-width: 56.25em) {
+  .chapter {
+    /* the panels either side of the current one are cut at the measure, so
+       the chapter reads as a window onto a longer strip */
+    overflow: hidden;
+    min-height: 68vh;
+  }
+  .chapter-meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding-bottom: 1.1rem;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: clamp(2rem, 5vw, 4rem);
+  }
+  .chapter-bar {
+    display: block;
+    width: clamp(6rem, 14vw, 14rem);
+    height: 1px;
+    background: var(--rule);
+  }
+  .chapter-bar > span {
+    display: block;
+    height: 100%;
+    background: var(--red);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+  }
+  .chapter-count {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--red);
+  }
+  /* the grid becomes a strip; the panels keep their own width and overflow it */
+  .chapter .cols-3.is-ruled {
+    display: flex;
+    gap: 0;
+  }
+  .chapter .cols-3.is-ruled .col-item {
+    flex: 0 0 100%;
+    /* the panel carries a 40vw numeral; without its own layer the whole glyph
+       is repainted on every frame of the slide and the flick falls to 60fps */
+    will-change: transform;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 46vh;
+    padding-inline: 0;
+    padding-bottom: 0;
+    border-left: 0;
+    background: none;
+  }
+  /* the folio numeral, now the size of the panel and sitting behind it */
+  .chapter .col-ghost {
+    inset: 50% auto auto 50%;
+    translate: -50% -50%;
+    right: auto;
+    font-size: 40vw;
+    color: rgb(var(--paper-rgb) / 0.05);
+  }
+  .chapter .col-item:hover .col-ghost {
+    color: rgb(var(--paper-rgb) / 0.05);
+  }
+  .chapter .col-head {
+    max-width: 34ch;
+  }
+  .chapter .col-item h3 {
+    font-size: clamp(2rem, 4.4vw, 3.6rem);
+  }
+  .chapter .col-item:hover h3 {
+    translate: 0 0;
+  }
+  /* the copy is set as editorial serif and types itself as the panel arrives */
+  .chapter .col-item p {
+    font-family: var(--font-serif);
+    font-size: clamp(1.25rem, 2.2vw, 2rem);
+    line-height: 1.28;
+    color: var(--paper);
+    max-width: 34ch;
+  }
+}
+
 /* ---------- stats ---------- */
 .stats {
   display: grid;

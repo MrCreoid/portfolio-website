@@ -336,27 +336,40 @@ export function Hero() {
 
       <div className="container section" data-scope>
         <SectionHead title="What I do" meta="Three things, mostly" />
-        <div className="cols-3 is-ruled">
-          {WHAT_I_DO.map((card, i) => (
-            <article className="col-item" data-reveal="wipe" key={card.title}>
-              <span className="col-ghost" data-parallax={String(0.05 + i * 0.04)} aria-hidden="true">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <span className="col-head">
-                <span className="col-index">
+        {/* wide enough, this becomes a pinned chapter: the three fields slide
+            past horizontally while the page holds still. Below 900px the pin
+            never mounts and the same DOM is read as stacked cards. */}
+        <div className="chapter" data-chapter>
+          <div className="chapter-meta" aria-hidden="true">
+            <span className="chapter-bar">
+              <span />
+            </span>
+            <span className="chapter-count">
+              01 / {String(WHAT_I_DO.length).padStart(2, "0")}
+            </span>
+          </div>
+          <div className="cols-3 is-ruled">
+            {WHAT_I_DO.map((card, i) => (
+              <article className="col-item" data-reveal="wipe" key={card.title}>
+                <span className="col-ghost" aria-hidden="true">
                   {String(i + 1).padStart(2, "0")}
                 </span>
-                <card.icon
-                  className="col-mark"
-                  size={18}
-                  strokeWidth={1.5}
-                  aria-hidden="true"
-                />
-              </span>
-              <h3>{card.title}</h3>
-              <p>{card.body}</p>
-            </article>
-          ))}
+                <span className="col-head">
+                  <span className="col-index">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <card.icon
+                    className="col-mark"
+                    size={18}
+                    strokeWidth={1.5}
+                    aria-hidden="true"
+                  />
+                </span>
+                <h3>{card.title}</h3>
+                <p data-type>{card.body}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </div>
 
