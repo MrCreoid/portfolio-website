@@ -516,10 +516,13 @@ export function useDvdScreensaver() {
 /** The tab title pouts while you're away. */
 export function useTabPout() {
   useEffect(() => {
-    const original = document.title;
+    // read when the tab is left, not at mount: the title carries the current
+    // view now, and a mount-time copy would put you back on the home page
+    let original = document.title;
     let pout: ReturnType<typeof setTimeout>;
     const onChange = () => {
       if (document.hidden) {
+        original = document.title;
         document.title = "come back…";
         pout = setTimeout(() => {
           document.title = "still here. waiting.";
@@ -533,7 +536,7 @@ export function useTabPout() {
     return () => {
       clearTimeout(pout);
       document.removeEventListener("visibilitychange", onChange);
-      document.title = original;
+      if (document.hidden) document.title = original;
     };
   }, []);
 }

@@ -11,7 +11,7 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
-import { NAV, View } from "@/lib/data";
+import { NAV, SITE_TITLE, VIEWS, View } from "@/lib/data";
 import { inkBurst } from "@/hooks/use-ambient";
 import { prefersReducedMotion, setParticleTheme, wait } from "@/lib/fx";
 import { scrollTop } from "@/lib/scroll";
@@ -22,6 +22,7 @@ type LightboxTarget = { src: string; caption: string } | null;
 type PortfolioValue = {
   view: View;
   goTo: (name: View, cx?: number, cy?: number) => void;
+  openDeepLink: () => void;
   toast: (msg: string, ms?: number) => void;
   cozy: boolean;
   setCozy: (v: boolean | ((p: boolean) => boolean)) => void;
@@ -41,6 +42,12 @@ type PortfolioValue = {
 };
 
 const Ctx = createContext<PortfolioValue | null>(null);
+
+/** The hash is the view. Home is the bare URL — it has no hash of its own. */
+const viewFromHash = (): View => {
+  const h = location.hash.slice(1);
+  return VIEWS.find((v) => v === h) ?? "home";
+};
 
 export function usePortfolio() {
   const v = useContext(Ctx);
@@ -74,7 +81,9 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   /* the slats drop, the view swaps underneath them, the slats lift. The
      click's centre is kept for the label, which leans toward where you were. */
   const goTo = useCallback(
-    async (name: View, cx?: number, cy?: number) => {
+    /* `push` is false only for the back button, which has already moved the
+       address bar — pushing there would bury the entry it just came back to */
+    async (name: View, cx?: number, cy?: number, push = true) => {
       if (animating.current) return;
       if (name === view) {
         scrollTop(false);
@@ -82,6 +91,10 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       }
       animating.current = true;
       setMenuOpen(false);
+      // the address bar moves with the click, not a slat-length later
+      if (push) {
+        history.pushState(null, "", name === "home" ? location.pathname + location.search : `#${name}`);
+      }
 
       const el = transitionRef.current;
       if (prefersReducedMotion() || !el) {
@@ -113,6 +126,30 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     [view],
   );
 
+  /* A deep link opens its view when the intro hands the page over — the
+     preloader's slats are still down at that point, so the swap needs no
+     transition of its own, and the URL already says where we are. */
+  const openDeepLink = useCallback(() => {
+    const v = viewFromHash();
+    if (v !== "home") {
+      setView(v);
+      scrollTop(false);
+    }
+  }, []);
+
+  /* back and forward walk the same slat transition, without pushing again */
+  useEffect(() => {
+    const onPop = () => void goTo(viewFromHash(), undefined, undefined, false);
+    addEventListener("popstate", onPop);
+    return () => removeEventListener("popstate", onPop);
+  }, [goTo]);
+
+  /* the tab says where you are */
+  useEffect(() => {
+    const label = NAV.find((n) => n.id === view)?.label;
+    document.title = view === "home" ? SITE_TITLE : `${label} — Pratyush Garg`;
+  }, [view]);
+
   /* body classes the stylesheet keys off */
   useEffect(() => {
     document.body.classList.toggle("is-cozy", cozy);
@@ -132,6 +169,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     () => ({
       view,
       goTo,
+      openDeepLink,
       toast,
       cozy,
       setCozy,
@@ -149,7 +187,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       toastShown,
       transitionRef,
     }),
-    [view, goTo, toast, cozy, crt, preview, lightbox, gameOpen, menuOpen, toastMsg, toastShown],
+    [view, goTo, openDeepLink, toast, cozy, crt, preview, lightbox, gameOpen, menuOpen, toastMsg, toastShown],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

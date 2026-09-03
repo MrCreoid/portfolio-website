@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { SITE_TITLE } from "@/lib/data";
 import { Archivo, Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -32,7 +33,7 @@ const favicon =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23090405'/%3E%3Crect x='4' y='4' width='56' height='56' fill='none' stroke='%23ff2233' stroke-width='3'/%3E%3Ctext x='32' y='44' font-family='Arial Black, Arial' font-size='28' fill='%23f2ece4' text-anchor='middle' font-weight='900'%3EPG%3C/text%3E%3C/svg%3E";
 
 export const metadata: Metadata = {
-  title: "Pratyush Garg — Portfolio",
+  title: SITE_TITLE,
   description:
     "Pratyush Garg, B.Tech CS student at the Faculty of Technology, DU. I build things for the web, mostly late at night.",
   icons: { icon: favicon },

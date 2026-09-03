@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { asset } from "@/lib/utils";
+/** The tab title at rest. Per-view titles hang off it; so does the metadata. */
+export const SITE_TITLE = "Pratyush Garg — Portfolio";
 export const VIEWS = ["home", "about", "projects", "achievements", "contact"] as const;
 export type View = (typeof VIEWS)[number];
 export const NAV: { id: View; label: string }[] = [

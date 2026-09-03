@@ -57,11 +57,14 @@ const SECTIONS = {
 } as const;
 
 function Site() {
-  const { view, menuOpen } = usePortfolio();
+  const { view, menuOpen, openDeepLink } = usePortfolio();
   const [ready, setReady] = useState(false);
   const [achievement, setAchievement] = useState(false);
 
-  const onPreloaderDone = useCallback(() => setReady(true), []);
+  const onPreloaderDone = useCallback(() => {
+    setReady(true);
+    openDeepLink();
+  }, [openDeepLink]);
   const showAchievement = useCallback(() => {
     setAchievement(true);
     setTimeout(() => setAchievement(false), 4200);
