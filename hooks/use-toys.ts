@@ -46,8 +46,12 @@ export function useEyebrowRotator(ref: RefObject<HTMLSpanElement | null>) {
     const el = ref.current;
     if (!el || prefersReducedMotion()) return;
     let i = 0;
+    let tick = 0;
 
+    // while the page is idle the line turns over twice as often — the site
+    // filling its own silence rather than waiting on you
     const id = setInterval(() => {
+      if (!document.body.classList.contains("is-idle") && tick++ % 2) return;
       el.animate(
         [
           { transform: "translateY(0)", opacity: 1 },
@@ -65,7 +69,8 @@ export function useEyebrowRotator(ref: RefObject<HTMLSpanElement | null>) {
           { duration: 420, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" },
         );
       };
-    }, 3600);
+      // halved, so the skipped tick above keeps the waking rate at 3.6s
+    }, 1800);
 
     return () => clearInterval(id);
   }, [ref]);

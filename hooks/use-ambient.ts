@@ -490,6 +490,37 @@ export function useDvdScreensaver() {
   }, []);
 }
 
+/**
+ * The page starts living on its own.
+ *
+ * Twenty seconds without a word from you and body.is-idle goes on: the readout
+ * blinks, the eyebrow hurries, the name waves, the band drifts backwards for a
+ * moment. Any input takes it straight back off. The screensaver still has the
+ * minute mark to itself.
+ */
+export function useIdle(ms = 20000) {
+  useEffect(() => {
+    if (prefersReducedMotion()) return;
+    let timer: ReturnType<typeof setTimeout>;
+    const sleep = () => document.body.classList.add("is-idle");
+    const wake = () => {
+      if (document.body.classList.contains("is-idle")) {
+        document.body.classList.remove("is-idle");
+      }
+      clearTimeout(timer);
+      timer = setTimeout(sleep, ms);
+    };
+    const events = ["pointermove", "pointerdown", "keydown", "wheel", "touchstart", "scroll"];
+    events.forEach((e) => addEventListener(e, wake, { passive: true }));
+    wake();
+    return () => {
+      clearTimeout(timer);
+      document.body.classList.remove("is-idle");
+      events.forEach((e) => removeEventListener(e, wake));
+    };
+  }, [ms]);
+}
+
 /** The tab title pouts while you're away. */
 export function useTabPout() {
   useEffect(() => {

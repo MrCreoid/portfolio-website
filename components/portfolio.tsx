@@ -38,6 +38,7 @@ import { useHeroLetters } from "@/hooks/use-toys";
 import {
   useDvdScreensaver,
   useFilmPosterWobble,
+  useIdle,
   useTabPout,
 } from "@/hooks/use-ambient";
 import {
@@ -95,6 +96,7 @@ function Site() {
   useBentoSpotlight();
   useTypePinch();
   useScramble();
+  useIdle();
   useDvdScreensaver();
   useTabPout();
   useFilmPosterWobble();

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Fragment, useRef, useState } from "react";
+import { Fragment, useRef, useState, type CSSProperties } from "react";
 import {
   CHIPS,
   EYEBROW_LINES,
@@ -44,7 +44,11 @@ function SplitText({
         ch === " " ? (
           <Fragment key={i}> </Fragment>
         ) : (
-          <span key={i} className={accent ? "h-letter accent" : "h-letter"}>
+          <span
+            key={i}
+            className={accent ? "h-letter accent" : "h-letter"}
+            style={{ "--wi": i } as CSSProperties}
+          >
             <i>{ch}</i>
           </span>
         ),

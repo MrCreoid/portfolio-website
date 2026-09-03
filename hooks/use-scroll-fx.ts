@@ -296,7 +296,10 @@ export function useViewScrollFx(view: View, ready: boolean) {
     const tick = (_t: number, dt: number) => {
       const l = getLenis();
       const speed = 60 + Math.min(Math.abs(l?.velocity ?? 0) * 9, 900);
-      const dir = l?.direction || 1;
+      // idle: the band gives up on the reader and drifts the other way for a
+      // beat every eight seconds, then goes back to its own direction
+      const idling = document.body.classList.contains("is-idle");
+      const dir = (l?.direction || 1) * (idling && (_t / 1000) % 8 > 6 ? -1 : 1);
       tracks.forEach((track, i) => {
         const half = halves[i];
         if (!half) return;

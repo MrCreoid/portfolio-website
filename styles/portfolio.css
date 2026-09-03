@@ -4474,6 +4474,40 @@ body.is-crt .crt-overlay {
   }
 }
 
+/* ---------- idle ---------- */
+/* twenty seconds without a word and the page starts filling its own silence */
+body.is-idle .readout-view::after {
+  content: " · idle";
+  color: var(--red);
+  animation: idle-blink 1.6s steps(1, end) infinite;
+}
+@keyframes idle-blink {
+  0%,
+  55% {
+    opacity: 1;
+  }
+  56%,
+  100% {
+    opacity: 0;
+  }
+}
+/* the name lifts through itself, one letter after the next, every eight
+   seconds — a wave along the line rather than fifteen separate twitches */
+body.is-idle .hero-title .h-letter > i {
+  animation: idle-wave 8s var(--ease-out) infinite;
+  animation-delay: calc(var(--wi, 0) * 55ms);
+}
+@keyframes idle-wave {
+  0%,
+  82%,
+  100% {
+    translate: 0 0;
+  }
+  88% {
+    translate: 0 -0.16em;
+  }
+}
+
 /* ---------- DVD screensaver ---------- */
 .dvd {
   position: fixed;
