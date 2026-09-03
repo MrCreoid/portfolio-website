@@ -2285,10 +2285,13 @@ body.is-locked .header {
   -webkit-text-stroke: 1px rgb(var(--paper-rgb) / 0.5);
   will-change: transform;
 }
+/* the one emphasised word. Red, but drawn rather than filled: at 15vw a solid
+   word is a thousand pixels of flat red across a quarter of the screen, which
+   is a wall, not an emphasis. A heavier stroke says the same thing. */
 .outro-track em {
   font-style: normal;
-  color: var(--red);
-  -webkit-text-stroke: 0;
+  color: transparent;
+  -webkit-text-stroke: 2px var(--red);
 }
 .outro-cta {
   display: flex;
@@ -2577,11 +2580,14 @@ body.is-locked .header {
   height: 100%;
   object-fit: cover;
   object-position: 50% 38%;
-  filter: grayscale(1) contrast(1.04);
+  /* in colour, unlike the hero: the hero portrait is an ink plate that
+     releases its colour on hover, and two grey prints of one shoot read as
+     the same photograph twice. This one is the photograph. */
+  filter: contrast(1.04);
   transition: filter 0.5s var(--ease-out);
 }
 .photo-frame:hover .photo-img {
-  filter: grayscale(0) contrast(0.98);
+  filter: contrast(0.98) brightness(1.05);
 }
 .flip-back h4 {
   font-family: var(--font-mono);

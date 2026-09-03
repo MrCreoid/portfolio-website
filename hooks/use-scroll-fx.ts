@@ -164,14 +164,17 @@ const chapter = (root: HTMLElement, mm: gsap.MatchMedia) => {
           // anticipatePin: the pin is applied a frame early, so a fast flick
           // does not paint one frame of the unpinned position on the way in
           anticipatePin: 1,
-          scrub: 1,
-          end: "+=250%",
+          // Lenis already smooths the wheel; a second of scrub on top of it
+          // put a beat between the gesture and the panel, and snapping on top
+          // of that yanked the strip while Lenis still had momentum. One
+          // smoothing system is enough, and it is Lenis's.
+          scrub: 0.35,
+          end: "+=160%",
           // the pin adds 250% of a viewport to the page, and every trigger
           // below it measures its own start against that. Without this they
           // are refreshed first, against a page the spacer has not stretched
           // yet, and fire a chapter's worth of scroll too early.
           refreshPriority: 1,
-          snap: { snapTo: 1 / last, duration: 0.3, ease: "power2.inOut" },
           invalidateOnRefresh: true,
           onUpdate: (self) => {
             if (bar) bar.style.transform = `scaleX(${self.progress.toFixed(3)})`;
@@ -285,7 +288,10 @@ export function useViewScrollFx(view: View, ready: boolean) {
       for (const el of $$("[data-drift]", root)) {
         gsap.fromTo(
           el,
-          { xPercent: 10 },
+          // not a positive start: a track many times the width of the viewport
+          // parks its left edge hundreds of pixels in, and the band arrives
+          // with its left half empty
+          { xPercent: -4 },
           { xPercent: parseFloat(el.dataset.drift || "-30"), ease: "none", scrollTrigger: across(el) },
         );
       }

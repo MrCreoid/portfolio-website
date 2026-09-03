@@ -2,7 +2,6 @@
 
 import { useEffect, type RefObject } from "react";
 import type WebGLFluidEnhanced from "webgl-fluid-enhanced";
-import { gsap } from "@/lib/scroll";
 import {
   SPRING,
   hasFinePointer,
@@ -220,8 +219,6 @@ export function useInk(ref: RefObject<HTMLCanvasElement | null>) {
     const layer = host?.parentElement;
     if (!canvas || !host || !layer || prefersReducedMotion()) return;
 
-    let px = -1;
-    let py = -1;
     let dead = false;
     const small = matchMedia("(max-width: 900px)");
     // the dye grid is the expensive half; a phone gets a quarter of the texels
@@ -255,29 +252,9 @@ export function useInk(ref: RefObject<HTMLCanvasElement | null>) {
       layer.dataset.ink = "on";
     });
 
-    let dx = 0;
-    let dy = 0;
-    let moved = false;
-    const onMove = (e: PointerEvent) => {
-      if (px >= 0) {
-        dx += (e.clientX - px) / innerWidth;
-        dy += (e.clientY - py) / innerHeight;
-        moved = true;
-      }
-      px = e.clientX;
-      py = e.clientY;
-    };
-    /* One splat per frame, the way the simulation drives its own pointers. A
-       splat per event instead means a 120Hz mouse lays down four times the dye
-       of a 60Hz one, and the plume saturates to white — which red is not. */
-    const tick = () => {
-      if (!moved) return;
-      moved = false;
-      if (Math.hypot(dx, dy) > 0.0006) inkSplat(px, py, dx * FORCE, -dy * FORCE);
-      dx = 0;
-      dy = 0;
-    };
-    gsap.ticker.add(tick);
+    /* Nothing is drawn by moving the pointer. Ink is a mark you make — a click,
+       or the origin a view change is thrown from — not a smear that follows the
+       cursor across every page it crosses. */
     const onDown = (e: PointerEvent) => inkBurst(e.clientX, e.clientY);
     const onResize = () => fluid?.setConfig(config());
 
@@ -289,17 +266,14 @@ export function useInk(ref: RefObject<HTMLCanvasElement | null>) {
       layer.dataset.ink = document.hidden ? "off" : "on";
     };
 
-    addEventListener("pointermove", onMove, { passive: true });
     addEventListener("pointerdown", onDown, { passive: true });
     addEventListener("resize", onResize);
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
       dead = true;
-      gsap.ticker.remove(tick);
       fluid?.stop();
       fluid = null;
       plate = null;
-      removeEventListener("pointermove", onMove);
       removeEventListener("pointerdown", onDown);
       removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibility);

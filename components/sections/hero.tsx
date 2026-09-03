@@ -432,7 +432,7 @@ export function Hero() {
       {/* the sign-off: a line of outline type that slides across the page as
           you scroll through it, with the one filled word in red */}
       <div className="outro" data-scope aria-label="Let's build something together">
-        <div className="outro-track" data-drift="-38" aria-hidden="true">
+        <div className="outro-track" data-drift="-46" aria-hidden="true">
           {[0, 1].map((k) => (
             <span key={k}>
               Let&apos;s build <em>something</em> together&nbsp;—&nbsp;
