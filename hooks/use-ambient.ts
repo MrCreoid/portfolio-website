@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, type RefObject } from "react";
+import type WebGLFluidEnhanced from "webgl-fluid-enhanced";
+import { gsap } from "@/lib/scroll";
 import {
   SPRING,
   hasFinePointer,
@@ -161,138 +163,147 @@ export function useCursor(rootRef: RefObject<HTMLDivElement | null>) {
   }, [rootRef]);
 }
 
+const FORCE = 6000;
+
+/* The sim wants hue and saturation from the palette and takes its intensity
+   from `brightness` — handing it a colour directly is not an option here, since
+   it reads hex as 0–255 and then multiplies by ten, which saturates the plume
+   to white on the first splat. White is not what red is for. */
+const hex = (css: string) =>
+  "#" +
+  (css.match(/[\d.]+/g) ?? ["255", "34", "51"])
+    .slice(0, 3)
+    .map((n) => Math.round(Number(n)).toString(16).padStart(2, "0"))
+    .join("");
+
+/** The second plate, in the two tints cozy and CRT already recolour. */
+const palette = () => [hex(particleTheme.line), hex(particleTheme.dot)];
+
+let fluid: WebGLFluidEnhanced | null = null;
+let plate: HTMLCanvasElement | null = null;
+
+/** One splat, in client coordinates. The sim reads x against the backing store
+ *  and y against the CSS box — its own inconsistency, not ours. */
+export function inkSplat(x: number, y: number, dx = 0, dy = 0) {
+  if (!fluid || !plate || !plate.clientWidth) return;
+  fluid.splatAtLocation(x * (plate.width / plate.clientWidth), y, dx, dy);
+}
+
+/** A ring of splats thrown outward — a click, or the origin of a view change.
+ *  They are spaced around the origin rather than stacked on it: sixteen splats
+ *  on one texel is not a burst, it is a white hole. */
+export function inkBurst(x: number, y: number, n = 8, force = 0.4, spread = 26) {
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 + rand(-0.25, 0.25);
+    const v = force * FORCE * rand(0.6, 1);
+    inkSplat(x + Math.cos(a) * spread, y + Math.sin(a) * spread, Math.cos(a) * v, -Math.sin(a) * v);
+  }
+}
+
 /**
- * Ink in water. The pointer leaves red ink behind it on a canvas under the
- * page: each move drops a few blots along its path, sized by how fast it was
- * going, and every frame the whole plate fades a little while the blots drift
- * and spread. A click drops a splat; a scroll bleeds ink from wherever the
- * pointer is resting. The canvas is drawn at half resolution and blurred in
- * CSS, which is what turns discs into ink.
+ * Ink in water, for real: a Navier–Stokes fluid simulation carrying red dye on
+ * black. The pointer drags velocity through it, so a fast swipe leaves a plume
+ * that keeps curling for a couple of seconds after the pointer has gone; a
+ * click throws a burst outward; a view change splats from wherever you clicked.
+ *
+ * The canvas cannot receive events — it sits under everything with
+ * `pointer-events: none` — so every splat is driven by hand from the one
+ * pointer listener here.
  */
 export function useInk(ref: RefObject<HTMLCanvasElement | null>) {
   useEffect(() => {
-    const c = ref.current;
-    if (!c || prefersReducedMotion()) return;
-    const ctx = c.getContext("2d");
-    if (!ctx) return;
+    const canvas = ref.current;
+    const host = canvas?.parentElement;
+    const layer = host?.parentElement;
+    if (!canvas || !host || !layer || prefersReducedMotion()) return;
 
-    const SCALE = 0.5;
-    type Blot = { x: number; y: number; r: number; vx: number; vy: number; life: number };
-    const blots: Blot[] = [];
-    let W = 0;
-    let H = 0;
     let px = -1;
     let py = -1;
-    let lastY = scrollY;
-    let raf = 0;
-    let running = true;
+    let dead = false;
+    const small = matchMedia("(max-width: 900px)");
+    // the dye grid is the expensive half; a phone gets a quarter of the texels
+    const config = () => ({
+      simResolution: 128,
+      dyeResolution: small.matches ? 256 : 512,
+      densityDissipation: 1.6,
+      velocityDissipation: 1.2,
+      pressure: 0.7,
+      curl: 18,
+      splatRadius: 0.18,
+      colorful: false,
+      colorPalette: palette(),
+      // ink, not neon: the dye has to stay a red plate at full accumulation
+      brightness: 0.26,
+      hover: false,
+      backgroundColor: "#000000",
+      // red is a second plate, never a glow — the two effects that would make
+      // it one are off
+      bloom: false,
+      sunrays: false,
+    });
 
-    const size = () => {
-      W = c.width = Math.ceil(innerWidth * SCALE);
-      H = c.height = Math.ceil(innerHeight * SCALE);
-    };
-    size();
+    // ~60KB of shader source nobody needs before the first frame
+    import("webgl-fluid-enhanced").then(({ default: Fluid }) => {
+      if (dead) return;
+      fluid = new Fluid(host);
+      plate = canvas;
+      fluid.setConfig(config());
+      fluid.start();
+      layer.dataset.ink = "on";
+    });
 
-    const drop = (x: number, y: number, r: number, vx = 0, vy = 0) => {
-      if (blots.length > 260) blots.shift();
-      blots.push({ x, y, r, vx, vy, life: 1 });
-    };
-
+    let dx = 0;
+    let dy = 0;
+    let moved = false;
     const onMove = (e: PointerEvent) => {
-      const x = e.clientX * SCALE;
-      const y = e.clientY * SCALE;
-      if (px < 0) {
-        px = x;
-        py = y;
-        return;
+      if (px >= 0) {
+        dx += (e.clientX - px) / innerWidth;
+        dy += (e.clientY - py) / innerHeight;
+        moved = true;
       }
-      const dx = x - px;
-      const dy = y - py;
-      const sp = Math.hypot(dx, dy);
-      if (sp < 0.6) return;
-      const n = Math.min(Math.ceil(sp / 5), 6);
-      for (let i = 1; i <= n; i++) {
-        drop(
-          px + (dx * i) / n,
-          py + (dy * i) / n,
-          3 + Math.min(sp, 60) * 0.26,
-          dx * 0.02 + rand(-0.3, 0.3),
-          dy * 0.02 + rand(-0.3, 0.3),
-        );
-      }
-      px = x;
-      py = y;
+      px = e.clientX;
+      py = e.clientY;
     };
-    const onDown = (e: PointerEvent) => {
-      const x = e.clientX * SCALE;
-      const y = e.clientY * SCALE;
-      for (let i = 0; i < 22; i++) {
-        const a = rand(0, Math.PI * 2);
-        const v = rand(0.6, 3.2);
-        drop(x, y, rand(4, 11), Math.cos(a) * v, Math.sin(a) * v);
-      }
+    /* One splat per frame, the way the simulation drives its own pointers. A
+       splat per event instead means a 120Hz mouse lays down four times the dye
+       of a 60Hz one, and the plume saturates to white — which red is not. */
+    const tick = () => {
+      if (!moved) return;
+      moved = false;
+      if (Math.hypot(dx, dy) > 0.0006) inkSplat(px, py, dx * FORCE, -dy * FORCE);
+      dx = 0;
+      dy = 0;
     };
-    const onScroll = () => {
-      const d = Math.abs(scrollY - lastY);
-      lastY = scrollY;
-      if (px < 0 || d < 2) return;
-      drop(px + rand(-6, 6), py + rand(-6, 6), 3 + Math.min(d, 80) * 0.14, rand(-0.4, 0.4), rand(-0.4, 0.4));
-    };
+    gsap.ticker.add(tick);
+    const onDown = (e: PointerEvent) => inkBurst(e.clientX, e.clientY);
+    const onResize = () => fluid?.setConfig(config());
 
-    const frame = () => {
-      if (!running) return;
-      ctx.globalCompositeOperation = "destination-out";
-      ctx.fillStyle = "rgba(0,0,0,0.075)";
-      ctx.fillRect(0, 0, W, H);
-      ctx.globalCompositeOperation = "lighter";
-      const rgb = particleTheme.line;
-      for (let i = blots.length - 1; i >= 0; i--) {
-        const b = blots[i];
-        b.x += b.vx;
-        b.y += b.vy;
-        b.vx *= 0.95;
-        b.vy *= 0.95;
-        b.r += 0.35;
-        b.life -= 0.02;
-        if (b.life <= 0) {
-          blots.splice(i, 1);
-          continue;
-        }
-        const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
-        g.addColorStop(0, `rgba(${rgb}, ${(0.24 * b.life).toFixed(3)})`);
-        g.addColorStop(1, `rgba(${rgb}, 0)`);
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      raf = requestAnimationFrame(frame);
-    };
-    raf = requestAnimationFrame(frame);
-
+    // a hidden tab has no reason to be integrating a fluid
     const onVisibility = () => {
-      running = !document.hidden;
-      if (running) raf = requestAnimationFrame(frame);
+      if (!fluid) return;
+      if (document.hidden) fluid.stop();
+      else fluid.start();
+      layer.dataset.ink = document.hidden ? "off" : "on";
     };
 
-    addEventListener("resize", size);
     addEventListener("pointermove", onMove, { passive: true });
     addEventListener("pointerdown", onDown, { passive: true });
-    addEventListener("scroll", onScroll, { passive: true });
+    addEventListener("resize", onResize);
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
-      running = false;
-      cancelAnimationFrame(raf);
-      removeEventListener("resize", size);
+      dead = true;
+      gsap.ticker.remove(tick);
+      fluid?.stop();
+      fluid = null;
+      plate = null;
       removeEventListener("pointermove", onMove);
       removeEventListener("pointerdown", onDown);
-      removeEventListener("scroll", onScroll);
+      removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [ref]);
 }
 
-/** The calm constellation: particles breathe around a home point and link up. */
 export function useParticles(canvasRef: RefObject<HTMLCanvasElement | null>) {
   useEffect(() => {
     const canvas = canvasRef.current;

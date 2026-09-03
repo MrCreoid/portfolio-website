@@ -56,10 +56,15 @@ for (const { name, w, h, mobile } of WIDTHS) {
   });
   const { page, errors } = await open(ctx, HASH && `#${HASH}`);
   await page.screenshot({ path: `${OUT}/${name}.png` });
+  await page.evaluate(() => scrollTo(0, 0));
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   await page.waitForTimeout(1200);
   await page.screenshot({ path: `${OUT}/${name}-bottom.png` });
   errors.forEach((e) => problems.push(note(`  ✗ ${name}px  ${e}`)));
+  // a fixed layer that loses its positioning pushes the whole document down,
+  // and every other check still passes while the page is blank
+  const top = await page.evaluate(() => document.querySelector("main").getBoundingClientRect().top + scrollY);
+  if (top > 200) problems.push(note(`  ✗ ${name}px  <main> starts ${top.toFixed(0)}px down the page`));
   console.log(`  · ${name}px captured${errors.length ? "" : ", console clean"}`);
   await ctx.close();
 }

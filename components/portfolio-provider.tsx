@@ -12,6 +12,7 @@ import {
   type RefObject,
 } from "react";
 import { NAV, View } from "@/lib/data";
+import { inkBurst } from "@/hooks/use-ambient";
 import { prefersReducedMotion, setParticleTheme, wait } from "@/lib/fx";
 import { scrollTop } from "@/lib/scroll";
 
@@ -92,6 +93,9 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
 
       el.style.setProperty("--cx", (cx ?? innerWidth / 2) + "px");
       el.style.setProperty("--cy", (cy ?? innerHeight / 2) + "px");
+      // the ink goes first: a splat thrown from the click the slats are about
+      // to wipe over
+      inkBurst(cx ?? innerWidth / 2, cy ?? innerHeight / 2, 12, 1.5, 90);
       const logo = el.querySelector<HTMLElement>(".t-logo");
       if (logo) logo.textContent = NAV.find((n) => n.id === name)?.label ?? name;
       el.classList.add("is-covering");
