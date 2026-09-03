@@ -336,18 +336,9 @@ export function Hero() {
 
       <div className="container section" data-scope>
         <SectionHead title="What I do" meta="Three things, mostly" />
-        {/* wide enough, this becomes a pinned chapter: the three fields slide
-            past horizontally while the page holds still. Below 900px the pin
-            never mounts and the same DOM is read as stacked cards. */}
+        {/* three fields, each given a page of its own: the numeral set behind
+            it at 40vw, and its sentence typing itself as the field arrives */}
         <div className="chapter" data-chapter>
-          <div className="chapter-meta" aria-hidden="true">
-            <span className="chapter-bar">
-              <span />
-            </span>
-            <span className="chapter-count">
-              01 / {String(WHAT_I_DO.length).padStart(2, "0")}
-            </span>
-          </div>
           <div className="cols-3 is-ruled">
             {WHAT_I_DO.map((card, i) => (
               <article className="col-item" data-reveal="wipe" key={card.title}>

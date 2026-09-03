@@ -124,74 +124,23 @@ const typeIn = (p: HTMLElement) => {
   });
 };
 
-/** The pinned horizontal chapter.
+/** Each field of the chapter types its sentence in as it arrives.
  *
- *  Only above 900px: below it the section stays the stacked grid it already is
- *  and nothing here mounts. The page is held for 250% of a viewport while the
- *  three panels travel one panel-width each, snapping to whole panels. */
-const chapter = (root: HTMLElement, mm: gsap.MatchMedia) => {
+ *  A ScrollTrigger per field rather than one across the block: the sentence
+ *  belongs to the field, and a field that has been scrolled back to should say
+ *  itself again. */
+const chapter = (root: HTMLElement) => {
   for (const el of $$("[data-chapter]", root)) {
-    const panels = $$(".col-item", el);
-    const count = el.querySelector<HTMLElement>(".chapter-count");
-    const bar = el.querySelector<HTMLElement>(".chapter-bar > span");
-    if (panels.length < 2) continue;
-    const last = panels.length - 1;
-    const total = String(panels.length).padStart(2, "0");
-
-    mm.add("(min-width: 56.25em)", () => {
-      let at = -1;
-      const step = (i: number) => {
-        if (i === at) return;
-        at = i;
-        if (count) count.textContent = `${String(i + 1).padStart(2, "0")} / ${total}`;
-        const p = panels[i].querySelector<HTMLElement>("[data-type]");
-        if (p) typeIn(p);
-      };
-
-      const tween = gsap.to(panels, {
-        xPercent: -100 * last,
-        ease: "none",
-        scrollTrigger: {
-          trigger: el,
-          pin: true,
-          // not position:fixed — the active view carries a per-frame velocity
-          // skew, and a transformed ancestor is what a fixed child is fixed to.
-          // Transform pinning translates the element instead, which survives it.
-          pinType: "transform",
-          // not flush to the top edge — the section's own head stays in frame
-          // above the pinned strip, so the chapter reads as part of the section
-          start: "top 18%",
-          // anticipatePin: the pin is applied a frame early, so a fast flick
-          // does not paint one frame of the unpinned position on the way in
-          anticipatePin: 1,
-          // Lenis already smooths the wheel; a second of scrub on top of it
-          // put a beat between the gesture and the panel, and snapping on top
-          // of that yanked the strip while Lenis still had momentum. One
-          // smoothing system is enough, and it is Lenis's.
-          scrub: 0.35,
-          end: "+=160%",
-          // the pin adds 250% of a viewport to the page, and every trigger
-          // below it measures its own start against that. Without this they
-          // are refreshed first, against a page the spacer has not stretched
-          // yet, and fire a chapter's worth of scroll too early.
-          refreshPriority: 1,
-          invalidateOnRefresh: true,
-          onUpdate: (self) => {
-            if (bar) bar.style.transform = `scaleX(${self.progress.toFixed(3)})`;
-            step(Math.round(self.progress * last));
-          },
-        },
+    for (const item of $$(".col-item", el)) {
+      const p = item.querySelector<HTMLElement>("[data-type]");
+      if (!p) continue;
+      ScrollTrigger.create({
+        trigger: item,
+        start: "top 72%",
+        onEnter: () => typeIn(p),
+        onEnterBack: () => typeIn(p),
       });
-
-      return () => {
-        tween.scrollTrigger?.kill();
-        tween.kill();
-        for (const p of $$<HTMLElement>("[data-type]", el)) {
-          p.style.minHeight = "";
-          if (p.dataset.full) p.textContent = p.dataset.full;
-        }
-      };
-    });
+    }
   }
 };
 
@@ -333,10 +282,8 @@ export function useViewScrollFx(view: View, ready: boolean) {
       for (const el of $$("[data-pass]", root)) {
         ScrollTrigger.create({ trigger: el, start: "top 62%", toggleClass: "is-passed" });
       }
+      chapter(root);
     }, root);
-
-    const mm = gsap.matchMedia();
-    chapter(root, mm);
 
     // the marquee runs on the scroll's own velocity: faster when you scroll
     // fast, backwards when you scroll up, barely moving when you stop
@@ -370,7 +317,6 @@ export function useViewScrollFx(view: View, ready: boolean) {
 
     return () => {
       cancelAnimationFrame(raf);
-      mm.revert();
       ctx.revert();
       if (tracks.length) {
         gsap.ticker.remove(tick);
