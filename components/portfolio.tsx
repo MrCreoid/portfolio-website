@@ -130,6 +130,11 @@ function Site() {
               className={`view${view === name ? " is-active" : ""}`}
               id={`view-${name}`}
             >
+              {/* one red line down the left rule of the view, drawn by the
+                  scroll — the timeline's rail is a thicker segment of it */}
+              <span className="view-line container" aria-hidden="true">
+                <i />
+              </span>
               <Section />
             </section>
           );

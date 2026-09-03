@@ -52,7 +52,10 @@ export function SectionHead({
     .join(" ");
 
   return (
-    <header className={cls} data-reveal>
+    <header className={cls} data-reveal data-pass>
+      {/* the station on the global line: an outline until the reader is past
+          it, filled after */}
+      <span className="sec-station" aria-hidden="true" />
       <h2 className="sec-title" aria-label={title}>
         <Chars text={title} />
       </h2>

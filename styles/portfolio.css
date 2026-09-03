@@ -4829,3 +4829,65 @@ body:has(.pal[open]) .cursor-ring {
     gap: 0.25rem;
   }
 }
+
+/* ---------- the line down the page ---------- */
+/* One red run down the left rule of every view, from under the header to the
+   footer, drawn by the scroll. It sits exactly on the container's left edge,
+   which is where the timeline's rail already lives — so that rail reads as a
+   thicker segment of this line rather than a second graphic. */
+/* it wears `.container` as well, so its left edge is the container's left
+   edge by construction — `--edge` is not that number, and hard-coding one
+   would drift the moment the measure changes. Absolutely positioned with
+   left+right 0 and an auto inline margin, it centres exactly as the in-flow
+   containers do. */
+.view-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid var(--rule);
+  z-index: 1;
+  pointer-events: none;
+}
+.view-line > i {
+  position: absolute;
+  left: -1px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--red);
+  transform: scaleY(0);
+  transform-origin: top;
+}
+/* the stations: a square on the line at every section head, hollow until the
+   reader is past it */
+.sec-head {
+  position: relative;
+}
+.sec-station {
+  position: absolute;
+  /* the head's own left edge is the container's, which is where the line
+     runs. The square hangs off the outside of it rather than straddling it:
+     the title and the meta both start on that edge, and a filled square
+     centred on the line would sit in the first glyph. */
+  left: 0;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  translate: -100% -50%;
+  border: 1px solid var(--red);
+  background: var(--ink);
+  transition:
+    background var(--snap),
+    scale var(--snap);
+}
+.sec-head.is-passed .sec-station {
+  background: var(--red);
+  scale: 1.25;
+}
+@media (prefers-reduced-motion: reduce) {
+  .view-line > i {
+    transform: scaleY(1);
+  }
+}

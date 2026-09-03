@@ -279,8 +279,29 @@ export function useViewScrollFx(view: View, ready: boolean) {
       for (const el of $$("[data-ink]", root)) {
         inkFill(el);
       }
+      // the line down the left rule: one draw across the whole view, from
+      // the top of the page to where the footer takes over
+      const line = root.querySelector<HTMLElement>(".view-line > i");
+      if (line) {
+        gsap.fromTo(
+          line,
+          { scaleY: 0 },
+          {
+            scaleY: 1,
+            ease: "none",
+            scrollTrigger: { trigger: root, start: "top top", end: "bottom bottom", scrub: true },
+          },
+        );
+      }
       for (const el of $$("[data-pass]", root)) {
-        ScrollTrigger.create({ trigger: el, start: "top 62%", toggleClass: "is-passed" });
+        // a latch, not a toggle: toggleClass ends at "bottom top", so anything
+        // that scrolled off the top lost the class it had just earned
+        ScrollTrigger.create({
+          trigger: el,
+          start: "top 62%",
+          onEnter: () => el.classList.add("is-passed"),
+          onLeaveBack: () => el.classList.remove("is-passed"),
+        });
       }
       chapter(root);
     }, root);
