@@ -440,7 +440,7 @@ export function Hero() {
           ))}
         </div>
         <div className="container outro-cta">
-          <p data-reveal data-scrub-words>
+          <p data-reveal data-ink>
             Got an idea, an internship, or a bug you want to argue about? The inbox
             is open, and replies are usually quick.
           </p>

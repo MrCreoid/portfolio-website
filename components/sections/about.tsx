@@ -102,7 +102,7 @@ export function About() {
 
       <div className="about-grid">
         <div className="about-text-col">
-          <p className="about-lede" data-reveal data-words>
+          <p className="about-lede" data-reveal data-ink>
             Hey, I&apos;m <strong>Pratyush</strong>, a Computer Science undergrad at
             the <strong>Faculty of Technology, Delhi University</strong>.
           </p>

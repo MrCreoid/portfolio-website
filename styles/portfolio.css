@@ -1267,6 +1267,24 @@ body.is-locked .header {
     translate 0.9s var(--ease-out-hard) var(--d, 0ms),
     clip-path 0.9s var(--ease-out-hard) var(--d, 0ms);
 }
+/* the ink fill: one edge travelling through a paragraph, line by line, the
+   way a thermometer rises — rather than the words resolving one at a time.
+   The filled colour is a custom property so it inherits: a <strong> inside the
+   paragraph keeps its red plate instead of being flattened to paper.
+   The default is 100%: if the scrub never runs the paragraph is simply read. */
+[data-ink] {
+  --ink: var(--paper);
+}
+[data-ink] strong {
+  --ink: var(--red-2);
+}
+[data-ink] .w {
+  color: transparent;
+  background-image: linear-gradient(90deg, var(--ink) var(--fill, 100%), var(--paper-4) 0);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
 /* the word cascade: each word of a [data-words] block lands a beat after the
    one before it. The spans are made by splitWords() before the first reveal. */
 [data-words] .w {
