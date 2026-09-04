@@ -521,7 +521,7 @@ export function Hero() {
         <div className="container">
           <div className="outro-head">
             <h2 className="outro-line" data-reveal>
-              Bring Me Something <em>Hard</em>.
+              Let&apos;s Build Something <em>Useful</em>.
             </h2>
             {/* The end of a printed document is where it says how it was
                 printed. It also fills the half of this line that was empty,
