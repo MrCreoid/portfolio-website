@@ -172,13 +172,21 @@ export function Contact() {
     void send();
   };
 
+  /* The form is a fresh node every time it comes back, and `useViewEnter`
+     collected this view's [data-reveal] elements once, when the view opened —
+     so nothing ever adds `is-in` to the remount and it sits at opacity 0 with
+     the caret already blinking inside it. Reveal it by hand, the same way the
+     observer would have. */
   const restart = () => {
     setVals({ name: "", email: "", message: "" });
     setPicked(null);
     setFiled(null);
     setErr("");
     setStatus("idle");
-    focusField("name");
+    requestAnimationFrame(() => {
+      formRef.current?.classList.add("is-in");
+      formRef.current?.querySelector<HTMLElement>('[name="name"]')?.focus();
+    });
   };
 
   const bar = code39(filed?.ref ?? "");
