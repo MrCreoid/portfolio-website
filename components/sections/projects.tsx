@@ -28,22 +28,44 @@ export function GithubIcon({ size = 14 }: { size?: number }) {
 }
 
 /**
- * One bento cell. The featured project gets the tall box and a display-scale
- * title; the rest run at body scale — the grid is deliberately uneven so the
- * eye lands on the big cell first and reads the others as supporting work.
+ * One bento cell.
  *
- * There are no project screenshots in the repo, so the cells are typographic
- * rather than image-led.
+ * The featured project takes a full-width box and reads as a masthead: its
+ * name at display scale down the left, and the line about it, the stack and
+ * the two controls down the right. The two supporting projects then share a
+ * row at half width each, and the GitHub strip closes the block edge to edge —
+ * which is the shape the sheet was always meant to have. Nothing here is an
+ * image: the cells are typographic, and the one place a screenshot belongs is
+ * the trail the work index throws after the cursor.
+ *
+ * The whole cell is the control. It used to carry an OPEN cursor and a red
+ * plate that rose to meet the pointer, and then do nothing when you pressed it
+ * — every affordance on the card said "click me" and only the two small
+ * buttons at the foot actually were. Pressing it opens the live preview, or
+ * the repository when there is nothing to preview.
  */
 function ProjectCell({ project, index }: { project: Project; index: number }) {
   const { openPreview } = usePortfolio();
+  const live = Boolean(project.url) && project.url !== "#";
 
+  const open = () =>
+    live
+      ? openPreview({
+          url: project.url,
+          title: project.title.toLowerCase().replace(/\s+/g, "-"),
+        })
+      : window.open(project.repo, "_blank", "noopener");
+
+  /* The card is an <article>, not a <button> — a heading cannot live inside
+     one. It gets the pointer; the two controls at the foot are what the
+     keyboard lands on, and they stop the press from reaching the card twice. */
   return (
     <article
       className={`b-cell ${project.featured ? "b-featured" : "b-proj"}`}
       data-cat={project.cat}
       data-cursor="open"
       data-reveal="wipe"
+      onClick={open}
     >
       {/* the red plate wipes up from the bottom edge on hover — a second
           printing plate, not a glow */}
@@ -54,44 +76,54 @@ function ProjectCell({ project, index }: { project: Project; index: number }) {
       </span>
 
       <div className="b-cell-in">
-        {project.featured && (
-          <span className="b-kind" data-scramble>
-            Featured
-          </span>
-        )}
-        <h3 className="b-title">{project.title}</h3>
-        <p className="b-body">{project.body}</p>
+        {/* On the featured card these two are columns: the name is the whole
+            left side at display scale, and everything you can do about it
+            sits on the right. On the supporting cards they simply stack. */}
+        <div className="b-head">
+          {project.featured && (
+            <span className="b-kind" data-scramble>
+              Featured
+            </span>
+          )}
+          <h3 className="b-title">{project.title}</h3>
+        </div>
+        <div className="b-copy">
+          <p className="b-body">{project.body}</p>
 
-        <ul className="b-tags">
-          {project.tags.map((t) => (
-            <li key={t}>{t}</li>
-          ))}
-        </ul>
+          <ul className="b-tags">
+            {project.tags.map((t) => (
+              <li key={t}>{t}</li>
+            ))}
+          </ul>
 
-        <div className="b-actions">
-          <button
-            className="b-btn b-preview"
-            data-cursor
-            onClick={() =>
-              openPreview({
-                url: project.url,
-                title: project.title.toLowerCase().replace(/\s+/g, "-"),
-              })
-            }
-          >
-            <PlayIcon />
-            preview
-          </button>
-          <a
-            className="b-btn"
-            href={project.repo}
-            target="_blank"
-            rel="noopener"
-            data-cursor
-          >
-            <GithubIcon />
-            code
-          </a>
+          <div className="b-actions">
+            <button
+              className="b-btn b-preview"
+              data-cursor
+              disabled={!live}
+              onClick={(e) => {
+                e.stopPropagation();
+                openPreview({
+                  url: project.url,
+                  title: project.title.toLowerCase().replace(/\s+/g, "-"),
+                });
+              }}
+            >
+              <PlayIcon />
+              preview
+            </button>
+            <a
+              className="b-btn"
+              href={project.repo}
+              target="_blank"
+              rel="noopener"
+              data-cursor
+              onClick={(e) => e.stopPropagation()}
+            >
+              <GithubIcon />
+              code
+            </a>
+          </div>
         </div>
       </div>
     </article>

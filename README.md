@@ -1,176 +1,119 @@
-# Pratyush Garg — Portfolio
+# Pratyush Garg
 
-An editorial-brutalist portfolio in cream and red on black, behind a live WebGL
-`GrainGradient` shader background. **Next.js 16 · React 19 · TypeScript ·
-Tailwind v4 · shadcn/ui · Motion**. It behaves like a single-page app
-(YouTube-style: the URL never changes), with five views:
-**Home · About · Projects · Achievements · Contact**.
+B.Tech Computer Science at the **Faculty of Technology, University of Delhi**.
+Delhi, India. Night-owl coder.
 
-## The design system — "The Archive"
+Coding was a habit well before it showed up on a timetable, and college hasn't
+managed to make it feel like homework. These days the time goes three ways:
+building for the web, crunching data in Python, and wrestling with C. I enjoy
+all three fights.
 
-A 12-column grid whose rules are visible; hard edges everywhere (the radius token
-is literally zero); warm cream ink on near-black paper; red used the way a printer
-uses a second plate — for rules, numerals and one word per headline, never as a
-glow. Type does the heavy lifting.
+Right now I'm **open to internships and collaborations** — the fastest way to
+reach me is <pratyushgarg527@gmail.com>.
+
+## What I do
+
+**Building for the web.** I like making the web feel less like software and
+more like something worth exploring — React, TypeScript, interaction, motion,
+and an unhealthy eye for tiny details.
+
+**Data & Python.** Give me a messy dataset and I'll disappear into NumPy and
+Pandas for a while. Finding patterns, cleaning chaos, making numbers useful.
+
+**Figuring things out.** C, computer science, unfamiliar problems. I'm early in
+the journey, and I learn fastest when there's something real to build and a
+reason to understand what's underneath it.
+
+Daily: HTML/CSS by hand, JavaScript, Python, Git. Building with: TypeScript,
+React, Next.js. Learning: C, and what the machine is actually doing.
+
+## Where I've been
 
 | | |
 |---|---|
-| **Display + body** | Archivo 400–900 — headlines, oversized numerals, body copy |
-| **Editorial voice** | Instrument Serif — ledes, project blurbs, film reviews |
-| **Metadata** | JetBrains Mono — every label, index, tag and caption |
-| **Ink** | `--ink` `#080506` · surfaces `--ink-2/3` |
-| **Paper** | `--paper` `#f2ece4`, stepped down through `--paper-2/3/4` |
-| **Second plate** | `--red` `#ff2233` — rules, section numerals, one accent word |
-| **Radius** | `0`, globally, in the reset |
+| 2024 — 2025 | **Vice President, Byte Club** — a year of events and workshops spent convincing people that coding is fun. It worked on at least a few of them. |
+| Aug 2025 | **B.Tech CS, FoT, University of Delhi** — the degree gave the habit deadlines and other people who cared about it. |
+| Jul 2026 | **Machine Learning Intern, Experion Labs** — a month of project-based ML work outside the classroom, and a taste of what building in an industry setting actually looks like. |
+| Aug 2026 | **Second year** — more C, more JavaScript, more data work. |
 
-Rules worth keeping:
+## Things I've built
 
-- **Text on a red field is always `--ink`.** Cream on this red is only 3.2:1;
-  black on it is 5.3:1. Every text role on the page clears WCAG AA (lowest 4.99:1).
-- **Section headers are never identical twice.** `<SectionHead>` takes a
-  `variant` — `margin` swells the numeral and tucks it behind the title,
-  `light` hairlines the rule and right-aligns the title.
-- **The shader is atmosphere, not the design.** `.bg-scrim` holds it well back;
-  the layout has to read the same if WebGL never paints.
-- **Tints derive from `--red-rgb` / `--paper-rgb`**, so cozy and CRT modes
-  recolour the whole page from two token lines.
+- **[MCP Vetting Agent](https://github.com/hemv-857/mcp-vetter-agent)** — a
+  security auditor for agentic tools. Hand it a third-party MCP server and it clones
+  the repo, reads the tools it declares, then runs AST rules and
+  Docker-sandboxed probes against it in parallel, findings mapped to the OWASP
+  Agentic Top 10. If the verdict is HIGH it drafts the security issue, stops,
+  and waits for a person to say yes. *(Python · TypeScript · FastMCP · Docker)*
+- **[Attendance Tracker](https://github.com/MrCreoid/attendance-tracker)** — set
+  your weekly timetable once, then mark each class as it happens.
+  *(React · TypeScript · Tailwind · Firebase)*
+- **This site** — the repository you are reading.
 
-## Running it
+## Beyond the editor
 
-```bash
-npm install
-npm run dev     # http://localhost:3000
-```
+Cinephile — movies and series, religiously; ratings live on
+[Letterboxd](https://letterboxd.com/MrCreoid/). Guitarist — the guitar comes out
+exactly when the bugs start winning. Night owl — best ideas arrive after
+midnight, sleep schedule genuinely figuring itself out.
 
-```bash
-npm run build && npm run start   # production
-npm run lint
-```
+## Elsewhere
 
-## Structure
-
-```
-app/
-  layout.tsx          fonts (next/font), metadata, favicon
-  page.tsx            renders <Portfolio />
-  globals.css         tailwind + shadcn tokens, then imports the stylesheet below
-styles/
-  portfolio.css       the whole visual system — tokens, grid, type, every animation
-components/
-  ui/                 shadcn's home + the shader background + <FallbackImage>
-  layout/section-head.tsx  the section header, with its variants
-  portfolio.tsx       app shell: mounts every view, overlay and effect hook
-  portfolio-provider.tsx   view routing, toasts, cozy/CRT modes, overlays
-  layout/             header, mobile menu, footer, bottom-secret
-  sections/           hero · about · projects · achievements · contact
-  fx/                 ambient background, custom cursor, preloader
-  overlays/           toast, wipe transition, preview window, lightbox, typing game
-hooks/
-  use-view-effects.ts reveals, count-ups, nav underline, magnetic, archive scan-rule
-  use-ambient.ts      cursor trail, particle constellation, DVD idle, tab pout
-  use-toys.ts         typewriter, eyebrow rotator, grabbable letters, guitar string
-  use-eggs.ts         typed secrets, cozy mode, konami, console greeting
-lib/
-  data.ts             ALL editable content — projects, timeline, skills, links
-  fx.ts               confetti, floaty bits, matrix rain, particle palette
-public/assets/        photo.jpg, resume.pdf, certificate-1.jpg go here
-legacy/               the original vanilla HTML/CSS/JS site, still runnable
-```
-
-### How the two stylesheets coexist
-
-`app/globals.css` imports Tailwind, shadcn's theme, then `styles/portfolio.css`
-**unlayered**, so the portfolio's rules win over `@layer base` defaults. Tailwind is
-fully available for new work — the shader background is written with it.
-
-One gotcha worth knowing: shadcn also defines `--accent` and `--muted` on `:root`.
-`portfolio.css` therefore declares its tokens on `html:root` (specificity 0,1,1) so
-they stay authoritative without being duplicated. Don't downgrade that selector.
-
-### The background
-
-`components/ui/paper-design-shader-background.tsx` is `@paper-design/shaders-react`'s
-`GrainGradient`, verbatim. It's `absolute inset-0 -z-10`, so `.bg-shader` in
-`portfolio.css` provides the fixed, full-viewport parent plus a CSS radial-gradient
-fallback for when WebGL is unavailable. `.bg-scrim` above it keeps body copy legible.
-
-## Personalizing
-
-Almost everything lives in **`lib/data.ts`** — marked with `▼`:
-
-- **Email** — `EMAIL` (copy button, mailto form and the email social link all read it)
-- **GitHub / LinkedIn / Letterboxd** — `LINKS`
-- **Journey timeline** — add an object to `TIMELINE`
-- **Projects** — add an object to `PROJECTS`; `url` powers the in-site preview
-  window, `cat` powers the filter chips, `repo` is the code link
-- **Achievements** — `ACHIEVEMENTS`; set `image` and drop the file in
-  `public/assets/` to make the card open in the lightbox
-- **Skills** — `FILMS`
-
-Files to drop into `public/assets/`: `photo.jpg` (4:5 portrait), `resume.pdf`,
-`certificate-1.jpg`. Until they exist the cards fall back to initials and emoji.
+[GitHub](https://github.com/MrCreoid) ·
+[LinkedIn](https://www.linkedin.com/in/devpratyushgarg/) ·
+[Letterboxd](https://letterboxd.com/MrCreoid/) ·
+<pratyushgarg527@gmail.com>
 
 ---
 
-## 🥚 The Easter Eggs
+## About this site
 
-This site has layers. Here is the complete map — reading further spoils the fun.
+An editorial-brutalist portfolio in cream and red on black, behind a live WebGL
+grain-gradient field. Five views — Home, About, Projects, Achievements,
+Contact — all mounted at once, one active, swapped behind a slat wipe. Each has
+its own URL, so deep links and the back button work. It is a static export;
+there is no server behind it.
 
-### Typed anywhere on the page
+The design system is called **The Archive**: a 12-column grid whose rules are
+visible, hard edges everywhere (the radius token is literally zero), warm cream
+ink on near-black paper, and red used the way a printer uses a second plate —
+for rules, numerals and one word per headline, never as a glow. Archivo does the
+headlines and body, Instrument Serif the ledes, JetBrains Mono every label and
+caption.
 
-| Type | What happens |
-|---|---|
-| `pratyush` | **Matrix rain** takes over the screen for a few seconds, then dissolves. *"wake up, neo 🐇"* |
-| `patty` | **Cozy mode** — the whole site melts into warm amber, ☕🎬🎸 float up the screen. Only people who know me know this one. Type it again to leave. |
-| `sudo` | *"ah, a person of culture. permissions granted."* — the cursor turns gold for a few seconds |
-| `↑↑↓↓←→←→BA` (Konami code) | **CRT mode** — green phosphor terminal, scanlines, flicker — plus a Minecraft **"Achievement Get! How Did We Get Here?"** toast. Same code exits. |
+The same design prints on four plates: **ink** (the default), **paper**
+(inverted — cream stock, ink type), and two recolourings, cozy and CRT. Nothing
+is restyled between them; the tokens trade places and every rule that reads one
+follows. All four clear WCAG AA, measured against the background actually
+composited behind each text role.
 
-### Found by accident
+The hero portrait is not a photograph — it's 111 × 82 characters in a `<pre>`,
+compiled from a source plate and re-sampled to 44 × 32 for phones. Point at it
+with a real pointer and a torch moves through the characters.
 
-| Trigger | What happens |
-|---|---|
-| Idle for 60 seconds | **DVD screensaver** — the PG logo bounces around the dimmed screen, changing color on every wall hit |
-| Switching browser tabs | The tab title pouts: *"👀 come back…"* → *"still here. waiting."* |
-| Scrolling to the absolute bottom and lingering | A secret line fades in: *"you scrolled all the way down here. we should talk."* |
-| The **"do not click this"** link in the footer | Escalating scoldings — *"you had ONE job."* — and confetti surrender on the 5th click |
-| Opening the browser console | A message for snoopers |
-| Adding `?play` to the URL | A hidden **typing speed test** — code lines and movie quotes, live WPM + accuracy, best score saved |
+**Built with** Next.js 16 · React 19 · TypeScript · Tailwind v4 · shadcn/ui ·
+GSAP · Lenis · anime.js · ogl. Deployed to GitHub Pages by
+`.github/workflows/deploy.yml`.
 
-### The sneaky résumé (3 ways)
+### The hidden half
 
-1. **Home** — the full stop at the end of the hero paragraph is secretly a link (*"psst… my résumé"*)
-2. **About** — the 📎 paperclip pinned to the photo
-3. **Anywhere** — press the **R** key
+There's a good deal in here the interface never advertises: modes you can type
+your way into, a toy or two, and a counter in the footer that tells you how many
+you've walked into and nothing else. One of them turns the whole archive over
+onto paper — cream stock, ink type — and the interface will not tell you how.
 
-### Toys (fiddle with everything)
+The map is deliberately not in this repo. A public list of the surprises is not
+a surprise.
 
-| Where | Toy |
-|---|---|
-| Load | **The ignition** — on first visit, particles stream in from the edges, assemble the mark, ignite, and a shockwave reveals the site |
-| Home | **Grab and fling the letters** of the name — they spring back with physics |
-| Home | **Bubble-wrap strip** below the stats — pop them, they regenerate, the counter remembers |
-| Home | Click the **∞ curiosity stat** rapidly — combo meter with milestones at ×5, ×10 (confetti), ×15, ×25 |
-| Everywhere | **Comet stardust trail** behind the cursor |
-| About | Click the photo — a **ring of light** expands from where you click and a hard wipe brings the other side in (cinephile facts + Letterboxd) |
-| About | **Pluck the guitar string** above the skills — it vibrates and throws music notes |
-| About | Click a **film poster** in the Skills filmography — the logos backflip |
-| Projects | Hover a project row — a **red poster panel follows your cursor** on a spring, and a **red scan rule** tracks you across the row |
-| Projects | **▶ preview** opens projects in a mini in-site browser window — the portfolio can preview *itself*, recursively |
-
----
-
-## The old site
-
-`legacy/` holds the original hand-written HTML/CSS/JS version this was ported from.
-It still runs on its own:
+### Running it
 
 ```bash
-cd legacy && python3 -m http.server 5173
+npm install && npm run dev
 ```
 
-Nothing in the app imports from it — it's there for reference and for rollback.
-
----
-
-Designed & built by **Pratyush Garg** · 2026 — B.Tech CS, Faculty of Technology, DU.
-*Current status: genuinely figuring it out.*
+Content lives in `lib/data.ts` — projects, timeline, skills, links, stats. The
+whole visual system is `styles/portfolio.css`. Three things future-me forgets:
+`portfolio.css` is imported **unlayered** and declares its tokens on `html:root`
+so shadcn's `:root` doesn't win; `--x: var(--themed)` must live on `body`, never
+`:root`, or no theme can reach it; and every hand-written `/assets` path goes
+through `asset()` in `lib/utils.ts`, or it 404s on Pages while working perfectly
+on localhost.

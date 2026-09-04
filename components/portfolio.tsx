@@ -60,7 +60,7 @@ const SECTIONS = {
 } as const;
 
 function Site() {
-  const { view, menuOpen, openDeepLink } = usePortfolio();
+  const { view, menuOpen, openDeepLink, toast, cozy } = usePortfolio();
   const [ready, setReady] = useState(false);
   const [achievement, setAchievement] = useState(false);
 
@@ -98,7 +98,7 @@ function Site() {
   useTypePinch();
   useScramble();
   useIdle();
-  useDvdScreensaver();
+  useDvdScreensaver(toast, cozy);
   useTabPout();
   useFilmPosterWobble();
   useTypedSecrets();
@@ -106,6 +106,14 @@ function Site() {
   useCozyMode();
   useKonami(showAchievement);
   useConsoleGreeting();
+
+  /* `?print` opens the print dialog once the page has settled — the same
+     sheet ⌘P gives you, for anyone who would rather link to it. */
+  useEffect(() => {
+    if (!ready || !location.search.toLowerCase().includes("print")) return;
+    const t = setTimeout(() => print(), 400);
+    return () => clearTimeout(t);
+  }, [ready]);
 
   return (
     <>
@@ -118,11 +126,16 @@ function Site() {
       <Preloader onDone={onPreloaderDone} />
       <Transition />
 
+      {/* first stop for a keyboard, and the only thing on the page that is
+          allowed to appear out of nowhere */}
+      <a className="skip-link" href="#main">
+        Skip to content
+      </a>
       <Header />
       <MobileMenu />
       <Rail view={view} ready={ready} />
 
-      <main id="main">
+      <main id="main" tabIndex={-1}>
         {VIEWS.map((name) => {
           const Section = SECTIONS[name];
           return (
@@ -131,11 +144,10 @@ function Site() {
               className={`view${view === name ? " is-active" : ""}`}
               id={`view-${name}`}
             >
-              {/* a red line down both margins of the view, drawn by the
-                  scroll — the timeline's rail is a thicker segment of the left */}
+              {/* one red line down the left margin of the view, drawn by the
+                  scroll — the timeline's rail is a thicker segment of it */}
               <span className="view-line container" aria-hidden="true">
-                <i className="vl-a" />
-                <i className="vl-b" />
+                <i />
               </span>
               <Section />
             </section>

@@ -138,13 +138,21 @@ const postPop = (n: number) => {
 };
 
 function Bubbles() {
-  const { toast } = usePortfolio();
+  const { toast, cozy } = usePortfolio();
   const mounted = useMounted();
   const [popped, setPopped] = useState(0);
   const [state, setState] = useState<
     Record<number, "popped" | "reborn" | undefined>
   >({});
   const flush = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  /* The speedrun: all sixteen inside five seconds. `runStart` is the first pop
+     of the current sheet, `live` the squares popped since. A sheet that beats
+     the clock is reprinted the other way up — paper stock, red bubbles — for
+     the next round, which is the only prize worth having. */
+  const runStart = useRef(0);
+  const live = useRef(0);
+  const [best, setBest] = useState<number | null>(null);
+  const [inverted, setInverted] = useState(false);
 
   /* The lifetime total this browser arrived with, read exactly once in a lazy
      initialiser. An effect that reads storage and calls setState is the
@@ -161,14 +169,35 @@ function Bubbles() {
     // one write after the flurry stops, not one per square
     clearTimeout(flush.current);
     flush.current = setTimeout(() => postPop(base + popped + 1), 400);
-    setPopped((n) => {
-      const next = n + 1;
-      if (next === 16) findEgg("bubbles");
-      if (next % 25 === 0)
-        toast(`${next} pops. your stress doesn't stand a chance`);
-      return next;
-    });
+    /* The count is derived here rather than inside the updater. React may
+       replay an updater during render, and `findEgg` dispatches the event the
+       footer's counter subscribes to — so the sixteenth pop was setting state
+       on another component mid-render, which React rightly complains about. */
+    const next = popped + 1;
+    setPopped(next);
+    if (next === 16) findEgg("bubbles");
+    if (next % 25 === 0) toast(`${next} pops. your stress doesn't stand a chance`);
     floatBit(e.clientX, e.clientY - 10, "pop!");
+
+    /* one sheet, sixteen squares, five seconds */
+    const now = performance.now();
+    if (!runStart.current || live.current >= 16) {
+      runStart.current = now;
+      live.current = 0;
+    }
+    live.current += 1;
+    if (live.current === 16) {
+      const secs = (now - runStart.current) / 1000;
+      runStart.current = 0;
+      if (secs <= 5) {
+        setBest((b) => (b === null || secs < b ? secs : b));
+        setInverted((v) => !v);
+        confetti(e.clientX, e.clientY - 20, 40, cozy);
+        toast(`speedrun. sixteen in ${secs.toFixed(2)}s — have a fresh sheet`, 4000);
+      } else {
+        setBest((b) => (b === null || secs < b ? secs : b));
+      }
+    }
 
     setTimeout(
       () => {
@@ -183,13 +212,20 @@ function Bubbles() {
     <div className="container section bubble-section">
       {/* housed on a plate with its own rules, so it reads as a module of the
           archive rather than sixteen loose squares floating above the footer */}
-      <div className="bubble-plate" data-reveal>
+      {/* The reprint is a data attribute, not a class. `useViewEnter` adds
+          `is-in` to every [data-reveal] imperatively, and a React re-render
+          that rewrites `className` wipes it — the plate then sits at opacity 0
+          forever. Attributes React does not own are safe to sit beside it. */}
+      <div className="bubble-plate" data-inverted={inverted || undefined} data-reveal>
         <p className="bubble-label">
           <span>Stress-relief station</span>
           <em>
             this sitting: <b>{popped}</b>
             {mounted && lifetime > popped && (
               <> · all time: <b>{lifetime}</b></>
+            )}
+            {best !== null && (
+              <> · best sheet: <b>{best.toFixed(2)}s</b></>
             )}
           </em>
         </p>
@@ -240,10 +276,10 @@ function ComboStat() {
       className={`stat stat-combo${combo >= 5 ? " tier-1" : ""}${combo >= 10 ? " tier-2" : ""}`}
       onClick={click}
       data-cursor
-      aria-label="Curiosity. Try clicking it a lot"
+      aria-label="Still learning. Try clicking it a lot"
     >
       <span className="stat-num">∞</span>
-      <span className="stat-label">curiosity</span>
+      <span className="stat-label">still learning</span>
       {/* keyed on the click count so the badge animation restarts every press */}
       <span
         key={pulse}
@@ -388,9 +424,17 @@ export function Hero() {
         <Band words={MARQUEE} name />
         <Band words={[...MARQUEE].reverse()} />
       </div>
+      {/* the bands are decoration and are hidden from assistive tech, so the
+          list they are made of has to exist somewhere it can be read */}
+      <h2 className="vh">What I work in</h2>
+      <ul className="vh">
+        {MARQUEE.map((word) => (
+          <li key={word}>{word}</li>
+        ))}
+      </ul>
 
       <div className="container section">
-        <SectionHead title="What I do" meta="Three things, mostly" />
+        <SectionHead title="What I do" meta="Three things, mostly. In that order." />
         {/* an index, not three pages: numeral, name, one line of what it
             means, the mark on the right — the same shape the skills and the
             work are set in, and all three readable without scrolling */}
@@ -475,9 +519,37 @@ export function Hero() {
           for it. */}
       <div className="outro">
         <div className="container">
-          <h2 className="outro-line" data-reveal>
-            Let&apos;s Build Something <em>Useful</em>.
-          </h2>
+          <div className="outro-head">
+            <h2 className="outro-line" data-reveal>
+              Bring Me Something <em>Hard</em>.
+            </h2>
+            {/* The end of a printed document is where it says how it was
+                printed. It also fills the half of this line that was empty,
+                and answers the question the stats row raises two screens
+                up — 6,100 lines of what, exactly. */}
+            <dl className="colophon" data-reveal>
+              <div>
+                <dt>Built with</dt>
+                <dd>Next.js · TypeScript · GSAP · Lenis</dd>
+              </div>
+              <div>
+                <dt>Set in</dt>
+                <dd>Archivo · Instrument Serif · JetBrains Mono</dd>
+              </div>
+              <div>
+                <dt>Styled in</dt>
+                <dd>Hand-written CSS. No component kit.</dd>
+              </div>
+              <div>
+                <dt>Source</dt>
+                <dd>
+                  <a href={LINKS.github} target="_blank" rel="noopener" data-cursor>
+                    {LINKS.githubHandle} ↗
+                  </a>
+                </dd>
+              </div>
+            </dl>
+          </div>
           <div className="outro-cta">
             <p data-reveal data-ink>
               Got an idea, an internship, or a bug you want to argue about? The inbox

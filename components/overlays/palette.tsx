@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { EMAIL, LINKS, NAV } from "@/lib/data";
-import { announceCozy } from "@/hooks/use-eggs";
 import { usePortfolio } from "@/components/portfolio-provider";
 
 type Cmd = { label: string; meta: string; run: () => void };
@@ -20,9 +19,14 @@ function fuzzy(q: string, s: string) {
 /**
  * ⌘K / Ctrl K. A keyboard control opened many times a day does not get an
  * open/close animation — it is simply there, on the frame you asked for it.
+ *
+ * It lists what the site can do, not what it is hiding. No mode is in here —
+ * cozy, CRT and paper are all found, and a palette row naming one turns the
+ * nicest things in the page into a dropdown. The typing test is the single
+ * exception: it is a place to go, not a mode you leave the page in.
  */
 export function Palette() {
-  const { goTo, toast, cozy, setCozy, crt, setCrt, playGame } = usePortfolio();
+  const { goTo, toast, playGame } = usePortfolio();
   const ref = useRef<HTMLDialogElement | null>(null);
   const [q, setQ] = useState("");
   const [at, setAt] = useState(0);
@@ -60,23 +64,7 @@ export function Palette() {
           () => toast("Couldn't copy. Email: " + EMAIL),
         ),
     },
-    { label: "Open résumé", meta: "pdf", run: () => void open(LINKS.resume, "_blank") },
-    {
-      label: `${cozy ? "Leave" : "Enter"} cozy mode`,
-      meta: "warm",
-      run: () => {
-        setCozy(!cozy);
-        announceCozy(!cozy, toast);
-      },
-    },
-    {
-      label: `${crt ? "Leave" : "Enter"} CRT mode`,
-      meta: "phosphor",
-      run: () => {
-        setCrt(!crt);
-        toast(crt ? "back to the future" : "CRT mode engaged. same code exits.");
-      },
-    },
+    { label: "Open résumé", meta: "linkedin", run: () => void open(LINKS.resume, "_blank") },
     { label: "Play the typing test", meta: "secret level", run: playGame },
   ];
 

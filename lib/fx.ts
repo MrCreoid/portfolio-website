@@ -29,13 +29,17 @@ export const particleTheme: ParticleTheme = {
   line: "255, 34, 51",
 };
 
-export function setParticleTheme(crt: boolean, cozy: boolean) {
+export function setParticleTheme(crt: boolean, cozy: boolean, paper = false) {
   if (crt) {
     particleTheme.dot = "rgba(74, 222, 128, 0.5)";
     particleTheme.line = "34, 197, 94";
   } else if (cozy) {
     particleTheme.dot = "rgba(251, 191, 36, 0.45)";
     particleTheme.line = "245, 158, 11";
+  } else if (paper) {
+    // a constellation of pinpricks in the sheet, not points of light on it
+    particleTheme.dot = "rgba(142, 12, 32, 0.42)";
+    particleTheme.line = "20, 16, 15";
   } else {
     particleTheme.dot = "rgba(255, 90, 90, 0.5)";
     particleTheme.line = "255, 34, 51";

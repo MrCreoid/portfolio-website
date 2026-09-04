@@ -31,7 +31,12 @@ export const LINKS = {
   linkedin: "https://www.linkedin.com/in/devpratyushgarg/",
   letterboxd: "https://letterboxd.com/MrCreoid/",
   githubHandle: "github.com/MrCreoid",
-  resume: asset("/assets/resume.pdf"),
+  /* Until the PDF is written, every résumé affordance opens LinkedIn — which
+     is the same information, kept up to date by somebody other than me. Swap
+     this back to `asset("/assets/resume.pdf")` the day the file is filed and
+     all four of them (the hero's full stop, the paperclip, the R key, the
+     palette row) follow it with no other change. */
+  resume: "https://www.linkedin.com/in/devpratyushgarg/",
 };
 /** Day and month only — the year is never needed and never shown. */
 export const BIRTHDAY = { day: 27, month: 5 };
@@ -62,24 +67,27 @@ export const MARQUEE = [
 export const WHAT_I_DO = [
   {
     icon: Code2,
-    title: "Web experiences",
-    body: "Interactive, animated sites built by hand in HTML, CSS and JavaScript. No page builders. I'd rather write the thing than configure it.",
+    title: "Building for the web",
+    body: "I like making the web feel less like software and more like something worth exploring. React, JavaScript, interaction, motion, and an unhealthy eye for tiny details.",
   },
   {
     icon: ChartColumn,
     title: "Data & Python",
-    body: "Mostly NumPy and Pandas. Hand me a messy CSV and I'll happily lose an afternoon to it.",
+    body: "Give me a messy dataset and I'll probably disappear into NumPy and Pandas for a while. I like finding patterns, cleaning chaos, and making numbers useful.",
   },
   {
     icon: Rocket,
-    title: "Always learning",
-    body: "Right now that means C, and the bits of JavaScript I'd been avoiding. Second year starts August 2026.",
+    title: "Figuring things out",
+    body: "C, computer science, new frameworks, unfamiliar problems. I'm still early in the journey, but I learn fastest when there's something real to build and a reason to understand what's underneath it.",
   },
 ];
+/* "Lines in this site" is `wc -l styles/portfolio.css`, rounded down to the
+   nearest hundred so it stays true between commits. The ∞ that closes the row
+   is ComboStat in hero.tsx, not an entry here. */
 export const STATS = [
-  { count: 47, suffix: "", label: "tabs open right now" },
-  { count: 12, suffix: "+", label: "easter eggs hidden here" },
-  { count: 90, suffix: "+", label: "animations on this site" },
+  { count: 6100, suffix: "+", label: "lines in this site" },
+  { count: 12, suffix: "", label: "late nights" },
+  { count: 47, suffix: "", label: "tabs open. somehow." },
 ];
 /* ---------------- about ---------------- */
 export const CHIPS = [
@@ -103,9 +111,9 @@ export const TIMELINE = [
     body: "Started the degree. The coding habit was already there; college gave it deadlines, a syllabus, and other people who cared about it.",
   },
   {
-    date: "2025 — 2026",
-    title: "Started shipping, not just studying",
-    body: "Attendance Tracker and Spent: two tools I built because I wanted them, then put in front of other people. I learned React and Firebase by needing them.",
+    date: "Jul 2026",
+    title: "Machine Learning Intern, Experion Labs",
+    body: "Spent a month doing machine learning outside the classroom. Worked on project-based assignments, dealt with real-world tasks, and got a taste of what building in an industry setting actually looks like.",
   },
   {
     date: "Aug 2026",
@@ -120,7 +128,7 @@ export type Skill = { name: string; note: string; status: string };
 export const SKILLS: Skill[] = [
   {
     name: "HTML & CSS",
-    note: "Grid, flexbox and custom properties, written by hand. That includes the 4,000-line stylesheet behind this page.",
+    note: "Grid, flexbox and custom properties, written by hand. That includes the six-thousand-line stylesheet behind this page.",
     status: "daily",
   },
   {
@@ -273,4 +281,6 @@ export const GAME_LINES = [
   "Do. Or do not. There is no try {}.",
   "df.groupby('mood').agg({'bugs': 'sum'})",
   "I'll be back. (me, closing the editor at 3 a.m.)",
+  /* one real line out of this site's own source — hooks/use-scroll-fx.ts */
+  "const half = (track.scrollWidth + gap) / 2;",
 ];

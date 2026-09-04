@@ -12,12 +12,13 @@ import { Chars, SectionHead } from "@/components/layout/section-head";
 type Status = "idle" | "sending" | "sent" | "error";
 type Filed = { name: string; email: string; ref: string; at: string };
 
-/* One question at a time. A form is a conversation, and three fields stacked
-   in a column is an interrogation. */
-const STEPS = [
-  { name: "name", ask: "who are you?", label: "Your name", type: "text" },
-  { name: "email", ask: "where do I reply?", label: "Your email", type: "email" },
-  { name: "message", ask: "what's on your mind?", label: "Your message", type: "textarea" },
+/* Three fields, no questions above them. The label in the box already says
+   what to put there, so the numbered ask was the same instruction printed
+   twice — and it made a three-field form five screens tall. */
+const FIELDS = [
+  { name: "name", label: "Your name", type: "text", auto: "name" },
+  { name: "email", label: "Your email", type: "email", auto: "email" },
+  { name: "message", label: "Your message", type: "textarea", auto: "off" },
 ] as const;
 
 /** PG-2026-XXXX. Not a database id — a filing reference, which is the point. */
@@ -68,22 +69,20 @@ export function Contact() {
   const [copyLabel, setCopyLabel] = useState("copy");
   const [picked, setPicked] = useState<number | null>(null);
   const [status, setStatus] = useState<Status>("idle");
-  const [step, setStep] = useState(0);
   const [vals, setVals] = useState({ name: "", email: "", message: "" });
   const [err, setErr] = useState("");
   const [filed, setFiled] = useState<Filed | null>(null);
 
-  const fieldRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
   const typing = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
   useEffect(() => () => clearInterval(typing.current), []);
 
-  /* The caret follows the conversation — but only once it is a conversation.
-     All five views are mounted at all times, so focusing from an effect on
-     mount aims at a field inside a `display: none` section and lands on the
-     body; and arriving at the view is no reason to seize the caret anyway. It
-     moves on the transition, after the frame that renders the next field. */
-  const focusField = () => requestAnimationFrame(() => fieldRef.current?.focus());
+  /** Puts the caret in the first question that still needs an answer. */
+  const focusField = (name: string) =>
+    requestAnimationFrame(() =>
+      formRef.current?.querySelector<HTMLElement>(`[name="${name}"]`)?.focus(),
+    );
 
   const copyEmail = async () => {
     try {
@@ -109,21 +108,20 @@ export function Contact() {
       setVals((v) => ({ ...v, message: full.slice(0, n) }));
       if (n >= full.length) clearInterval(typing.current);
     }, 16);
-    fieldRef.current?.focus();
+    focusField("message");
   };
 
 
-  /** What is wrong with the current answer, or "" if nothing is. */
-  const problem = useCallback(
-    (i: number) => {
-      const v = vals[STEPS[i].name].trim();
-      if (!v) return `${STEPS[i].label} — I do need this one.`;
-      if (STEPS[i].name === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v))
-        return "That address doesn't look like one. Check it?";
-      return "";
-    },
-    [vals],
-  );
+  /** The first answer that is wrong, or null if none of them are. */
+  const problem = useCallback(() => {
+    for (const f of FIELDS) {
+      const v = vals[f.name].trim();
+      if (!v) return { name: f.name, msg: `${f.label} — I do need this one.` };
+      if (f.name === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v))
+        return { name: f.name, msg: "That address doesn't look like one. Check it?" };
+    }
+    return null;
+  }, [vals]);
 
   const send = useCallback(async () => {
     const name = vals.name.trim();
@@ -166,22 +164,15 @@ export function Contact() {
     }
   }, [toast, vals]);
 
-  /* Enter is the only control the flow needs: it answers the question and
-     asks the next one, and on the last one it files. */
   const submit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const bad = problem(step);
+    const bad = problem();
     if (bad) {
-      setErr(bad);
-      fieldRef.current?.focus();
+      setErr(bad.msg);
+      focusField(bad.name);
       return;
     }
     setErr("");
-    if (step < STEPS.length - 1) {
-      setStep(step + 1);
-      focusField();
-      return;
-    }
     void send();
   };
 
@@ -190,12 +181,10 @@ export function Contact() {
     setPicked(null);
     setFiled(null);
     setErr("");
-    setStep(0);
     setStatus("idle");
-    focusField();
+    focusField("name");
   };
 
-  const current = STEPS[step];
   const bar = code39(filed?.ref ?? "");
 
   return (
@@ -273,9 +262,10 @@ export function Contact() {
             </div>
             <div>
               <dt>Replies in</dt>
-              <dd data-scramble>A day or two, usually</dd>
+              <dd data-scramble>A day. Two if the bug won.</dd>
             </div>
           </dl>
+
         </div>
 
         {status === "sent" && filed ? (
@@ -331,70 +321,62 @@ export function Contact() {
             </button>
           </div>
         ) : (
-          <form className="contact-form" onSubmit={submit} data-reveal noValidate>
-            <p className="cf-ask">
-              <b>{String(step + 1).padStart(2, "0")}</b>
-              <span>{current.ask}</span>
-              <i aria-hidden="true">of {String(STEPS.length).padStart(2, "0")}</i>
-            </p>
-            <span className="cf-rule" aria-hidden="true">
-              <i style={{ transform: `scaleX(${(step + 1) / STEPS.length})` }} />
-            </span>
+          <form className="contact-form" ref={formRef} onSubmit={submit} data-reveal noValidate>
+            {FIELDS.map((f) => (
+              <div className="cf-q" key={f.name}>
+                {/* the chips write the opening line for you, so they belong to
+                    the question they are answering */}
+                {f.type === "textarea" && (
+                  <div className="quick-chips" role="group" aria-label="Quick message starters">
+                    {QUICK_CHIPS.map((chip, k) => (
+                      <button
+                        type="button"
+                        key={chip.label}
+                        className={`qchip${picked === k ? " is-picked" : ""}`}
+                        onClick={() => pickChip(k)}
+                        data-cursor
+                      >
+                        {chip.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
-            {current.type === "textarea" ? (
-              <>
-                <div className="quick-chips" role="group" aria-label="Quick message starters">
-                  {QUICK_CHIPS.map((chip, i) => (
-                    <button
-                      type="button"
-                      key={chip.label}
-                      className={`qchip${picked === i ? " is-picked" : ""}`}
-                      onClick={() => pickChip(i)}
-                      data-cursor
-                    >
-                      {chip.label}
-                    </button>
-                  ))}
-                </div>
                 <div className="field">
-                  <textarea
-                    id="fMsg"
-                    name="message"
-                    ref={fieldRef as React.RefObject<HTMLTextAreaElement>}
-                    rows={5}
-                    placeholder=" "
-                    value={vals.message}
-                    disabled={status === "sending"}
-                    onChange={(e) => setVals((v) => ({ ...v, message: e.target.value }))}
-                    /* Enter belongs to the paragraph here, so the shortcut
-                       files instead */
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                        e.preventDefault();
-                        if (!problem(step)) void send();
-                      }
-                    }}
-                  />
-                  <label htmlFor="fMsg">{current.label}</label>
+                  {f.type === "textarea" ? (
+                    <textarea
+                      id={`f-${f.name}`}
+                      name={f.name}
+                      rows={5}
+                      placeholder=" "
+                      autoComplete={f.auto}
+                      value={vals.message}
+                      disabled={status === "sending"}
+                      onChange={(e) => setVals((v) => ({ ...v, message: e.target.value }))}
+                      /* Enter belongs to the paragraph here, so the shortcut files */
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                          e.preventDefault();
+                          formRef.current?.requestSubmit();
+                        }
+                      }}
+                    />
+                  ) : (
+                    <input
+                      id={`f-${f.name}`}
+                      name={f.name}
+                      type={f.type}
+                      placeholder=" "
+                      autoComplete={f.auto}
+                      disabled={status === "sending"}
+                      value={vals[f.name]}
+                      onChange={(e) => setVals((v) => ({ ...v, [f.name]: e.target.value }))}
+                    />
+                  )}
+                  <label htmlFor={`f-${f.name}`}>{f.label}</label>
                 </div>
-              </>
-            ) : (
-              <div className="field">
-                <input
-                  id={`f-${current.name}`}
-                  name={current.name}
-                  type={current.type}
-                  ref={fieldRef as React.RefObject<HTMLInputElement>}
-                  placeholder=" "
-                  autoComplete={current.name === "email" ? "email" : "name"}
-                  value={vals[current.name]}
-                  onChange={(e) =>
-                    setVals((v) => ({ ...v, [current.name]: e.target.value }))
-                  }
-                />
-                <label htmlFor={`f-${current.name}`}>{current.label}</label>
               </div>
-            )}
+            ))}
 
             {(err || status === "error") && (
               <p className="form-error" role="alert">
@@ -413,20 +395,6 @@ export function Contact() {
             )}
 
             <div className="cf-actions">
-              {step > 0 && (
-                <button
-                  className="cf-back"
-                  type="button"
-                  onClick={() => {
-                    setErr("");
-                    setStep(step - 1);
-                    focusField();
-                  }}
-                  data-cursor
-                >
-                  <span className="whisper-arrow">←</span> back
-                </button>
-              )}
               <button
                 className={`btn btn-primary magnetic${status === "sending" ? " is-sending" : ""}`}
                 type="submit"
@@ -435,18 +403,12 @@ export function Contact() {
                 <Roll>
                   {status === "sending"
                     ? "Filing…"
-                    : step < STEPS.length - 1
-                      ? "Next"
-                      : status === "error"
-                        ? "Try again"
-                        : "Send message"}
+                    : status === "error"
+                      ? "Try again"
+                      : "Send message"}
                 </Roll>
                 {status === "sending" ? (
                   <RotateCw className="btn-spin" size={15} strokeWidth={2} aria-hidden="true" />
-                ) : step < STEPS.length - 1 ? (
-                  <span className="arrow" aria-hidden="true">
-                    →
-                  </span>
                 ) : status === "error" ? (
                   <RotateCw className="btn-plane" size={15} strokeWidth={2} aria-hidden="true" />
                 ) : (
@@ -458,13 +420,46 @@ export function Contact() {
                   </>
                 )}
               </button>
+              <p className="cf-hint" aria-hidden="true">
+                ⌘↵ send
+              </p>
             </div>
-            <p className="cf-hint" aria-hidden="true">
-              {step < STEPS.length - 1 ? "↵ next" : "⌘↵ send"}
-            </p>
           </form>
         )}
       </div>
+
+        {/* Under both columns, because both of them run out before the page
+            does and the band above the footer was the emptiest part of it.
+            What was missing here was the one thing the form never says: what
+            happens after you press the button. The receipt already talks like
+            a docket, so this does too — three states, in the order your
+            message goes through them. */}
+        <ol className="contact-steps" data-reveal>
+          <li>
+            <span className="cs-no">01</span>
+            <b>Filed</b>
+            <span>
+              Straight into my inbox — no forms service in the middle, nothing
+              queued behind a ticket number.
+            </span>
+          </li>
+          <li>
+            <span className="cs-no">02</span>
+            <b>Read</b>
+            <span>
+              All of them, usually the same night. Short ones are welcome; so
+              are the ones with a stack trace pasted in.
+            </span>
+          </li>
+          <li>
+            <span className="cs-no">03</span>
+            <b>Answered</b>
+            <span>
+              By me, in a real sentence. If the answer is no, you still get
+              one.
+            </span>
+          </li>
+        </ol>
     </div>
   );
 }

@@ -77,6 +77,16 @@ const inkFill = (el: HTMLElement) => {
   };
 
   measure();
+  /* A paragraph that is already on screen when the view opens has no scroll
+     above it to fill with — both ends of the trigger clamp to zero and the
+     head never leaves the first word, so the lede of "About" simply sat there
+     in half-tone waiting for a scroll that had already happened. If there is
+     no runway, the paragraph is one you are reading now: it is inked. */
+  if (el.getBoundingClientRect().top < innerHeight * 0.85) {
+    state.p = 1;
+    paint();
+    return;
+  }
   paint();
   gsap.to(state, {
     p: 1,
@@ -196,7 +206,11 @@ export function useViewScrollFx(view: View, ready: boolean) {
       for (const el of $$("[data-scrub-words]", root)) {
         gsap.fromTo(
           splitWords(el),
-          { opacity: 0.14 },
+          // 0.14 was a word you could see was there but could not read — the
+          // effect was costing the reader the paragraph. It resolves from
+          // half-tone to full now, which is the same gesture and still legible
+          // at every point in it.
+          { opacity: 0.55 },
           {
             opacity: 1,
             ease: "none",
@@ -232,6 +246,25 @@ export function useViewScrollFx(view: View, ready: boolean) {
             scaleY: 1,
             ease: "none",
             scrollTrigger: { trigger: root, start: "top top", end: "bottom bottom", scrub: true },
+          },
+        );
+      }
+      /* The field is the hero's atmosphere and nothing beyond it.
+         `data-view` already drops it on the other four views, but the home
+         view is four screens tall and the wash was following the reader all
+         the way down — which turns the second plate into ambient glow across
+         the whole page, the one thing the design contract rules out. It burns
+         off with the hero and the paper goes back to being near-black. */
+      const field = document.querySelector<HTMLElement>(".bg-shader");
+      const heroEl = root.querySelector<HTMLElement>(".hero");
+      if (field && heroEl) {
+        gsap.fromTo(
+          field,
+          { opacity: 1 },
+          {
+            opacity: 0.16,
+            ease: "none",
+            scrollTrigger: { trigger: heroEl, start: "top top", end: "bottom top", scrub: true },
           },
         );
       }
@@ -308,6 +341,12 @@ export function useViewScrollFx(view: View, ready: boolean) {
 export function useNameToMarquee(active: boolean) {
   useEffect(() => {
     if (!active || prefersReducedMotion()) return;
+    /* Only where the composition it belongs to exists. Below the stack
+       breakpoint the hero is a single column with the figure in a band of his
+       own, and the flight path runs straight across the two calls to action —
+       fifteen glyphs scattered over the buttons read as debris, not as a name
+       taking off. The name stays where it is on a phone. */
+    if (!matchMedia("(min-width: 46.0625em)").matches) return;
     const title = document.querySelector<HTMLElement>(".hero-title");
     const hero = document.querySelector<HTMLElement>(".hero");
     const track = document.querySelector<HTMLElement>(".marquee-track");
@@ -327,6 +366,9 @@ export function useNameToMarquee(active: boolean) {
     let trackX0 = 0;
     let half = 1;
     let ready = false;
+    /** Whole band repeats already taken off the letters' travel. Only ever
+     *  changed at the two ends of the flight — see `apply`. */
+    let wrapK = 0;
 
     /** The inline transform the marquee driver wrote this frame — read from the
      *  attribute, never from getComputedStyle, so nothing is recalculated. */
@@ -340,7 +382,9 @@ export function useNameToMarquee(active: boolean) {
       baseY = lines.map((_, i) => lineY(i));
       trackX0 = trackX();
       half = repeatWidth(track) || 1;
+      wrapK = 0;
       wasHome = false;
+      wasFlying = false;
       // no `absolute` here: Flip applies position:absolute to the element as a
       // side effect even in getVars mode, and fifteen absolutely positioned
       // glyphs collapse their spans to nothing and stack on the line's origin
@@ -357,24 +401,48 @@ export function useNameToMarquee(active: boolean) {
     const span = 1 - STAGGER * (letters.length - 1);
 
     let wasHome = false;
+    let wasFlying = false;
+    /** The grab physics' element: the span the glyph sits in. */
+    const spans = letters.map((el) => el.parentElement as HTMLElement);
     const apply = () => {
       if (!ready) return;
       const p = state.p;
+      /* The band repeats every half its width, so a letter that would travel a
+         full repeat can continue on the next copy of its slot instead. That
+         swap is only invisible at the two ends of the flight — landed, the two
+         copies are the same glyph in the same place; home, nothing is drawn.
+         Wrapping mid-air teleports the letter `half * p` pixels sideways, which
+         is the glitch you get by scrolling up and down: the band reverses with
+         you (see the marquee driver's `l.direction`), so its travel walks back
+         and forth across one wrap boundary and crosses it again and again. */
+      const raw = trackX() - trackX0;
+      if (p < 0.0005 || p > 0.999) wrapK += Math.round((raw - wrapK) / half) * half;
       // at rest the letters are home and nothing needs writing — this runs on
       // every frame the home view is on screen, which is most of them
       if (p < 0.0005) {
         if (wasHome) return;
         wasHome = true;
+        wasFlying = false;
         gsap.set(letters, { clearProps: "transform" });
         title.classList.remove("is-flying");
         return;
       }
       wasHome = false;
+      if (!wasFlying) {
+        wasFlying = true;
+        /* A letter flung a moment ago is still springing home on its own
+           transition, on the span that wraps the glyph the flight is about to
+           drive. Left alone it takes off from wherever the spring had got to,
+           which reads as one letter out of formation. Grabbed letters are
+           somebody's hand — those are left where they are. */
+        for (const el of spans) {
+          if (el.classList.contains("is-grabbed")) continue;
+          el.style.transition = "";
+          el.style.transform = "";
+        }
+      }
       title.classList.add("is-flying");
-      // the band repeats every half its width, so a landed letter that would
-      // travel a full repeat simply continues on the next copy of its slot
-      const raw = trackX() - trackX0;
-      const dx = ((((raw + half / 2) % half) + half) % half) - half / 2;
+      const dx = raw - wrapK;
       const drifts = lines.map((_, i) => lineY(i) - baseY[i]);
 
       letters.forEach((el, i) => {

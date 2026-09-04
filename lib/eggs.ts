@@ -19,6 +19,7 @@ export const EGG_IDS = [
   "nope",
   "bubbles",
   "birthday",
+  "paper",
 ] as const;
 
 export const EGG_TOTAL = EGG_IDS.length;

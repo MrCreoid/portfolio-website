@@ -1,7 +1,8 @@
 "use client";
 
-import type { MouseEvent, ReactNode } from "react";
+import { useEffect, useRef, type MouseEvent, type ReactNode } from "react";
 import { NAV, type View } from "@/lib/data";
+import { findEgg } from "@/lib/eggs";
 import { usePortfolio } from "@/components/portfolio-provider";
 
 /** Nav clicks pass their own centre so the wipe grows out of the button. */
@@ -24,13 +25,46 @@ export function Roll({ children }: { children: ReactNode }) {
   );
 }
 
+/** How long the mark has to be held before the archive turns over. */
+const HOLD = 600;
+
 export function Header() {
-  const { view, menuOpen, setMenuOpen } = usePortfolio();
+  const { view, menuOpen, setMenuOpen, flipPaper, paper } = usePortfolio();
   const nav = useNavClick();
+  const home = nav("home");
+
+  /* The mark is two controls in one: a press goes home, a hold turns the page
+     over. `held` swallows the click that a hold always ends with — otherwise
+     flipping the plate also navigated. */
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const held = useRef(false);
+
+  const holdStart = (e: React.PointerEvent<HTMLElement>) => {
+    held.current = false;
+    const { clientX, clientY } = e;
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      held.current = true;
+      findEgg("paper");
+      flipPaper(clientX, clientY);
+    }, HOLD);
+  };
+  const holdEnd = () => clearTimeout(timer.current);
 
   return (
     <header className="header">
-      <button className="logo" onClick={nav("home")} aria-label="Go to home">
+      <button
+        className="logo"
+        onClick={(e) => {
+          if (held.current) return;
+          home(e);
+        }}
+        onPointerDown={holdStart}
+        onPointerUp={holdEnd}
+        onPointerLeave={holdEnd}
+        onPointerCancel={holdEnd}
+        aria-label={`Go to home. Hold to switch to ${paper ? "ink" : "paper"}`}
+      >
         <span className="logo-mark">
           P<em>G</em>
         </span>
@@ -72,8 +106,19 @@ export function Header() {
 }
 
 export function MobileMenu() {
-  const { view, menuOpen } = usePortfolio();
+  const { view, menuOpen, setMenuOpen } = usePortfolio();
   const nav = useNavClick();
+
+  /* Escape closes it. Every other overlay on the site does, and a full-screen
+     menu with no keyboard way out is the one that matters most. */
+  useEffect(() => {
+    if (!menuOpen) return;
+    const off = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    addEventListener("keydown", off);
+    return () => removeEventListener("keydown", off);
+  }, [menuOpen, setMenuOpen]);
 
   return (
     <div

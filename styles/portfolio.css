@@ -39,6 +39,19 @@ html:root {
   --red-2: #ff5a4c;
   --red-deep: #8e0c20;
 
+  /* Two roles that look like `--ink` and `--red` but are not them.
+     `--on-plate` is the dark you print ON something — a red plate, the
+     receipt's cream stock, a lit control. The plate does not change colour
+     when the page inverts, so neither may its ink; using `--ink` here meant
+     every button label went cream-on-red the moment paper mode came on.
+     `--red-ink` is red used as *type* rather than as a plate: bright red
+     reads 5.3:1 on ink and only 3.24:1 on paper, so on paper it deepens. */
+  --on-plate: #080506;
+  --on-plate-rgb: 8 5 6;
+
+  /* the ground every fixed scrim and the header are tinted with */
+  --scrim-rgb: 8 5 6;
+
   --glow: rgba(255, 34, 51, 0.3);
 
   --font-display: var(--font-archivo), "Archivo", "Helvetica Neue", sans-serif;
@@ -50,6 +63,10 @@ html:root {
   --page: min(97.5rem, 92vw);
   --gap: clamp(1rem, 2.2vw, 2.25rem);
   --edge: max(2rem, calc((100vw - var(--page)) / 2));
+  /* Everything that isn't in the flow — the header, the readout, the rail, a
+     .bleed row's own padding — is placed off --edge, so --page is what keeps
+     the chrome lined up with the text. Widen the page and the gutter closes
+     on the rail; the rail is the thing that needs the room. */
 
   /* motion — fast and flat for structure, springy only for toys */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -76,6 +93,15 @@ body {
   --accent: var(--red);
   --accent-2: var(--red-2);
   --accent-3: var(--red-deep);
+
+  /* Red used as *type* rather than as a plate, and it belongs here for the
+     same reason the aliases above do. Declared on the root it resolved to the
+     default red once, on <html>, and no theme setting `--red` on body could
+     ever reach it again — so every red label on the page stayed pillar-box red
+     in the amber room and in the green terminal. Declared on body it follows
+     whichever plate the page is printed on; `body.is-paper` overrides it to
+     `--red-deep`, because bright red is 3.24:1 on cream. */
+  --red-ink: var(--red);
 }
 
 /* Lenis owns the scroll; these two lines are all it needs from the page */
@@ -131,7 +157,7 @@ body.is-locked {
 
 ::selection {
   background: var(--red);
-  color: var(--ink);
+  color: var(--on-plate);
 }
 
 img {
@@ -182,8 +208,15 @@ main {
 }
 
 /* ---------- layout primitives ---------- */
+/* `max-width` because Tailwind ships a `.container` utility of its own, and
+   its breakpoint cap (1280px at xl) was silently overriding this width between
+   1280px and 1536px — the containers came out 1280 wide while --edge went on
+   describing a 92vw page. Everything placed off --edge was then 22px outboard
+   of the text it was supposed to line up with, and the .bleed rows overhung
+   into the rail's gutter, which is where the stats row met the tick labels. */
 .container {
   width: var(--page);
+  max-width: none;
   margin-inline: auto;
 }
 
@@ -347,12 +380,12 @@ main {
 }
 .btn:hover,
 .btn:focus-visible {
-  color: var(--ink);
+  color: var(--on-plate);
 }
 .btn-primary {
   background: var(--red);
   border-color: var(--red);
-  color: var(--ink);
+  color: var(--on-plate);
 }
 .btn-primary::before {
   background: var(--paper);
@@ -388,31 +421,31 @@ button:hover .arrow {
 }
 
 /* ---------- ambient layers ---------- */
+/* The grain is a 128px tile repeated across the viewport, shifted a few
+   pixels at a time. It used to be one element four times the size of the
+   window (inset: -50%) translated by percentages, which is four viewports of
+   composited overdraw on every frame of the loop for a texture nobody can see
+   move. Same grain, a quarter of the pixels, and the tile is small enough
+   that the repeat never reads. */
 .noise {
   position: fixed;
-  inset: -50%;
+  inset: 0;
   z-index: 4;
   pointer-events: none;
   opacity: 0.055;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
-  animation: grain 7s steps(10) infinite;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  animation: grain 1.2s steps(6) infinite;
 }
+/* background-position, not transform: the layer is exactly the viewport now,
+   so there is nothing outside it to slide in from. */
 @keyframes grain {
-  0%,
+  0% {
+    background-position: 0 0;
+  }
   100% {
-    transform: translate(0, 0);
-  }
-  20% {
-    transform: translate(-3%, 2%);
-  }
-  40% {
-    transform: translate(2%, -3%);
-  }
-  60% {
-    transform: translate(-2%, -2%);
-  }
-  80% {
-    transform: translate(3%, 3%);
+    background-position: 128px 128px;
   }
 }
 
@@ -445,8 +478,8 @@ button:hover .arrow {
   pointer-events: none;
   background: linear-gradient(
     to bottom,
-    rgba(6, 2, 4, 0.42),
-    rgba(6, 2, 4, 0.66)
+    rgb(var(--scrim-rgb) / 0.42),
+    rgb(var(--scrim-rgb) / 0.66)
   );
 }
 
@@ -457,10 +490,61 @@ button:hover .arrow {
   pointer-events: none;
 }
 
+/* ---------- accessibility furniture ---------- */
+/* Read by a screen reader, never by an eye. Used for the tech list the
+   marquee only decorates, and for headings the layout carries typographically
+   rather than as text. */
+.vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+/* Parked off the top of the window until a keyboard asks for it, then it is
+   a plain red plate under the header — the same plate every primary button on
+   the site is printed on. */
+.skip-link {
+  position: fixed;
+  top: 0;
+  left: var(--edge);
+  z-index: 200;
+  translate: 0 -120%;
+  padding: 0.7rem 1.1rem;
+  background: var(--red);
+  color: var(--on-plate);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transition: translate 0.2s var(--ease-out);
+}
+/* `:focus`, not `:focus-visible` — the link is parked off-screen, so the only
+   way to reach it at all is a keyboard, and a heuristic that guesses wrong
+   here leaves the first tab stop invisible. */
+.skip-link:focus {
+  translate: 0 0;
+  outline-offset: -4px;
+}
+/* the <main> is only a focus target for the skip link; it never draws a ring */
+main:focus {
+  outline: none;
+}
+
 /* ---------- custom cursor ---------- */
 /* A square, because everything here is square. The ring's size is written
    by the hook every frame; the stylesheet only owns colour, rotation and the
    label. body[data-cur] carries the mood. */
+/* `translate` belongs to the hook — it writes the position there every frame,
+   already centred. Nothing below may set `translate` on these two: the two
+   would be the same property, and putting the position in `transform` instead
+   is worse, since transform composes *after* rotate and scale and the 45°
+   hover would swing the whole page-space offset around with it. */
 .cursor-dot,
 .cursor-ring {
   position: fixed;
@@ -468,7 +552,6 @@ button:hover .arrow {
   left: 0;
   z-index: 9999;
   pointer-events: none;
-  translate: -50% -50%;
 }
 /* Both carry a paper hairline as well as their red. Half the controls on this
    page fill with the same red on hover — the bento plate, the primary button,
@@ -505,7 +588,7 @@ button:hover .arrow {
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--ink);
+  color: var(--on-plate);
   opacity: 0;
   transition: opacity 0.15s;
 }
@@ -540,7 +623,7 @@ body[data-cur="label"][data-word="open"] .cursor-ring {
     0 0 14px 3px rgb(var(--paper-rgb) / 0.16);
 }
 body[data-cur="label"][data-word="open"] .cursor-label {
-  color: var(--ink);
+  color: var(--on-plate);
 }
 body[data-cur="label"] .cursor-label {
   opacity: 1;
@@ -553,6 +636,12 @@ body[data-cur="blend"] .cursor-ring {
   background: var(--paper);
   border-color: var(--paper);
   box-shadow: none;
+  /* Difference against red ink returns cyan — the one colour this site does
+     not own, sitting on the largest word on the page. The backdrop is
+     desaturated before the square differences against it, so the inversion
+     survives (cream over the ink, black over the type) and comes out in
+     greys instead of turning teal over GARG. and TOGETHER. */
+  backdrop-filter: grayscale(1);
   mix-blend-mode: difference;
 }
 body[data-cur="blend"] .cursor-dot {
@@ -565,6 +654,20 @@ body[data-cur="blend"] .cursor-label {
 }
 body.cursor-down .cursor-ring {
   scale: 0.8;
+}
+/* Nothing is drawn until the pointer has actually moved, and it stands down
+   again the moment it leaves the window. The square used to sit dead in the
+   middle of the viewport from first paint — before any mouse had been near it
+   — which read as a stray rectangle printed on the page. */
+body:not(.cursor-live) .cursor-dot,
+body:not(.cursor-live) .cursor-ring {
+  opacity: 0;
+}
+/* over a text field the native caret is the cursor; two of them in one box is
+   one too many, and the square latching onto a field-wide box read as a bug */
+body[data-cur="text"] .cursor-dot,
+body[data-cur="text"] .cursor-ring {
+  opacity: 0;
 }
 @media (pointer: coarse) {
   .cursor-dot,
@@ -680,7 +783,7 @@ body:has(.pv-body:hover) .cursor-ring {
 }
 .readout-val {
   font-weight: 700;
-  color: var(--red);
+  color: var(--red-ink);
   min-width: 3ch;
 }
 @media (max-width: 50em), (pointer: coarse) {
@@ -690,6 +793,16 @@ body:has(.pv-body:hover) .cursor-ring {
 }
 
 /* ---------- the archive rail ---------- */
+/* From 900px the rail is mounted in the right gutter, and its tick labels are
+   the widest thing in there (see rail.tsx). The page gives up four points of
+   width so they have somewhere to sit; below 900px there is no rail and the
+   page keeps the wider measure. */
+@media (min-width: 56.25em) {
+  html:root {
+    --page: min(97.5rem, 88vw);
+  }
+}
+
 /* The native scrollbar goes only while the rail is mounted to replace it —
    never on touch, where the rail never renders. */
 html.has-rail {
@@ -735,18 +848,34 @@ html.has-rail::-webkit-scrollbar {
   position: absolute;
   right: -3px;
   top: calc(var(--at) * (100% - var(--thumb)) + var(--thumb) / 2);
-  width: 8px;
+  /* the full extent is the hit target; the bar inside it is what you see */
+  width: 16px;
   height: 2px;
   margin-top: -1px;
   padding: 0;
   border: 0;
-  background: var(--rule-3);
+  background: none;
   cursor: pointer;
-  transition: width 220ms var(--ease-out), background 220ms var(--ease-out);
 }
-.rail-tick:hover,
-.rail-tick.is-current {
-  width: 16px;
+/* The bar is a pseudo-element so lengthening it is a transform rather than a
+   width change. `.is-current` is retoggled on every scroll update, so the old
+   `transition: width` put a layout pass on the one element that moves while
+   the reader is actually scrolling. The label is a sibling, not a child of
+   this, so it is not stretched along with it. */
+.rail-tick::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--rule-3);
+  transform: scaleX(0.5);
+  transform-origin: right;
+  transition:
+    transform 220ms var(--ease-out),
+    background 220ms var(--ease-out);
+}
+.rail-tick:hover::before,
+.rail-tick.is-current::before {
+  transform: scaleX(1);
   background: var(--red);
 }
 /* the labels are the widest part of the rail, so they are the first thing to
@@ -888,7 +1017,7 @@ html.has-rail::-webkit-scrollbar {
   font-style: normal;
   font-size: 0.28em;
   letter-spacing: -0.02em;
-  color: var(--red);
+  color: var(--red-ink);
 }
 .pre-bar {
   margin-top: 1.4rem;
@@ -953,7 +1082,7 @@ html.has-rail::-webkit-scrollbar {
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.28em;
-  color: var(--red);
+  color: var(--red-ink);
   opacity: 0;
   transition: opacity 0.3s;
 }
@@ -1031,11 +1160,18 @@ html.has-rail::-webkit-scrollbar {
   align-items: center;
   gap: 1.5rem;
   padding: 0.85rem var(--edge);
-  background: rgba(8, 5, 6, 0.82);
+  background: rgb(var(--scrim-rgb) / 0.82);
   backdrop-filter: blur(14px) saturate(1.1);
   -webkit-backdrop-filter: blur(14px) saturate(1.1);
   transition: translate 0.5s var(--ease-out-hard);
   border-bottom: 1px solid var(--rule);
+}
+/* Where the backdrop blur is unavailable the plate has to carry the contrast
+   on its own, or the copy scrolling under the bar shows through it. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .header {
+    background: rgb(var(--scrim-rgb) / 0.96);
+  }
 }
 /* ducks on the way down, returns the moment you scroll back up */
 .header.is-hidden {
@@ -1071,7 +1207,7 @@ body.is-locked .header {
 }
 .logo-mark em {
   font-style: normal;
-  color: var(--red);
+  color: var(--red-ink);
 }
 .logo-sub {
   font-family: var(--font-mono);
@@ -1140,7 +1276,7 @@ body.is-locked .header {
   }
 }
 .nav-link.is-active i {
-  color: var(--red);
+  color: var(--red-ink);
 }
 /* the hook writes left/width onto this — a 2px red rule, not a pill */
 .nav-indicator {
@@ -1208,6 +1344,10 @@ body.is-locked .header {
   clip-path: inset(0 0 0 0);
   pointer-events: auto;
 }
+/* the sheet behind it holds still while it is up */
+body:has(.mobile-menu.is-open) {
+  overflow: hidden;
+}
 .m-link {
   display: flex;
   align-items: baseline;
@@ -1263,7 +1403,7 @@ body.is-locked .header {
   color: var(--paper);
 }
 .m-link.is-active i {
-  color: var(--red);
+  color: var(--red-ink);
 }
 
 /* ---------- views ---------- */
@@ -1319,7 +1459,14 @@ body.is-locked .header {
 [data-ink] {
   --ink: var(--paper);
 }
+/* One word on the second plate, not a clause. The lede carries three <strong>
+   runs and putting all of them in red turned most of a paragraph into an
+   accent — the first is the name, and that is the one worth the ink. */
 [data-ink] strong {
+  --ink: var(--paper);
+  font-weight: 500;
+}
+[data-ink] strong:first-of-type {
   --ink: var(--red-2);
 }
 [data-ink] .w {
@@ -1388,6 +1535,10 @@ body.is-locked .header {
   position: relative;
   z-index: 1;
   padding-block: clamp(6.5rem, 14vh, 10rem) clamp(2rem, 5vw, 4rem);
+  /* The figure's measure, declared once. The copy's right-hand reserve is
+     derived from it below rather than guessed at, so the two can never drift
+     apart when one of them is tuned. */
+  --fig-w: clamp(18rem, 42vw, 40rem);
 }
 
 /* ---------- the figure ----------
@@ -1397,10 +1548,16 @@ body.is-locked .header {
    softens the shoulder where the surname passes in front of it. */
 .hero-portrait {
   position: absolute;
-  right: calc(var(--edge) * -1);
-  bottom: clamp(2.5rem, 5vw, 4.5rem);
+  /* On the container's right edge and standing on the same line the facts
+     strip does, rather than centred inside a box that hangs off the page.
+     The box used to overhang by `--edge` while the grid inside it stayed
+     centred, which left the figure floating with a gutter of nothing to its
+     right and its characters trimmed mid-glyph at the window edge. He is
+     whole now, and aligned to the same two rules as everything else. */
+  right: 0;
+  bottom: clamp(3.5rem, 6vw, 6rem);
   z-index: 0;
-  width: clamp(18rem, 46vw, 44rem);
+  width: var(--fig-w);
   /* hoverable, but the type sits at a higher z-index, so the letters and the
      CTA still take the pointer where they overlap him */
   pointer-events: auto;
@@ -1524,42 +1681,147 @@ body.is-locked .header {
   position: absolute;
   inset: 0;
   display: grid;
-  place-items: center;
+  /* hung on the box's own corner — the figure is taller than it is wide, so
+     centring it left air on the right that read as a misalignment */
+  place-items: end end;
   pointer-events: none;
   transition: opacity 0.5s var(--ease-out);
 }
 .pt-fig {
   font-family: var(--font-mono);
-  /* a mono advance is ~0.6em, so N columns need N × 0.6em of width. Sizing
-     off the container rather than the viewport means it holds its proportions
-     at every zoom level without a breakpoint. */
-  font-size: calc(88cqw / (var(--pt-cols) * 0.6));
-  line-height: 1;
+  /* A mono advance is 0.6em wide and the rows are 1.15em apart, which is the
+     ratio the grid was sampled at — set them any other way and he comes out
+     stretched. The figure is taller than it is wide and the frame it sits in
+     is the photograph's own box (1.04 × its width), so the *height* is what
+     runs out first: the type is sized from the row count, not the column
+     count. Container units, so it holds at every zoom with no breakpoint. */
+  --pt-lh: 1.15;
+  font-size: calc(100cqw * 1.02 / (var(--pt-rows) * var(--pt-lh)));
+  line-height: var(--pt-lh);
   letter-spacing: 0;
-  color: rgb(var(--paper-rgb) / 0.82);
+  /* denser than the outline it replaced — a full density ramp at 0.82 is a
+     block of cream rather than a portrait */
+  color: rgb(var(--paper-rgb) / 0.62);
   white-space: pre;
   margin: 0;
 }
-/* the crop marks a printer would trim off, and the plate number */
-.pt-crop {
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  border: 0 solid var(--red);
-  opacity: 0.75;
+/* The torch: the same grid again, stacked exactly on the first, clipped to
+   its own glyphs and filled with a radial gradient that follows the pointer.
+   The ink is the page's second plate, so cozy and CRT recolour it along with
+   everything else — amber in the lamp-lit room, phosphor in the terminal. */
+/* Stacked in the same grid cell as the plate it lights, not absolutely
+   positioned over the whole box. `inset: 0` made this layer the size of the
+   wrapper while the base sits in a content-sized cell anchored to its corner,
+   so the two grids were centred differently and the light landed above and to
+   the left of the pointer. */
+.pt-fig {
+  grid-area: 1 / 1;
 }
-.pt-tl {
-  top: 6%;
-  left: 4%;
-  border-top-width: 1px;
-  border-left-width: 1px;
+/* One plate per measure. The narrow one is the same portrait re-sampled at a
+   third of the density (44×32 rather than 111×82) — shrinking the big grid to
+   a phone's width puts a glyph at three pixels, which is a smudge, not type. */
+.pt-sm,
+.pt-dim-sm {
+  display: none;
 }
-.pt-br {
-  bottom: 10%;
-  right: 4%;
-  border-bottom-width: 1px;
-  border-right-width: 1px;
+@media (max-width: 46em) {
+  .pt-lg,
+  .pt-dim-lg {
+    display: none;
+  }
+  .pt-sm {
+    display: block;
+  }
+  .pt-dim-sm {
+    display: inline;
+  }
 }
+.pt-lit {
+  color: transparent;
+  background-image: radial-gradient(
+    circle at var(--px, 50%) var(--py, 50%),
+    var(--red-2) 0,
+    var(--red) 30%,
+    transparent 58%
+  );
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  opacity: 0;
+  /* `visibility` as well as opacity: nine thousand glyphs clipped out of a
+     gradient still get rasterised at opacity 0, and this layer is idle for
+     almost the whole visit. Hidden it costs nothing; the delayed transition
+     keeps it around long enough to fade out rather than vanish. */
+  visibility: hidden;
+  transition:
+    opacity 0.35s var(--ease-out),
+    visibility 0s linear 0.35s;
+  pointer-events: none;
+}
+.portrait-type.is-lit .pt-lit {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 0.35s var(--ease-out),
+    visibility 0s;
+  animation: plate-slip 2.3s steps(1) infinite;
+}
+/* the press not quite holding register: every couple of seconds the lit plate
+   jumps a pixel or two and the one underneath goes the other way, for two
+   frames. Not a glitch effect — a printing fault, which is the language the
+   rest of the page is already speaking. */
+.portrait-type.is-lit .pt-fig:not(.pt-lit) {
+  animation: plate-slip-under 2.3s steps(1) infinite;
+}
+@keyframes plate-slip {
+  0%,
+  40% {
+    translate: 0 0;
+  }
+  42% {
+    translate: 3px -1px;
+  }
+  45% {
+    translate: -2px 1px;
+  }
+  47%,
+  76% {
+    translate: 0 0;
+  }
+  78% {
+    translate: -2px 0;
+  }
+  80%,
+  100% {
+    translate: 0 0;
+  }
+}
+@keyframes plate-slip-under {
+  0%,
+  40% {
+    translate: 0 0;
+  }
+  42% {
+    translate: -2px 1px;
+  }
+  45% {
+    translate: 2px 0;
+  }
+  47%,
+  100% {
+    translate: 0 0;
+  }
+}
+/* the base plate steps back a little while the light is on it, so the lit
+   characters read as the ones being picked out rather than as an overlay */
+.portrait-type.is-lit .pt-fig:not(.pt-lit) {
+  color: rgb(var(--paper-rgb) / 0.4);
+}
+.pt-fig {
+  transition: color 0.35s var(--ease-out);
+}
+
+/* the plate number a printer would trim off */
 .pt-meta {
   position: absolute;
   bottom: 6%;
@@ -1568,23 +1830,27 @@ body.is-locked .header {
   font-size: 0.56rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--red);
+  color: var(--red-ink);
 }
 .pt-meta i {
   font-style: normal;
-  color: rgb(var(--paper-rgb) / 0.4);
+  /* 0.4 at this size measured 3.33:1 */
+  color: rgb(var(--paper-rgb) / 0.62);
   margin-left: 0.5em;
 }
+/* Only where the type is actually up. Below the stack breakpoint he takes his
+   own band and the grid would have to be sized off a full-width container —
+   so the photograph stands on its own there and these rules stay out of it. */
 .hero-portrait.has-type .portrait-gl,
 .hero-portrait.has-type > img {
   opacity: 0;
 }
-/* point at him and the type gives way to the person */
-.hero-portrait.has-type.is-lit .portrait-type {
-  opacity: 0;
-}
-.hero-portrait.has-type.is-lit .portrait-gl {
-  opacity: 1;
+@media (min-width: 46.0625em) {
+  /* He stays set in type. The plate used to trade itself for the photograph on
+     hover, which meant the one deliberate image on the page appeared and
+     disappeared under the pointer; the light moving through the characters is
+     the interaction now, and the photograph belongs to the smaller screens and
+     to About. */
 }
 
 .hero-rail {
@@ -1661,15 +1927,19 @@ body.is-locked .header {
   padding-left: clamp(0.5rem, 7vw, 6rem);
 }
 .hero-title .accent {
-  color: var(--red);
+  color: var(--red-ink);
 }
 .hero-dot {
-  color: var(--red);
+  color: var(--red-ink);
 }
 .h-letter {
   display: inline-block;
   cursor: grab;
-  will-change: transform;
+  /* No will-change here. The wrapper only moves while a letter is actually
+     being dragged, which is rare and already inline-transformed; the inner
+     <i> is the one the marquee flight drives every frame and it keeps its
+     hint. Promoting both put seventeen extra compositor layers on the page
+     for the entire visit. */
   user-select: none;
   touch-action: none;
 }
@@ -1687,13 +1957,13 @@ body.is-locked .header {
 }
 .h-letter.is-grabbed {
   cursor: grabbing;
-  color: var(--red);
+  color: var(--red-ink);
   z-index: 5;
   position: relative;
 }
 /* legacy hook — the old gradient class must not paint a gradient any more */
 .grad {
-  color: var(--red);
+  color: var(--red-ink);
 }
 
 /* the supporting block: deliberately offset and overlapping the last line */
@@ -1701,12 +1971,25 @@ body.is-locked .header {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.05fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
   gap: clamp(1.5rem, 4vw, 4rem);
   align-items: start;
   padding-top: clamp(2.4rem, 5vw, 4rem);
-  /* the right gutter belongs to the figure */
-  padding-right: clamp(0rem, 80vw - 48rem, 27.5rem);
+  /* The right gutter belongs to the figure, and the reserve is the figure's
+     own measure rather than a curve fitted to one viewport: he is 46vw wide
+     and bleeds `--edge` off the page, so the copy has to stop 46vw − 2×edge
+     short of the container's right edge. The old `80vw − 48rem` only started
+     reserving above ~960px, which is why the character grid ran straight
+     through the buttons and the "who writes all this" link on a tablet. */
+  padding-right: min(30rem, calc(var(--fig-w) * 0.74));
+}
+/* Two columns of copy plus a reserved column for the figure is three columns
+   of content, and below this the middle one stops being a line of type. The
+   sub and the calls to action stack; the figure stays where he is. */
+@media (max-width: 80em) {
+  .hero-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 .hero-sub {
   font-family: var(--font-serif);
@@ -1763,7 +2046,7 @@ body.is-locked .header {
 /* sneaky résumé #1 — the full stop is a link */
 .secret-dot {
   position: relative;
-  color: var(--red);
+  color: var(--red-ink);
   font-weight: 900;
 }
 .secret-tip {
@@ -1777,7 +2060,7 @@ body.is-locked .header {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   background: var(--red);
-  color: var(--ink);
+  color: var(--on-plate);
   padding: 0.25rem 0.5625rem;
   opacity: 0;
   pointer-events: none;
@@ -1832,8 +2115,17 @@ body.is-locked .header {
   color: var(--paper-2);
   transition: color var(--snap);
 }
-.hero-facts li:hover {
-  color: var(--red-2);
+/* Rows and cards hover only where a pointer can actually hover. On a touch
+   screen :hover latches on tap and holds until something else is tapped, so a
+   row brushed past on the way down kept a red plate on its numeral and its
+   title shoved half a rem to the right — a selection nobody made. Every
+   `@media (hover: hover)` around a `:hover` in this file is here for that.
+   Controls keep theirs unguarded: a button that stays lit after you press it
+   is feedback, not a phantom. */
+@media (hover: hover) {
+  .hero-facts li:hover {
+    color: var(--red-2);
+  }
 }
 
 .scroll-hint {
@@ -1922,6 +2214,42 @@ body.is-locked .header {
   .portrait-ghost {
     display: none;
   }
+  /* He is set in type here too. The plate takes its own line rather than
+     hanging over the photograph's box, so the band is exactly as tall as the
+     figure — and the photograph, which only ever stood in until this
+     hydrated, gets out of the flow entirely. */
+  .hero-portrait.has-type > img {
+    display: none;
+  }
+  .portrait-type {
+    position: relative;
+    inset: auto;
+    place-items: center;
+  }
+  /* The photograph's bottom was a soft crop, so the paragraph could sit up
+     under it. The grid ends on a hard row of glyphs and its plate number, and
+     both wanted air. */
+  .hero-portrait.has-type {
+    margin-block: clamp(-1.25rem, -3vw, -0.5rem) clamp(0.75rem, 3vw, 1.5rem);
+  }
+  /* Sized to the band rather than to the page: 0.88 of the band's width puts
+     the figure at about the height the photograph had, and the floor keeps the
+     characters legible on a 320px screen instead of letting them close up into
+     a grey field. */
+  .pt-sm {
+    font-size: max(8px, calc(100cqw * 0.88 / (var(--pt-rows) * var(--pt-lh))));
+    /* a third of the glyphs is a third of the ink: the narrow plate is printed
+       a little heavier so it reads as type rather than as a grey haze */
+    color: rgb(var(--paper-rgb) / 0.72);
+  }
+  /* Set beneath the plate rather than on it. There is no clear corner inside
+     a 44-column grid on a phone — every absolute placement landed either on
+     his shoulder or under the paragraph — so it takes its own line, the way a
+     caption does. */
+  .pt-meta {
+    position: static;
+    margin-top: 0.4rem;
+  }
 
   .hero-aside {
     padding-left: 0;
@@ -1951,9 +2279,17 @@ body.is-locked .header {
   padding-block: 0.6rem;
   user-select: none;
 }
+/* The second band is printed the other way up from the first: paper stock,
+   ink words. It is an inverting plate, so its words are `--ink` rather than
+   the fixed `--on-plate` the red band's are — otherwise the band flips with
+   the page in paper mode and takes its own text with it. */
 .marquee + .marquee {
   background: var(--paper);
   border-top: 2px solid var(--ink);
+}
+.marquee + .marquee .marquee-track span,
+.marquee + .marquee .marquee-track i {
+  color: var(--ink);
 }
 /* driven by the scroll's velocity from the view hook: faster when you scroll
    fast, backwards when you scroll up, barely moving at rest */
@@ -1970,13 +2306,15 @@ body.is-locked .header {
   font-size: clamp(1.1rem, 2.6vw, 2rem);
   letter-spacing: -0.02em;
   text-transform: uppercase;
-  color: var(--ink);
+  color: var(--on-plate);
   white-space: nowrap;
 }
 .marquee-track i {
   font-style: normal;
   font-size: 0.7rem;
-  color: rgba(8, 5, 6, 0.5);
+  /* 0.5 put the separator at 2.65:1 on the band — a mark you can see but not
+     read is still text somebody's eyes have to resolve */
+  color: rgb(var(--on-plate-rgb) / 0.86);
 }
 .marquee-track span {
   transition:
@@ -1986,7 +2324,7 @@ body.is-locked .header {
 @media (hover: hover) {
   .marquee-track span:hover {
     background: var(--ink);
-    color: var(--red);
+    color: var(--red-ink);
   }
   .marquee + .marquee .marquee-track span:hover {
     color: var(--paper);
@@ -2046,8 +2384,10 @@ body.is-locked .header {
   pointer-events: none;
   transition: color 0.4s var(--ease-out);
 }
-.col-item:hover .col-ghost {
-  color: rgb(var(--red-rgb) / 0.18);
+@media (hover: hover) {
+  .col-item:hover .col-ghost {
+    color: rgb(var(--red-rgb) / 0.18);
+  }
 }
 .col-item h3,
 .col-item p {
@@ -2056,14 +2396,18 @@ body.is-locked .header {
 .col-item h3 {
   transition: translate 0.4s var(--ease-out-hard);
 }
-.col-item:hover h3 {
-  translate: 0.4rem 0;
+@media (hover: hover) {
+  .col-item:hover h3 {
+    translate: 0.4rem 0;
+  }
 }
 .col-item:last-child {
   padding-right: 0;
 }
-.col-item:hover {
-  background: rgb(var(--paper-rgb) / 0.03);
+@media (hover: hover) {
+  .col-item:hover {
+    background: rgb(var(--paper-rgb) / 0.03);
+  }
 }
 .col-index {
   display: block;
@@ -2071,7 +2415,7 @@ body.is-locked .header {
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.2em;
-  color: var(--red);
+  color: var(--red-ink);
   margin-bottom: 1.2rem;
 }
 .col-item h3 {
@@ -2102,14 +2446,16 @@ body.is-locked .header {
   margin-bottom: 0;
 }
 .col-mark {
-  color: var(--red);
+  color: var(--red-ink);
   opacity: 0.55;
   transition:
     opacity var(--snap),
     color var(--snap);
 }
-.col-item:hover .col-mark {
-  opacity: 1;
+@media (hover: hover) {
+  .col-item:hover .col-mark {
+    opacity: 1;
+  }
 }
 /* the structural rule between the three fields */
 .cols-3.is-ruled {
@@ -2157,26 +2503,30 @@ body.is-locked .header {
   border-bottom: 1px solid var(--rule);
   transition: background var(--snap);
 }
-.wid-row:hover {
-  background: rgb(var(--paper-rgb) / 0.03);
+@media (hover: hover) {
+  .wid-row:hover {
+    background: rgb(var(--paper-rgb) / 0.03);
+  }
 }
 .wid-no {
   font-family: var(--font-mono);
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.14em;
-  color: var(--red);
+  color: var(--red-ink);
   transition:
     background var(--snap),
     color var(--snap),
     padding var(--snap);
 }
 /* the numeral takes the second plate on contact, the way a passed date does */
-.wid-row:hover .wid-no {
-  background: var(--red);
-  color: var(--ink);
-  padding: 0.2em 0.45em;
-  margin-left: -0.45em;
+@media (hover: hover) {
+  .wid-row:hover .wid-no {
+    background: var(--red);
+    color: var(--on-plate);
+    padding: 0.2em 0.45em;
+    margin-left: -0.45em;
+  }
 }
 .wid-name {
   font-family: var(--font-display);
@@ -2188,8 +2538,10 @@ body.is-locked .header {
   color: var(--paper);
   transition: translate 0.4s var(--ease-out-hard);
 }
-.wid-row:hover .wid-name {
-  translate: 0.5rem 0;
+@media (hover: hover) {
+  .wid-row:hover .wid-name {
+    translate: 0.5rem 0;
+  }
 }
 .wid-note {
   font-family: var(--font-serif);
@@ -2200,12 +2552,14 @@ body.is-locked .header {
 }
 .wid-mark {
   align-self: center;
-  color: var(--red);
+  color: var(--red-ink);
   opacity: 0.4;
   transition: opacity var(--snap);
 }
-.wid-row:hover .wid-mark {
-  opacity: 1;
+@media (hover: hover) {
+  .wid-row:hover .wid-mark {
+    opacity: 1;
+  }
 }
 @media (max-width: 62em) {
   .wid-row {
@@ -2213,7 +2567,15 @@ body.is-locked .header {
   }
   .wid-note {
     grid-column: 2 / -1;
+    grid-row: 2;
     margin-top: 0.75rem;
+  }
+  /* the note is placed explicitly and takes row 1's remaining columns with
+     it, which left the mark to auto-place into the next free cell — row 2,
+     column 1 — so every row's icon sat under its own numeral. It is pinned. */
+  .wid-mark {
+    grid-column: 3;
+    grid-row: 1;
   }
 }
 
@@ -2240,6 +2602,17 @@ body.is-locked .header {
   line-height: 0.85;
   letter-spacing: -0.05em;
   color: var(--paper);
+}
+/* The infinity sign has no cap height to fill, so at the digits' size it
+   reads as a smaller number set on a different baseline. Sized up to match
+   them optically rather than metrically. */
+/* The infinity sign has no cap height to fill, so at the digits' size it
+   reads as a smaller number on a different baseline. Scaled in place rather
+   than set larger: a transform leaves the box alone, so the label underneath
+   still lines up with the other three. */
+.stat-combo .stat-num {
+  transform: scale(1.3);
+  transform-origin: left bottom;
 }
 .stat-label {
   display: block;
@@ -2280,15 +2653,17 @@ body.is-locked .header {
   border-bottom: 1px solid var(--rule);
   transition: background var(--snap);
 }
-.work-row:hover {
-  background: rgb(var(--paper-rgb) / 0.04);
+@media (hover: hover) {
+  .work-row:hover {
+    background: rgb(var(--paper-rgb) / 0.04);
+  }
 }
 .work-no {
   font-family: var(--font-mono);
   font-size: 0.68rem;
   font-weight: 500;
   letter-spacing: 0.14em;
-  color: var(--red);
+  color: var(--red-ink);
 }
 .work-title {
   font-family: var(--font-display);
@@ -2300,22 +2675,28 @@ body.is-locked .header {
   color: var(--paper);
   transition: color var(--snap);
 }
-.work-row:hover .work-title {
-  color: var(--red-2);
+@media (hover: hover) {
+  .work-row:hover .work-title {
+    color: var(--red-2);
+  }
 }
 .work-title {
   transition:
     color var(--snap),
     translate 0.4s var(--ease-out-hard);
 }
-.work-row:hover .work-title {
-  translate: 0.5rem 0;
+@media (hover: hover) {
+  .work-row:hover .work-title {
+    translate: 0.5rem 0;
+  }
 }
 .work-no {
   transition: translate 0.35s var(--ease-out-hard);
 }
-.work-row:hover .work-no {
-  translate: 0.5rem 0;
+@media (hover: hover) {
+  .work-row:hover .work-no {
+    translate: 0.5rem 0;
+  }
 }
 .work-tags {
   font-family: var(--font-mono);
@@ -2334,9 +2715,11 @@ body.is-locked .header {
     translate var(--snap),
     color var(--snap);
 }
-.work-row:hover .work-go {
-  translate: 0.35rem 0;
-  color: var(--red);
+@media (hover: hover) {
+  .work-row:hover .work-go {
+    translate: 0.35rem 0;
+    color: var(--red-ink);
+  }
 }
 .work-all {
   display: inline-block;
@@ -2355,8 +2738,16 @@ body.is-locked .header {
   .work-row {
     grid-template-columns: auto minmax(0, 1fr) auto;
   }
+  /* The arrow stays on the title's line. Auto-placement dropped it into the
+     first cell of the second row, where it read as a stray glyph under the
+     tags rather than as the row's own "open". */
+  .work-go {
+    grid-column: 3;
+    grid-row: 1;
+  }
   .work-tags {
     grid-column: 2 / -1;
+    grid-row: 2;
     margin-top: 0.5rem;
     white-space: normal;
   }
@@ -2383,12 +2774,64 @@ body.is-locked .header {
   text-transform: uppercase;
   color: var(--paper);
   max-width: 18ch;
-  margin-bottom: clamp(2rem, 5vw, 3.5rem);
+  /* no margin-bottom: .outro-cta already carries the interval, and the two
+     stacked put a third of a screen of nothing between the line and the
+     sentence that answers it */
   text-wrap: balance;
 }
+/* the headline holds the left; the colophon takes the half of the line that
+   was empty, and drops under it once there is no half to take */
+.outro-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: clamp(1.5rem, 4vw, 3rem);
+}
+.outro-head .outro-line {
+  flex: 1 1 14ch;
+}
+.colophon {
+  flex: 0 1 26rem;
+  padding-bottom: 0.4rem;
+}
+.colophon div {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr);
+  gap: 1rem;
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--rule);
+}
+.colophon dt {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--paper-4);
+}
+.colophon dd {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  color: var(--paper-2);
+}
+.colophon a {
+  color: var(--red-ink);
+}
+.colophon a:hover {
+  color: var(--paper);
+}
+@media (max-width: 40em) {
+  .colophon div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.25rem;
+  }
+}
+
 .outro-line em {
   font-style: normal;
-  color: var(--red);
+  color: var(--red-ink);
 }
 .outro-cta {
   display: flex;
@@ -2435,16 +2878,23 @@ body.is-locked .header {
 .bubble-label b {
   color: var(--red-2);
 }
+/* Sixteen, in one run on a wide plate and two of eight on a phone. Wrapped
+   flex items stretched the last row to fill it, so the four that wrapped came
+   out half again as wide as the twelve above them — a sheet of bubble wrap
+   with four odd cells in the corner. */
 .bubbles {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(16, minmax(0, 1fr));
   gap: 0.45rem;
+}
+@media (max-width: 46em) {
+  .bubbles {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
 }
 .bubble {
   /* they read as things to press now: solid enough to have weight, and they
      grow to fill the plate instead of sitting as a short dark row */
-  flex: 1 1 2.75rem;
-  min-width: 2.75rem;
   height: 2.875rem;
   background: rgb(var(--red-rgb) / 0.46);
   border: 1px solid rgb(var(--red-rgb) / 0.85);
@@ -2515,7 +2965,7 @@ body.is-locked .header {
   font-family: var(--font-mono);
   font-weight: 700;
   font-size: 0.95rem;
-  color: var(--red);
+  color: var(--red-ink);
   opacity: 0;
   pointer-events: none;
 }
@@ -2568,9 +3018,12 @@ body.is-locked .header {
   margin-bottom: clamp(1.4rem, 3vw, 2.4rem);
   text-wrap: balance;
 }
+/* No colour here: the lede is a [data-ink] paragraph, so the ink the fill
+   paints with is the `--ink` custom property, and setting `color` as well
+   meant the print sheet (where the words inherit their colour rather than
+   being filled) came out with two red clauses in it. */
 .about-lede strong {
   font-weight: 400;
-  color: var(--red-2);
 }
 .about-text-col > p:not(.about-lede) {
   font-size: clamp(1.02rem, 0.98rem + 0.3vw, 1.18rem);
@@ -2683,8 +3136,10 @@ body.is-locked .header {
   filter: var(--photo-ink, contrast(1.04));
   transition: filter 0.5s var(--ease-out);
 }
-.photo-frame:hover .photo-img {
-  filter: var(--photo-ink-lit, contrast(0.98) brightness(1.05));
+@media (hover: hover) {
+  .photo-frame:hover .photo-img {
+    filter: var(--photo-ink-lit, contrast(0.98) brightness(1.05));
+  }
 }
 .flip-back h4 {
   font-family: var(--font-mono);
@@ -2692,7 +3147,7 @@ body.is-locked .header {
   font-weight: 500;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--red);
+  color: var(--red-ink);
   padding-bottom: 0.7rem;
   border-bottom: 1px solid var(--rule);
   margin-bottom: 1.1rem;
@@ -2727,14 +3182,16 @@ body.is-locked .header {
   font-size: 0.6rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--ink);
+  color: var(--on-plate);
   background: var(--red);
   padding: 0.3125rem 0.625rem;
   opacity: 0;
   transition: opacity 0.25s;
 }
-.photo-frame:hover .flip-hint {
-  opacity: 1;
+@media (hover: hover) {
+  .photo-frame:hover .flip-hint {
+    opacity: 1;
+  }
 }
 /* the ring of light that wipes the new face in */
 /* sneaky résumé #2 — the paperclip */
@@ -2754,7 +3211,7 @@ body.is-locked .header {
 }
 .paperclip:hover {
   rotate: -6deg;
-  color: var(--red);
+  color: var(--red-ink);
 }
 .paperclip-tip {
   position: absolute;
@@ -2766,7 +3223,7 @@ body.is-locked .header {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   background: var(--red);
-  color: var(--ink);
+  color: var(--on-plate);
   padding: 0.25rem 0.5rem;
   opacity: 0;
   pointer-events: none;
@@ -2794,7 +3251,9 @@ body.is-locked .header {
 /* the rail draws itself down the left edge as you read */
 .tl-rail {
   position: absolute;
-  left: 0;
+  /* on the page's own line, which now runs a little outside the measure —
+     the rail has to be the same run of red, not a second one beside it */
+  left: -0.6rem;
   top: 0;
   bottom: 0;
   width: 3px;
@@ -2813,7 +3272,7 @@ body.is-locked .header {
 }
 .tl-item.is-passed .tl-date {
   background: var(--red);
-  color: var(--ink);
+  color: var(--on-plate);
   padding: 0.15em 0.4em;
   margin-left: -0.4em;
 }
@@ -2826,8 +3285,10 @@ body.is-locked .header {
   border-bottom: 1px solid var(--rule);
   transition: background var(--snap);
 }
-.tl-item:hover {
-  background: rgb(var(--paper-rgb) / 0.03);
+@media (hover: hover) {
+  .tl-item:hover {
+    background: rgb(var(--paper-rgb) / 0.03);
+  }
 }
 .tl-dot {
   position: absolute;
@@ -2840,8 +3301,10 @@ body.is-locked .header {
   transform-origin: left;
   transition: transform 0.45s var(--ease-out);
 }
-.tl-item:hover .tl-dot {
-  transform: scaleX(1);
+@media (hover: hover) {
+  .tl-item:hover .tl-dot {
+    transform: scaleX(1);
+  }
 }
 .tl-date {
   font-family: var(--font-mono);
@@ -2849,8 +3312,12 @@ body.is-locked .header {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--red);
+  color: var(--red-ink);
   align-self: start;
+  /* The plate is the highlighter over the date, not the whole date column.
+     Blockified into a 15rem grid track it ran a red bar two-thirds empty
+     across every entry whose date was short. */
+  justify-self: start;
 }
 /* the card prints when the rail reaches it: a clip edge runs down the title,
    then the body a beat behind it, the whole card set in 600ms */
@@ -2928,12 +3395,12 @@ body.is-locked .header {
   text-transform: uppercase;
   color: var(--paper-4);
 }
+/* what a plucked string throws: small red plates, sized in JS */
 .music-note {
   position: fixed;
   z-index: 9600;
   pointer-events: none;
-  color: var(--red-2);
-  font-size: 1.1rem;
+  background: var(--red-2);
 }
 
 /* ---------- skills: the index ---------- */
@@ -2952,14 +3419,18 @@ body.is-locked .header {
   border-bottom: 1px solid var(--rule);
   transition: background var(--snap);
 }
-.skill:hover {
-  background: rgb(var(--paper-rgb) / 0.03);
+@media (hover: hover) {
+  .skill:hover {
+    background: rgb(var(--paper-rgb) / 0.03);
+  }
 }
 .skill-name {
   transition: translate 0.4s var(--ease-out-hard);
 }
-.skill:hover .skill-name {
-  translate: 0.5rem 0;
+@media (hover: hover) {
+  .skill:hover .skill-name {
+    translate: 0.5rem 0;
+  }
 }
 .skill-status {
   transition:
@@ -2967,17 +3438,19 @@ body.is-locked .header {
     background var(--snap),
     padding var(--snap);
 }
-.skill:hover .skill-status {
-  background: var(--paper);
-  color: var(--ink);
-  padding: 0.2em 0.5em;
+@media (hover: hover) {
+  .skill:hover .skill-status {
+    background: var(--paper);
+    color: var(--ink);
+    padding: 0.2em 0.5em;
+  }
 }
 .skill-no {
   font-family: var(--font-mono);
   font-size: 0.68rem;
   font-weight: 500;
   letter-spacing: 0.14em;
-  color: var(--red);
+  color: var(--red-ink);
 }
 .skill-name {
   font-family: var(--font-display);
@@ -3029,6 +3502,20 @@ body.is-locked .header {
   align-items: baseline;
   gap: 0 clamp(1.2rem, 4vw, 3.5rem);
   padding: clamp(2rem, 5vw, 3.5rem) 0;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+/* The rest of the shelf: the slots that have nothing in them yet. The section
+   was one paragraph floating in a screen of nothing — this is the same page
+   furniture every other list here is set on, left empty on purpose. */
+.ach-slots {
+  height: clamp(9rem, 22vw, 14rem);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--rule) 0 1px,
+    transparent 1px clamp(3rem, 7.4vw, 4.7rem)
+  );
+  opacity: 0.65;
 }
 .ach-empty-no {
   font-family: var(--font-display);
@@ -3045,7 +3532,7 @@ body.is-locked .header {
   font-weight: 500;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--red);
+  color: var(--red-ink);
   margin-bottom: 0.9rem;
 }
 .ach-empty-body p {
@@ -3054,6 +3541,17 @@ body.is-locked .header {
   line-height: 1.4;
   color: var(--paper-2);
   max-width: 46ch;
+}
+/* `.ach-empty-body p` outranks a bare `.ach-empty-note`, so this line was
+   coming out as serif at 1.45rem wearing the mono rule's tracking and caps —
+   a size and a voice nobody chose. */
+.ach-empty-body .ach-empty-note {
+  margin-top: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--paper-4);
 }
 .ach-empty-body em {
   color: var(--red-2);
@@ -3098,10 +3596,81 @@ body.is-locked .header {
   letter-spacing: 0.08em;
   color: var(--paper-2);
 }
+/* The colophon is two columns of mono in a column that is itself half the
+   grid — below this the value column is narrower than the value, and every
+   row wraps mid-phrase. The label goes above it instead. */
+@media (max-width: 62em) {
+  .contact-meta div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.3rem;
+  }
+}
 @media (max-width: 33em) {
   .contact-meta div {
     grid-template-columns: 1fr;
     gap: 0.3rem;
+  }
+}
+
+/* what happens after you press send — three states, read left to right */
+.contact-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin-top: clamp(2.5rem, 6vw, 5rem);
+  border-top: 1px solid var(--rule-2);
+  list-style: none;
+}
+.contact-steps li {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
+  gap: 0.15rem 1rem;
+  padding: clamp(1.2rem, 2.5vw, 1.8rem) clamp(1rem, 2.5vw, 2.2rem)
+    clamp(1.6rem, 3vw, 2.4rem) 0;
+  align-content: start;
+}
+/* the rules between the cells, and none hanging off the last one */
+.contact-steps li + li {
+  border-left: 1px solid var(--rule);
+  padding-left: clamp(1rem, 2.5vw, 2.2rem);
+}
+.contact-steps .cs-no {
+  grid-row: span 2;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  color: var(--red-ink);
+  padding-top: 0.15em;
+}
+.contact-steps b {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--paper-2);
+}
+.contact-steps li > span:last-child {
+  font-family: var(--font-serif);
+  font-size: 0.98rem;
+  line-height: 1.35;
+  color: var(--paper-4);
+  max-width: 42ch;
+}
+/* three columns of 40ch prose do not fit in a phone; they stack, and the rule
+   moves from between them to under each one */
+@media (max-width: 56em) {
+  .contact-steps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .contact-steps li {
+    grid-template-columns: 2rem minmax(0, 1fr);
+    padding: 0.95rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .contact-steps li + li {
+    border-left: 0;
+    padding-left: 0;
   }
 }
 
@@ -3291,7 +3860,7 @@ body.is-locked .header {
 }
 .b-filter.is-active {
   background: var(--red);
-  color: var(--ink);
+  color: var(--on-plate);
 }
 
 /* ---------- the bento ----------
@@ -3398,6 +3967,66 @@ body.is-locked .header {
   height: 100%;
   gap: 0.75rem;
 }
+.b-head,
+.b-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.b-copy {
+  height: 100%;
+}
+
+/* The featured card is a masthead, not a column of text in a wide box: the
+   name takes the whole left side at display scale and everything you can do
+   about the project sits on the right. It used to be a 34ch measure floated in
+   a 1280px cell with three quarters of the biggest box on the page holding
+   nothing but a faint numeral. */
+.b-featured .b-cell-in {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: clamp(1.5rem, 4vw, 4rem);
+  align-items: stretch;
+}
+/* the kicker sits at the head of the column and the name on its foot, so the
+   left side is a full column of card rather than a title with air under it */
+.b-featured .b-head {
+  justify-content: space-between;
+  gap: 1.1rem;
+}
+.b-featured .b-copy {
+  height: auto;
+  gap: 1.4rem;
+}
+/* the supporting pair share a row at half width each, so the sheet reads as
+   one tall box over two, rather than three narrow columns */
+.b-proj {
+  flex: 1 1 min(100%, 22rem);
+}
+/* and the strip closes the block edge to edge */
+.b-github {
+  flex: 1 1 100%;
+}
+@media (max-width: 56em) {
+  .b-featured .b-cell-in {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.1rem;
+  }
+  /* Stacked, the copy is no longer sharing the row with anything, so a 38ch
+     measure left the right half of the largest card on the page empty. */
+  .b-featured .b-body {
+    max-width: 52ch;
+  }
+}
+/* the whole card is the control now */
+.b-cell[data-cursor="open"] {
+  cursor: pointer;
+}
+.b-preview:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
 /* every role flips to ink once the plate is up — cream on this red is only
    3.2:1, ink is not */
 @media (hover: hover) {
@@ -3405,7 +4034,7 @@ body.is-locked .header {
   .b-cell:hover .b-body,
   .b-cell:hover .b-kind,
   .b-cell:hover .b-tags li {
-    color: var(--ink);
+    color: var(--on-plate);
     border-color: rgb(0 0 0 / 0.4);
   }
 }
@@ -3414,7 +4043,7 @@ body.is-locked .header {
   font-size: 0.62rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--red);
+  color: var(--red-ink);
   transition: color 0.3s;
 }
 .b-title {
@@ -3510,13 +4139,13 @@ body.is-locked .header {
 }
 .b-preview:hover {
   background: var(--red);
-  color: var(--ink);
+  color: var(--on-plate);
   border-color: var(--red);
 }
 /* once the red plate is up the outlines have to leave the red family */
 @media (hover: hover) {
   .b-cell:hover .b-btn {
-    color: var(--ink);
+    color: var(--on-plate);
     border-color: rgb(0 0 0 / 0.45);
   }
   .b-cell:hover .b-btn:hover {
@@ -3528,7 +4157,6 @@ body.is-locked .header {
 
 /* ---------- the github strip ---------- */
 .b-github {
-  grid-area: gh;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -3538,8 +4166,10 @@ body.is-locked .header {
   text-decoration: none;
   transition: background 0.3s;
 }
-.b-github:hover {
-  background: rgb(var(--paper-rgb) / 0.09);
+@media (hover: hover) {
+  .b-github:hover {
+    background: rgb(var(--paper-rgb) / 0.09);
+  }
 }
 .b-github-in {
   display: inline-flex;
@@ -3559,8 +4189,10 @@ body.is-locked .header {
   text-transform: uppercase;
   color: var(--paper-3);
 }
-.b-github:hover .b-github-cta {
-  color: var(--red-2);
+@media (hover: hover) {
+  .b-github:hover .b-github-cta {
+    color: var(--red-2);
+  }
 }
 
 @media (max-width: 46em) {
@@ -3599,8 +4231,10 @@ body.is-locked .header {
   cursor: pointer;
   transition: background var(--snap);
 }
-.ach-card:hover {
-  background: rgb(var(--paper-rgb) / 0.03);
+@media (hover: hover) {
+  .ach-card:hover {
+    background: rgb(var(--paper-rgb) / 0.03);
+  }
 }
 .ach-year {
   font-family: var(--font-display);
@@ -3608,7 +4242,7 @@ body.is-locked .header {
   font-size: clamp(1.6rem, 4vw, 3.2rem);
   line-height: 0.85;
   letter-spacing: -0.05em;
-  color: var(--red);
+  color: var(--red-ink);
 }
 .ach-media {
   position: relative;
@@ -3635,8 +4269,10 @@ body.is-locked .header {
   filter: grayscale(1) contrast(1.1);
   transition: filter 0.4s var(--ease-out);
 }
-.ach-card:hover .ach-media img {
-  filter: grayscale(0);
+@media (hover: hover) {
+  .ach-card:hover .ach-media img {
+    filter: grayscale(0);
+  }
 }
 .ach-body h3 {
   font-family: var(--font-display);
@@ -3648,8 +4284,10 @@ body.is-locked .header {
   margin-bottom: 0.45rem;
   transition: translate 0.35s var(--ease-out);
 }
-.ach-card:hover .ach-body h3 {
-  translate: 0.6rem 0;
+@media (hover: hover) {
+  .ach-card:hover .ach-body h3 {
+    translate: 0.6rem 0;
+  }
 }
 .ach-body p {
   font-family: var(--font-serif);
@@ -3672,6 +4310,17 @@ body.is-locked .header {
   text-transform: uppercase;
   color: var(--paper-3);
   white-space: nowrap;
+}
+/* not a button: there is no scan to open, and it says so rather than
+   offering a press that does nothing */
+.ach-view.is-none {
+  color: var(--paper-4);
+}
+.ach-card[data-openable] .ach-view {
+  transition: color var(--snap);
+}
+.ach-card[data-openable]:hover .ach-view {
+  color: var(--red-2);
 }
 .ach-card.featured .ach-year {
   position: relative;
@@ -3733,19 +4382,34 @@ body.is-locked .header {
 .contact-big {
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: clamp(2.8rem, 13vw, 11rem);
-  line-height: 0.82;
+  /* Three lines at 11rem put the email address and the form itself entirely
+     below the fold on a laptop: you arrived at "Contact" and were shown a
+     slogan. Still the largest type on the page, just not a whole screen of
+     it. */
+  font-size: clamp(2.6rem, 10.5vw, 8.6rem);
+  line-height: 0.84;
   letter-spacing: -0.055em;
   text-transform: uppercase;
-  margin-bottom: clamp(2.5rem, 6vw, 5rem);
+  margin-bottom: clamp(2rem, 4.5vw, 3.5rem);
 }
 .contact-big .accent,
 .contact-big .grad {
-  color: var(--red);
+  color: var(--red-ink);
 }
 .contact-big .line-1,
 .contact-big .line-2 {
   display: block;
+}
+/* The heading is a full-width block two lines tall, so the paper square
+   inverted itself over the empty half of every line as well as over the type.
+   The hit area is the glyphs themselves — the same trick the hero plays with
+   its letters. */
+.contact-big,
+.contact-big * {
+  pointer-events: none;
+}
+.contact-big .ch {
+  pointer-events: auto;
 }
 .contact-big .line-2 {
   padding-left: clamp(1rem, 8vw, 7rem);
@@ -3758,6 +4422,18 @@ body.is-locked .header {
   gap: clamp(2rem, 5vw, 5rem);
   align-items: start;
   padding-top: clamp(1.8rem, 4vw, 3rem);
+}
+/* The left column is shorter than the form, and the leftovers used to gather
+   in one hole between the colophon and whatever came next. Stretched to the
+   row's height with the colophon pushed to the foot of it, the two columns
+   close on the same line instead and the space is shared out above it. */
+.contact-left {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+}
+.contact-left .contact-meta {
+  margin-top: auto;
 }
 .contact-left > p {
   font-family: var(--font-serif);
@@ -3815,7 +4491,7 @@ body.is-locked .header {
 }
 .email-row:hover .email-text,
 .email-row:hover .email-copy {
-  color: var(--ink);
+  color: var(--on-plate);
 }
 
 .socials {
@@ -3853,42 +4529,14 @@ body.is-locked .header {
 .contact-form {
   display: flex;
   flex-direction: column;
-  gap: 1.4rem;
+  gap: clamp(1.8rem, 3.4vw, 2.8rem);
 }
-/* one question at a time, and the question is the label */
-.cf-ask {
+/* one field, and whatever belongs to it. The questions above each field are
+   gone — the label in the box says the same thing in a third of the space. */
+.cf-q {
   display: flex;
-  align-items: baseline;
-  gap: 0.8rem;
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--paper-2);
-}
-.cf-ask b {
-  font-weight: 700;
-  color: var(--red);
-}
-.cf-ask i {
-  margin-left: auto;
-  font-style: normal;
-  font-size: 0.58rem;
-  letter-spacing: 0.2em;
-  color: var(--paper-4);
-}
-.cf-rule {
-  display: block;
-  height: 1px;
-  background: var(--rule);
-  margin-top: -0.7rem;
-}
-.cf-rule > i {
-  display: block;
-  height: 100%;
-  background: var(--red);
-  transform-origin: left;
-  transition: transform 0.5s var(--ease-out-hard);
+  flex-direction: column;
+  gap: 0.9rem;
 }
 .cf-actions {
   display: flex;
@@ -3907,13 +4555,20 @@ body.is-locked .header {
 .cf-back:hover {
   color: var(--paper);
 }
+/* nothing on a phone has a ⌘ key to press */
+@media (pointer: coarse) {
+  .cf-hint {
+    display: none;
+  }
+}
 .cf-hint {
+  margin-left: auto;
   font-family: var(--font-mono);
   font-size: 0.56rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--paper-4);
-  margin-top: -0.9rem;
+  white-space: nowrap;
 }
 .quick-chips {
   display: flex;
@@ -3943,7 +4598,7 @@ body.is-locked .header {
 }
 .qchip.is-picked {
   background: var(--red);
-  color: var(--ink);
+  color: var(--on-plate);
 }
 
 .field {
@@ -4006,7 +4661,7 @@ body.is-locked .header {
 .field textarea:not(:placeholder-shown) + label {
   top: 0;
   font-size: 0.6rem;
-  color: var(--red);
+  color: var(--red-ink);
 }
 .cf-actions .btn {
   margin-top: 0;
@@ -4052,7 +4707,7 @@ body.is-locked .header {
 }
 .egg-count b {
   font-weight: 700;
-  color: var(--red);
+  color: var(--red-ink);
 }
 .footer-hint {
   text-align: right;
@@ -4064,15 +4719,43 @@ body.is-locked .header {
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--paper-4);
-  opacity: 0.5;
+  opacity: 0.75;
   transition:
     opacity var(--snap),
     color var(--snap);
 }
 .dnc:hover {
   opacity: 1;
-  color: var(--red);
+  color: var(--red-ink);
   animation: jitter 0.25s linear infinite;
+}
+/* the print run, standing next to the line the way a plate number would */
+.dnc-run {
+  margin-left: 0.5em;
+  font-weight: 700;
+  color: var(--red-ink);
+}
+/* Struck out and stamped, and it stays struck out — the argument is over and
+   this browser remembers having had it. Clicking again reprints the line. */
+.dnc.is-void {
+  position: relative;
+  opacity: 0.5;
+}
+.dnc.is-void .dnc-line {
+  text-decoration: line-through;
+  text-decoration-color: var(--red-ink);
+}
+.dnc.is-void::after {
+  content: "void";
+  margin-left: 0.6em;
+  padding: 0.1em 0.4em;
+  border: 1px solid var(--red-ink);
+  color: var(--red-ink);
+  rotate: -4deg;
+  display: inline-block;
+}
+.dnc.is-void:hover {
+  animation: none;
 }
 @keyframes jitter {
   25% {
@@ -4091,17 +4774,7 @@ body.is-locked .header {
     text-align: center;
     gap: 0.6rem;
   }
-  /* the only place the eggs are ever counted, and it never names one */
-.egg-count {
-  display: block;
-  color: var(--paper-4);
-  margin-bottom: 0.35rem;
-}
-.egg-count b {
-  font-weight: 700;
-  color: var(--red);
-}
-.footer-hint {
+  .footer-hint {
     text-align: center;
   }
 }
@@ -4134,7 +4807,7 @@ body.is-locked .header {
   pointer-events: auto;
 }
 .bottom-secret button {
-  color: var(--ink);
+  color: var(--on-plate);
   font-family: inherit;
   font-size: inherit;
   letter-spacing: inherit;
@@ -4186,7 +4859,7 @@ body.is-locked .header {
   display: grid;
   place-items: center;
   padding: clamp(0.8rem, 3vw, 2rem);
-  background: rgba(8, 5, 6, 0.92);
+  background: rgb(var(--scrim-rgb) / 0.92);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   opacity: 0;
@@ -4394,7 +5067,7 @@ body.is-locked .header {
   font-size: 0.62rem;
   letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: var(--red);
+  color: var(--red-ink);
 }
 .game-box h3 {
   font-family: var(--font-display);
@@ -4430,7 +5103,7 @@ body.is-locked .header {
   color: var(--paper);
 }
 .game-text span.bad {
-  color: var(--ink);
+  color: var(--on-plate);
   background: var(--red);
 }
 .game-text span.cur {
@@ -4571,7 +5244,7 @@ body.is-editorial [contenteditable="true"]:focus {
   gap: 1.5rem;
   padding: 0.65rem clamp(1rem, 3vw, 2.2rem);
   background: var(--red);
-  color: var(--ink);
+  color: var(--on-plate);
   font-family: var(--font-mono);
   font-size: 0.6rem;
   letter-spacing: 0.18em;
@@ -4597,6 +5270,120 @@ body.sudo-gold .cursor-ring {
 }
 body.sudo-gold .cursor-dot {
   background: #fbbf24 !important;
+}
+
+/* ---------- paper mode (type "theme", or hold the logo) ---------- */
+/* The archive inverted: the same design printed the other way up. Nothing is
+   restyled — the two plates trade places and every rule that reads a token
+   follows. Only three things cannot simply swap:
+
+   1. The red plate is red in both modes, so the ink printed *on* it never
+      flips. That is `--on-plate`, and it stays dark here.
+   2. Red used as type is 5.3:1 on ink and only 3.24:1 on paper, so `--red-ink`
+      deepens. Red at display scale is still bright — large text needs 3:1,
+      and the headline is the one place the bright plate belongs.
+   3. The fluid ink is drawn with `screen`, which is invisible on a light
+      ground. It multiplies here instead, which is what red ink on paper
+      actually does.
+
+   Every tint below was measured back with `.verify/contrast.mjs`; the steps
+   are not the dark theme's alphas, because the same alpha over a light ground
+   lands somewhere entirely different. */
+body.is-paper {
+  --ink: #f4efe7;
+  --ink-2: #ebe4d9;
+  --ink-3: #e0d7c9;
+  --paper: #14100f;
+  --paper-rgb: 20 16 15;
+  --paper-2: rgba(20, 16, 15, 0.82);
+  --paper-3: rgba(20, 16, 15, 0.74);
+  --paper-4: rgba(20, 16, 15, 0.62);
+  --rule: rgba(20, 16, 15, 0.16);
+  --rule-2: rgba(20, 16, 15, 0.3);
+  --rule-3: rgba(20, 16, 15, 0.52);
+  --red-ink: var(--red-deep);
+  /* --red-2 is never a plate, only an accent in type — 2.69:1 on this ground.
+     A lighter step than --red-deep so the two are still distinguishable. */
+  --red-2: #b01226;
+  --scrim-rgb: 244 239 231;
+  --glow: rgba(142, 12, 32, 0.2);
+  /* the photograph prints as a duotone on paper rather than a bright plate */
+  --photo-ink: grayscale(1) contrast(1.1) brightness(0.96);
+  --photo-ink-lit: grayscale(0) contrast(1.04) brightness(0.97);
+}
+/* red ink on paper, not red light on black */
+body.is-paper .ink {
+  mix-blend-mode: multiply;
+  opacity: 0.55;
+}
+/* the grain has to darken the sheet, not lift it */
+body.is-paper .noise {
+  mix-blend-mode: multiply;
+  opacity: 0.075;
+}
+/* The readout is set in `difference` so it stays legible over whatever the
+   field is doing behind it. Differencing a deep red against cream lands on
+   teal — the one colour this palette does not contain. On paper it does not
+   need the trick: both of its roles already clear AA on the sheet. */
+body.is-paper .readout {
+  mix-blend-mode: normal;
+}
+/* `screen` is invisible on a light ground, so the misregistered plates — which
+   only surface below 736px, where the photograph does — multiply instead */
+body.is-paper .portrait-ghost {
+  mix-blend-mode: multiply;
+}
+/* The field is still the hero's atmosphere, but a wash of warm ink into the
+   top corner rather than a light source behind the page. The shader itself is
+   recoloured at the source (see GradientBackground); this is the fallback for
+   no-WebGL and reduced motion. */
+body.is-paper .bg-shader {
+  background:
+    radial-gradient(85% 65% at 8% 2%, rgba(255, 34, 51, 0.16), transparent 62%),
+    radial-gradient(75% 65% at 100% 6%, rgba(163, 15, 40, 0.12), transparent 64%),
+    radial-gradient(90% 75% at 80% 100%, rgba(142, 12, 32, 0.1), transparent 66%),
+    var(--ink);
+}
+body.is-paper .bg-shader:not([data-view="home"]) {
+  opacity: 0.42;
+}
+/* the intro's slats are ink in both modes — they are what covers the page */
+body.is-paper .pre-slats i,
+body.is-paper .t-slats i {
+  background: var(--paper);
+}
+body.is-paper .preloader,
+body.is-paper .transition {
+  color: var(--ink);
+}
+/* the circular reveal the switch rides in on */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) {
+  z-index: 1;
+}
+::view-transition-new(root) {
+  z-index: 2;
+}
+html.is-flipping::view-transition-new(root) {
+  animation: paper-in 620ms var(--ease-out-hard);
+}
+@keyframes paper-in {
+  from {
+    clip-path: circle(0 at var(--fx, 50%) var(--fy, 50%));
+  }
+  to {
+    clip-path: circle(155% at var(--fx, 50%) var(--fy, 50%));
+  }
+}
+/* no View Transitions, or motion turned down: a plain crossfade instead */
+@media (prefers-reduced-motion: reduce) {
+  html.is-flipping::view-transition-new(root) {
+    animation: none;
+  }
 }
 
 /* ---------- cozy mode (type "patty") ---------- */
@@ -4693,9 +5480,14 @@ body.is-crt {
   --ink-2: #04120a;
   --ink-3: #06170d;
   --paper: #c9f8d2;
-  --paper-2: rgba(201, 248, 210, 0.72);
-  --paper-3: rgba(201, 248, 210, 0.46);
-  --paper-4: rgba(201, 248, 210, 0.26);
+  /* The stepped-down tints have to hold the same contrast the default plate
+     does. 0.46 and 0.26 were carried over from an earlier, lighter ground:
+     against this near-black they put every mono label, every legend and the
+     whole footer between 2.0:1 and 4.1:1 — a phosphor terminal you could not
+     read. Matched to the default theme's steps and measured back. */
+  --paper-2: rgba(201, 248, 210, 0.78);
+  --paper-3: rgba(201, 248, 210, 0.7);
+  --paper-4: rgba(201, 248, 210, 0.56);
   --rule: rgba(74, 222, 128, 0.18);
   --rule-2: rgba(74, 222, 128, 0.34);
   --rule-3: rgba(74, 222, 128, 0.55);
@@ -4746,11 +5538,142 @@ body.is-crt .crt-overlay {
   }
 }
 
+/* ---------- the tube switching on ---------- */
+/* Fires once, on a deliberate press of the code (or the palette's toggle) —
+   never on load and never under reduced motion. Two children: the hot line
+   that snaps across the middle, and the phosphor wash that opens out of it. */
+.crt-boot {
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  pointer-events: none;
+  overflow: hidden;
+}
+.crt-boot i {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: block;
+  transform-origin: center;
+}
+.crt-wash {
+  top: 0;
+  bottom: 0;
+  background:
+    radial-gradient(120% 80% at 50% 50%, rgba(74, 222, 128, 0.95), rgba(11, 43, 22, 0.98) 78%);
+  opacity: 0;
+}
+.crt-line {
+  top: 50%;
+  height: 3px;
+  margin-top: -1.5px;
+  background: #eafff1;
+  box-shadow:
+    0 0 12px 2px rgba(74, 222, 128, 0.9),
+    0 0 40px 8px rgba(34, 197, 94, 0.55);
+  opacity: 0;
+}
+
+/* switching on: the line strikes, holds, then opens into the picture */
+.crt-boot.is-on .crt-line {
+  animation: crt-strike 620ms var(--ease-slam) forwards;
+}
+.crt-boot.is-on .crt-wash {
+  animation: crt-open 820ms var(--ease-out-hard) forwards;
+}
+@keyframes crt-strike {
+  0% {
+    transform: scaleX(0);
+    opacity: 1;
+  }
+  22% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  40% {
+    transform: scaleX(1) scaleY(1.6);
+    opacity: 1;
+  }
+  62% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: scaleX(1) scaleY(0.4);
+    opacity: 0;
+  }
+}
+@keyframes crt-open {
+  0%,
+  26% {
+    transform: scaleY(0.004);
+    opacity: 0;
+  }
+  30% {
+    transform: scaleY(0.004);
+    opacity: 0.9;
+  }
+  52% {
+    transform: scaleY(1);
+    opacity: 0.85;
+  }
+  /* the overscan settling, which is the bit that sells it */
+  62% {
+    transform: scaleY(1);
+    opacity: 0.42;
+  }
+  70% {
+    transform: scaleY(1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scaleY(1);
+    opacity: 0;
+  }
+}
+
+/* switching off: the picture collapses back into the line and blinks out */
+.crt-boot.is-off .crt-wash {
+  animation: crt-close 380ms var(--ease-slam) forwards;
+}
+.crt-boot.is-off .crt-line {
+  animation: crt-blink 620ms var(--ease-slam) forwards;
+}
+@keyframes crt-close {
+  0% {
+    transform: scaleY(1);
+    opacity: 0.75;
+  }
+  100% {
+    transform: scaleY(0.004);
+    opacity: 1;
+  }
+}
+@keyframes crt-blink {
+  0%,
+  48% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+  56% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(0.02);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .crt-boot {
+    display: none;
+  }
+}
+
 /* ---------- idle ---------- */
 /* twenty seconds without a word and the page starts filling its own silence */
 body.is-idle .readout-view::after {
   content: " · idle";
-  color: var(--red);
+  color: var(--red-ink);
   animation: idle-blink 1.6s steps(1, end) infinite;
 }
 @keyframes idle-blink {
@@ -4780,12 +5703,176 @@ body.is-idle .hero-title .h-letter > i {
   }
 }
 
+/* ---------- cozy mode's lamp ---------- */
+/* A warm pool that follows the pointer. It is always in the DOM and always
+   moved by the cursor's own loop; only the stylesheet decides whether it is
+   lit, which is cheaper than mounting and unmounting a fixed layer. */
+.cozy-lamp {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  width: 46rem;
+  height: 46rem;
+  margin: -23rem 0 0 -23rem;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgb(var(--red-rgb) / 0.16),
+    rgb(var(--red-rgb) / 0.06) 42%,
+    transparent 68%
+  );
+  transition: opacity 0.6s var(--ease-out);
+}
+body.is-cozy .cozy-lamp {
+  opacity: 0.4;
+}
+@media (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .cozy-lamp {
+    display: none;
+  }
+}
+
+/* ---------- the sheet, reprinted ---------- */
+/* Sixteen inside five seconds and the next sheet comes off the press the
+   other way up: paper stock, red bubbles. */
+.bubble-plate[data-inverted] {
+  background: var(--paper);
+  border-color: var(--paper);
+}
+.bubble-plate[data-inverted] .bubble-label,
+.bubble-plate[data-inverted] .bubble-label b {
+  color: var(--on-plate);
+}
+.bubble-plate[data-inverted] .bubble {
+  background: var(--red);
+  border-color: var(--red-deep);
+}
+
+/* ---------- the negotiation ---------- */
+/* The tenth click on a thing that asked you not to. Both answers are yes. */
+.nope-ask {
+  position: fixed;
+  inset: 0;
+  z-index: 9800;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 4vw, 2rem);
+  background: rgb(var(--scrim-rgb) / 0.9);
+  animation: nope-in 0.14s var(--ease-slam);
+}
+@keyframes nope-in {
+  from {
+    opacity: 0;
+  }
+}
+.nope-box {
+  width: min(28rem, 100%);
+  padding: clamp(1.4rem, 3.5vw, 2rem);
+  background: var(--ink);
+  border: 1px solid var(--paper);
+}
+.nope-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--red-ink);
+  margin-bottom: 0.6rem;
+}
+.nope-box h4 {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+}
+.nope-box p {
+  font-size: 0.9rem;
+  color: var(--paper-2);
+  max-width: 34ch;
+}
+.nope-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 1.4rem;
+}
+
+/* ---------- the stamp on a file that was read to the end ---------- */
+.read-stamp {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--red-ink);
+  border: 2px solid var(--red);
+  padding: 0.2rem 0.5rem;
+  rotate: -7deg;
+  opacity: 0;
+}
+.bottom-secret.is-shown .read-stamp {
+  animation: stamp-slam 0.24s var(--ease-slam) 0.35s forwards;
+}
+
+/* ---------- the arcade table ---------- */
+.game-board {
+  margin-top: 1.4rem;
+  border-top: 1px solid var(--rule);
+}
+.game-board-head,
+.game-board-row {
+  display: grid;
+  grid-template-columns: 2.4rem 1fr 4rem 3.6rem;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 0.5rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  border-bottom: 1px solid var(--rule);
+}
+.game-board-head {
+  font-size: 0.56rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--paper-4);
+}
+.game-board-row span:first-child {
+  color: var(--red-ink);
+  font-weight: 700;
+}
+.game-board-row.is-claiming {
+  background: rgb(var(--red-rgb) / 0.08);
+}
+.game-initials {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--paper);
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--red);
+  padding: 0.1rem 0;
+  width: 5ch;
+}
+.game-initials::placeholder {
+  color: var(--paper-4);
+}
+
 /* ---------- DVD screensaver ---------- */
 .dvd {
   position: fixed;
   inset: 0;
   z-index: 9850;
-  background: rgba(8, 5, 6, 0.94);
+  background: rgb(var(--scrim-rgb) / 0.94);
   opacity: 0;
   transition: opacity 0.8s;
   cursor: none;
@@ -4974,7 +6061,7 @@ body.is-idle .hero-title .h-letter > i {
   justify-items: center;
 }
 .pal::backdrop {
-  background: rgba(8, 5, 6, 0.9);
+  background: rgb(var(--scrim-rgb) / 0.9);
 }
 /* the square has no way into the top layer, so the native pointer comes back
    inside the box — the same trade the preview frame makes */
@@ -5059,7 +6146,7 @@ body:has(.pal[open]) .cursor-ring {
   color: var(--ink);
 }
 .pal-row.is-on .pal-meta {
-  color: var(--ink);
+  color: var(--on-plate);
 }
 .pal-empty {
   padding: 1.3rem 1.1rem;
@@ -5097,12 +6184,17 @@ body:has(.pal[open]) .cursor-ring {
    containers do. */
 .view-line {
   position: absolute;
-  left: 0;
-  right: 0;
+  /* Shifted a little clear of the measure. Sitting exactly on the container's
+     left edge put the rule against the stem of every flush-left glyph, which
+     at reading size looks like the letter has been trimmed rather than like a
+     rule in the margin. Left and right move together, so the auto margins the
+     `.container` width relies on still centre it. */
+  left: -0.6rem;
+  right: 0.6rem;
   top: 0;
   bottom: 0;
   border-left: 1px solid var(--rule);
-  z-index: 1;
+  z-index: 0;
   pointer-events: none;
 }
 .view-line > i {
@@ -5113,9 +6205,18 @@ body:has(.pal[open]) .cursor-ring {
   background: var(--red);
   transform: scaleY(0);
   transform-origin: top;
-}
-.vl-a {
   left: -1px;
+}
+/* The rule runs on the container's left edge, which is also where every
+   flush-left glyph starts — so the content has to paint over it. Without this
+   the red line took a two-pixel bite out of the first letter of every label on
+   the page ("BASED IN" read as "3ASED IN"), which is the sort of thing you see
+   once and cannot unsee. Positioned siblings with z-index: 0 paint above
+   in-flow inline content, so raising the content is the fix, not lowering the
+   line — a negative z-index would put it behind the fixed ambient layers. */
+.view > *:not(.view-line) {
+  position: relative;
+  z-index: 1;
 }
 /* the stations: a square on the line at every section head, hollow until the
    reader is past it */
@@ -5146,5 +6247,428 @@ body:has(.pal[open]) .cursor-ring {
 @media (prefers-reduced-motion: reduce) {
   .view-line > i {
     transform: scaleY(1);
+  }
+}
+
+/* Nothing on a touch device can "press R", so the hint stands down there and
+   the egg counter has the footer line to itself. */
+@media (pointer: coarse) {
+  .footer-key {
+    display: none;
+  }
+}
+
+/* ============================================================
+   404 — the page that is not in the archive
+   ============================================================ */
+/* Deliberately the quietest page on the site: the type, one rule, one way
+   back. Nothing here animates, because nobody arrived here on purpose. */
+.nf {
+  min-height: 100dvh;
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 1.1rem;
+  padding: 4rem var(--edge);
+  border-left: 1px solid var(--rule);
+  max-width: var(--page);
+  margin-inline: auto;
+}
+.nf-folio {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  color: var(--red-ink);
+}
+.nf-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(3rem, 12vw, 9rem);
+  line-height: 0.84;
+  letter-spacing: -0.05em;
+  text-transform: uppercase;
+}
+.nf-title em {
+  font-style: normal;
+  color: var(--red-ink);
+}
+.nf-note {
+  font-family: var(--font-serif);
+  font-size: clamp(1.05rem, 2vw, 1.5rem);
+  line-height: 1.35;
+  color: var(--paper-2);
+  max-width: 38ch;
+}
+.nf-home {
+  margin-top: 0.8rem;
+  padding: 0.85rem 1.4rem;
+  background: var(--red);
+  color: var(--on-plate);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transition: background var(--snap);
+}
+.nf-home:hover {
+  background: var(--paper);
+}
+.nf-meta {
+  margin-top: 2rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--paper-4);
+}
+
+/* ============================================================
+   PRINT — the archive as a résumé
+   ============================================================ */
+/* ⌘P on any view prints one continuous document: the name, how to reach him,
+   the journey, the skills index and the work. Ink on paper, red rules, mono
+   labels — the same design, subtracted down to what a sheet can carry.
+
+   All five views are mounted at once and four of them are display:none, so
+   printing is mostly a matter of turning them back on in the right order and
+   removing everything that only exists on a screen. */
+@media print {
+  @page {
+    margin: 14mm 12mm;
+  }
+
+  html:root {
+    /* the plates swap: ink on paper, and the red goes deep so small type on
+       white still holds up */
+    --ink: #ffffff;
+    --paper: #111111;
+    --paper-2: #333333;
+    --paper-3: #444444;
+    --paper-4: #666666;
+    --paper-rgb: 17 17 17;
+    --rule: rgba(0, 0, 0, 0.25);
+    --rule-2: rgba(0, 0, 0, 0.4);
+    --rule-3: rgba(0, 0, 0, 0.6);
+    --red: #8e0c20;
+    --red-2: #8e0c20;
+  }
+  html,
+  body {
+    background: #fff !important;
+    color: #111 !important;
+    font-size: 10.5pt;
+    overflow: visible !important;
+    height: auto !important;
+  }
+  /* the whole apparatus: chrome, canvases, toys, overlays, every egg */
+  .bg-shader,
+  .bg-scrim,
+  .ink,
+  #particles,
+  .noise,
+  .cursor-dot,
+  .cursor-ring,
+  .trail,
+  .rail,
+  .readout,
+  .header,
+  .mobile-menu,
+  .preloader,
+  .transition,
+  .toast,
+  .mc-toast,
+  .crt-overlay,
+  .pv,
+  .lb,
+  .pal,
+  .dvd,
+  .proof-bar,
+  .game,
+  .bottom-secret,
+  .skip-link,
+  .marquee-block,
+  .bubble-section,
+  .scroll-hint,
+  .string-box,
+  .hero-cta,
+  .whisper-link,
+  .secret-tip,
+  .paperclip,
+  .flip-hint,
+  .b-actions,
+  .b-filters,
+  .b-no,
+  .b-plate,
+  .col-ghost,
+  .contact-form,
+  .quick-chips,
+  .stats,
+  .outro,
+  .footer,
+  .view-line,
+  .sec-station,
+  .portrait-type,
+  .portrait-gl,
+  .portrait-ghost,
+  .hero-portrait,
+  .ach-view,
+  .ach-media {
+    display: none !important;
+  }
+
+  /* every view prints, in the order a résumé reads */
+  main {
+    display: flex !important;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .view {
+    display: block !important;
+    break-inside: auto;
+  }
+  #view-home {
+    order: 1;
+  }
+  #view-about {
+    order: 2;
+  }
+  #view-projects {
+    order: 3;
+  }
+  #view-achievements {
+    order: 4;
+  }
+  #view-contact {
+    order: 5;
+  }
+
+  .container,
+  .bleed {
+    width: auto !important;
+    max-width: none;
+    padding-inline: 0 !important;
+    margin-inline: 0 !important;
+  }
+  .section,
+  .section-top {
+    padding-block: 0 0 !important;
+    margin-bottom: 6mm;
+  }
+
+  /* nothing is hiding, waiting for a scroll that will never come */
+  [data-reveal],
+  [data-reveal="wipe"],
+  [data-words] .w,
+  .ch,
+  .tl-card h3,
+  .tl-card p {
+    opacity: 1 !important;
+    translate: none !important;
+    transform: none !important;
+    clip-path: none !important;
+    --wdth: 100;
+  }
+  [data-ink] .w {
+    color: inherit !important;
+    background: none !important;
+  }
+  .w {
+    opacity: 1 !important;
+  }
+
+  /* the masthead */
+  .hero {
+    padding-block: 0 4mm !important;
+  }
+  .hero-title {
+    font-size: 24pt !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.03em;
+    margin-bottom: 2mm;
+  }
+  /* the three lines run together as one masthead, but they have to be able to
+     wrap: set solid on one line the name ran off the right edge of the page */
+  .hero-title .line,
+  .hero-title .line-1,
+  .hero-title .line-2,
+  .hero-title .line-3,
+  .h-letter,
+  .h-letter > i,
+  .hero-dot {
+    display: inline !important;
+    font-size: inherit !important;
+    padding: 0 !important;
+  }
+  .h-letter,
+  .h-letter > i {
+    display: inline !important;
+    transform: none !important;
+  }
+  .hero-body {
+    display: block !important;
+    padding: 0 !important;
+  }
+  .hero-sub {
+    font-size: 11pt !important;
+    min-height: 0 !important;
+    max-width: none;
+  }
+  .type-wrap,
+  .caret {
+    display: none !important;
+  }
+  .hero-facts {
+    margin-top: 2mm !important;
+    gap: 0 4mm !important;
+  }
+  /* the contact line the sheet actually needs, printed once under the name */
+  .hero-facts::after {
+    content: "pratyushgarg527@gmail.com · github.com/MrCreoid · linkedin.com/in/devpratyushgarg";
+    display: block;
+    flex-basis: 100%;
+    margin-top: 2mm;
+    font-family: var(--font-mono);
+    font-size: 8pt;
+    letter-spacing: 0.04em;
+    text-transform: none;
+    color: #111;
+  }
+
+  .sec-head {
+    break-after: avoid;
+    margin-bottom: 2mm;
+    border-bottom: 1.5pt solid var(--red);
+    padding-bottom: 1mm;
+  }
+  .sec-title {
+    font-size: 15pt !important;
+  }
+  .sec-meta {
+    font-size: 7.5pt !important;
+  }
+
+  .wid-row,
+  .skill,
+  .tl-item,
+  .work-row,
+  .ach-card,
+  .col-item,
+  .b-cell {
+    break-inside: avoid;
+    padding-block: 1.5mm !important;
+  }
+  .wid-name,
+  .skill-name,
+  .work-title,
+  .b-title,
+  .tl-card h3,
+  .ach-body h3,
+  .col-item h3 {
+    font-size: 11pt !important;
+    line-height: 1.15 !important;
+  }
+  .tl-date,
+  .ach-year {
+    font-size: 8pt !important;
+  }
+  /* a passed date wears the red plate on screen; on paper it is just a date,
+     and dark ink on the deep red the print block uses is only 2.5:1 */
+  .tl-date {
+    background: none !important;
+    color: var(--red) !important;
+    padding: 0 !important;
+  }
+  .ach-year {
+    color: var(--red) !important;
+  }
+  .wid-note,
+  .skill-note,
+  .tl-card p,
+  .b-body,
+  .about-lede {
+    font-size: 9.5pt !important;
+    max-width: none;
+  }
+  .about-grid,
+  .contact-grid,
+  .cols-3 {
+    display: block !important;
+  }
+  .bento {
+    display: block !important;
+    border: 0;
+  }
+  .b-cell {
+    border: 0;
+    border-bottom: 0.5pt solid var(--rule);
+    padding-inline: 0 !important;
+  }
+  /* the featured card keeps its two-column masthead grid otherwise, which on
+     paper set the description in a 40mm gutter beside the title */
+  .b-featured .b-cell-in {
+    display: block !important;
+  }
+  .b-github,
+  .about-photo-col,
+  .work-all,
+  .whisper-link,
+  .sec-note,
+  .about-text-col .chips,
+  .ach-empty,
+  .egg-count,
+  .vh {
+    display: none !important;
+  }
+  /* the body copy on About was the only text still set at screen size */
+  .about-text-col p,
+  .about-lede {
+    font-size: 9.5pt !important;
+    line-height: 1.35 !important;
+    max-width: none;
+    margin-bottom: 1.5mm;
+  }
+  .about-grid {
+    display: block !important;
+  }
+  .timeline {
+    margin-bottom: 4mm;
+  }
+  .tl-rail,
+  .tl-dot {
+    display: none !important;
+  }
+  .tl-item {
+    padding-left: 0 !important;
+  }
+  .contact-left > p,
+  .sec-note {
+    font-size: 9.5pt !important;
+  }
+  a {
+    text-decoration: none;
+  }
+  /* The sign-off is a display line on screen and a section head on paper. At
+     8.6rem it took most of a sheet in the middle of what is meant to read as
+     a resume. */
+  .contact-big {
+    font-size: 20pt !important;
+    line-height: 1 !important;
+    margin-bottom: 3mm !important;
+  }
+  .contact-big .line-2 {
+    padding-left: 0 !important;
+  }
+  /* the receipt is the one thing on the site that was always meant to come
+     out of a printer, so while it is on screen it prints on its own */
+  body:has(.receipt) .view:not(#view-contact),
+  body:has(.receipt) #view-contact .sec-head,
+  body:has(.receipt) .contact-big,
+  body:has(.receipt) .contact-left {
+    display: none !important;
+  }
+  .receipt {
+    break-inside: avoid;
   }
 }

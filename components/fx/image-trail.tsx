@@ -63,16 +63,28 @@ export function ImageTrail({ scope }: { scope: string }) {
       root.classList.add("is-on");
     };
 
+    /* Everything that puts the trail away goes through here. A scroll counts:
+       the row slides out from under a pointer that never moved, and the
+       browser is under no obligation to fire pointerout for that — which is
+       how five screenshots used to stay printed on a page you had scrolled
+       past. */
+    const off = () => {
+      if (!offAt) offAt = performance.now();
+      root.classList.remove("is-on");
+    };
+
     const leave = (e: PointerEvent) => {
       if ((e.relatedTarget as HTMLElement | null)?.closest?.("[data-shot]")) return;
-      offAt = performance.now();
-      root.classList.remove("is-on");
+      off();
     };
 
     const move = (e: PointerEvent) => {
       vx = e.clientX - px;
       px = e.clientX;
       py = e.clientY;
+      // moving again after a scroll put it away: pointerover will not fire a
+      // second time for a row the pointer never left, so re-arm from here
+      if (offAt) enter(e);
     };
 
     const tick = () => {
@@ -102,11 +114,15 @@ export function ImageTrail({ scope }: { scope: string }) {
     list.addEventListener("pointerover", enter);
     list.addEventListener("pointerout", leave);
     list.addEventListener("pointermove", move);
+    addEventListener("scroll", off, { passive: true });
+    addEventListener("blur", off);
     return () => {
       gsap.ticker.remove(tick);
       list.removeEventListener("pointerover", enter);
       list.removeEventListener("pointerout", leave);
       list.removeEventListener("pointermove", move);
+      removeEventListener("scroll", off);
+      removeEventListener("blur", off);
       root.classList.remove("is-on");
     };
   }, [on, scope]);

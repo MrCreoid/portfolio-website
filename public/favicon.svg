@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- the PG mark: square, no radius, the same two plates as the site -->
+  <rect width="64" height="64" fill="#080506"/>
+  <rect x="3" y="3" width="58" height="58" fill="none" stroke="#ff2233" stroke-width="3"/>
+  <text x="32" y="46" text-anchor="middle" font-family="Archivo, Helvetica Neue, Arial, sans-serif"
+        font-size="34" font-weight="900" letter-spacing="-2" fill="#f2ece4">PG</text>
+</svg>

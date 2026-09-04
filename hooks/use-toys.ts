@@ -214,6 +214,10 @@ export function useHeroLetters(active: boolean) {
     const ripple = (from: number) => () => {
       const now = performance.now();
       if (now - last < 90) return;
+      // while the name is in transit the flight owns these glyphs' transform,
+      // and two libraries writing one property in the same frame is a letter
+      // flickering between where it is and where it was
+      if (title.classList.contains("is-flying")) return;
       last = now;
       animate(glyphs, {
         translateY: [
@@ -233,6 +237,14 @@ export function useHeroLetters(active: boolean) {
     return () => {
       letters.forEach((off) => off());
       utils.remove(glyphs);
+      /* `remove` stops the animation where it stands and leaves that frame
+         inline. Stopped on its first one — leaving the view while the name is
+         still rising — that is a glyph parked 1.15em low and turned 9°, which
+         is how a letter ends up sitting under the line it belongs to. */
+      for (const g of glyphs) {
+        g.style.transform = "";
+        g.style.opacity = "";
+      }
       title.classList.remove("is-lit");
     };
   }, [active]);
@@ -262,9 +274,15 @@ export function useGuitarString(
       osc = { a: Math.max(Math.min(amplitude, 70), -70), t: 0 };
       if (Math.abs(osc.a) > 6) {
         const r = box.getBoundingClientRect();
+        /* Squares, not note glyphs. ♪ ♫ ♩ render as emoji on some platforms
+           and as a different typeface on all of them, and nothing else on
+           this page is a picture of a thing — a plucked string throws little
+           red plates, like everything else here. */
         const note = document.createElement("span");
         note.className = "music-note";
-        note.textContent = ["♪", "♫", "♩"][(Math.random() * 3) | 0];
+        const size = rand(4, 9);
+        note.style.width = `${size}px`;
+        note.style.height = `${size}px`;
         note.style.left = r.left + r.width / 2 + rand(-80, 80) + "px";
         note.style.top = r.top + 20 + "px";
         document.body.appendChild(note);

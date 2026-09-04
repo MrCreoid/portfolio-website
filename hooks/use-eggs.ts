@@ -2,17 +2,19 @@
 
 import { useEffect, useRef } from "react";
 import { BIRTHDAY, LINKS } from "@/lib/data";
+import { refreshCursor } from "@/hooks/use-ambient";
 import { findEgg } from "@/lib/eggs";
-import { confetti, rand } from "@/lib/fx";
+import { confetti, prefersReducedMotion, rand } from "@/lib/fx";
 import { addEyebrowLine } from "@/hooks/use-toys";
 import { usePortfolio } from "@/components/portfolio-provider";
 
 /**
  * Typed secrets: "pratyush" → editorial mode, "patty" → cozy mode,
- * "sudo" → gold cursor, a lone "R" → the résumé.
+ * "theme" → the archive turns over, "sudo" → gold cursor, a lone "R" → the
+ * résumé.
  */
 export function useTypedSecrets() {
-  const { toast, setCozy, cozy } = usePortfolio();
+  const { toast, setCozy, cozy, flipPaper } = usePortfolio();
   // the keydown listener is registered once; this ref keeps it reading the
   // current cozy state without re-binding on every toggle
   const cozyRef = useRef(cozy);
@@ -58,12 +60,24 @@ export function useTypedSecrets() {
         setCozy(next);
         announceCozy(next, toast);
       }
+      if (keyBuffer.endsWith("theme")) {
+        keyBuffer = "";
+        findEgg("paper");
+        // no pointer to reveal from, so it opens out of the middle
+        flipPaper();
+      }
       if (keyBuffer.endsWith("sudo")) {
         keyBuffer = "";
         findEgg("sudo");
         toast("ah, a person of culture. permissions granted.");
         document.body.classList.add("sudo-gold");
-        setTimeout(() => document.body.classList.remove("sudo-gold"), 4000);
+        refreshCursor();
+        setTimeout(() => {
+          document.body.classList.remove("sudo-gold");
+          // the verb has to come back on its own, not on the next thing you
+          // happen to point at
+          refreshCursor();
+        }, 4000);
       }
     };
 
@@ -72,7 +86,7 @@ export function useTypedSecrets() {
       clearTimeout(resumeTimer);
       removeEventListener("keydown", onKey);
     };
-  }, [toast, setCozy]);
+  }, [toast, setCozy, flipPaper]);
 }
 
 /**
@@ -200,6 +214,29 @@ export function useCozyMode() {
   }, [cozy]);
 }
 
+/**
+ * The set switching on.
+ *
+ * A tube does not simply become green: a hot line snaps across the middle,
+ * holds for a beat, then opens vertically into the picture, and the overscan
+ * settles. Leaving CRT runs it backwards — the picture collapses to that same
+ * line and blinks out. One gesture, under a second, and it only ever plays on
+ * a deliberate press of the code (or the palette's own toggle), never on load.
+ *
+ * The overlay is the only thing that moves. Squashing the page itself would
+ * mean a transform on the active view, and a transformed ancestor takes every
+ * `position: fixed` layer on the site down with it.
+ */
+export function crtSwitch(on: boolean) {
+  if (prefersReducedMotion()) return;
+  document.querySelectorAll(".crt-boot").forEach((e) => e.remove());
+  const el = document.createElement("div");
+  el.className = `crt-boot ${on ? "is-on" : "is-off"}`;
+  el.innerHTML = '<i class="crt-wash"></i><i class="crt-line"></i>';
+  document.body.append(el);
+  setTimeout(() => el.remove(), 1000);
+}
+
 /** ↑↑↓↓←→←→BA → CRT mode + a Minecraft achievement. */
 export function useKonami(onAchievement: () => void) {
   const { setCrt, crt, toast } = usePortfolio();
@@ -235,6 +272,8 @@ export function useKonami(onAchievement: () => void) {
       findEgg("crt");
       const next = !crtRef.current;
       crtRef.current = next;
+      // the tube first, then the mode it reveals
+      crtSwitch(next);
       setCrt(next);
 
       if (next) {

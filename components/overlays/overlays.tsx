@@ -19,7 +19,11 @@ function useEscape(active: boolean, close: () => void) {
 export function Toast() {
   const { toastMsg, toastShown } = usePortfolio();
   return (
-    <div className={`toast${toastShown ? " is-show" : ""}`} role="status">
+    <div
+      className={`toast${toastShown ? " is-show" : ""}`}
+      role="status"
+      aria-live="polite"
+    >
       {toastMsg}
     </div>
   );

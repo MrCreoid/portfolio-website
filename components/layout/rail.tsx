@@ -47,7 +47,7 @@ export function Rail({ view, ready }: { view: View; ready: boolean }) {
     if (!on) return;
     const GUTTER = 32; // the middle of the 28–36px band
     const LABEL = 27; // how far a tick's label reaches left of the rule
-    const TICK = 5; // and how far a bare tick does
+    const TICK = 13; // and how far a bare tick does (its full 16px, less the 3px overhang)
     const MIN = 8; // the least the rule may sit from the window itself
 
     const place = () => {

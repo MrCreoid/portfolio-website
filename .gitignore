@@ -63,3 +63,17 @@ skills-lock.json
 
 # verification screenshots
 .verify/
+
+# the review gallery — ~150MB of PNGs, regenerated on demand with
+# `node scripts/gallery.mjs`. Kept on disk, never pushed.
+screenshots/
+
+# AI/Project Planning artifacts
+AGENTS.md
+CLAUDE.md
+MASTERPLAN.md
+
+# Debug/test/screenshot artifacts
+screenshots.zip
+scripts/
+design-source/

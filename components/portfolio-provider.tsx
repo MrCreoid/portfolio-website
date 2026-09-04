@@ -8,12 +8,15 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type ReactNode,
   type RefObject,
 } from "react";
+import { flushSync } from "react-dom";
 import { NAV, SITE_TITLE, VIEWS, View } from "@/lib/data";
 import { inkBurst, refreshInk } from "@/hooks/use-ambient";
 import { prefersReducedMotion, scramble, setParticleTheme, wait } from "@/lib/fx";
+import { readPaper, serverPaper, subscribePaper, togglePaper } from "@/lib/paper";
 import { scrollTop } from "@/lib/scroll";
 
 type PreviewTarget = { url: string; title: string } | null;
@@ -28,6 +31,10 @@ type PortfolioValue = {
   setCozy: (v: boolean | ((p: boolean) => boolean)) => void;
   crt: boolean;
   setCrt: (v: boolean | ((p: boolean) => boolean)) => void;
+  paper: boolean;
+  /** Turns the archive over, with a circular reveal from wherever it was
+   *  asked for. Pass the client coordinates of whatever the reader pressed. */
+  flipPaper: (cx?: number, cy?: number) => void;
   preview: PreviewTarget;
   openPreview: (t: PreviewTarget) => void;
   lightbox: LightboxTarget;
@@ -64,6 +71,10 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [cozy, setCozy] = useState(false);
   const [crt, setCrt] = useState(false);
+  /* The plate the reader left it on, read from the store rather than held
+     here: the server cannot know it, and a subscription renders the server's
+     answer during hydration and the browser's on the frame after. */
+  const paper = useSyncExternalStore(subscribePaper, readPaper, serverPaper);
   const [preview, setPreview] = useState<PreviewTarget>(null);
   const [lightbox, setLightbox] = useState<LightboxTarget>(null);
   const [gameOpen, setGameOpen] = useState(false);
@@ -74,6 +85,10 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
 
   const transitionRef = useRef<HTMLDivElement | null>(null);
   const animating = useRef(false);
+
+  /** The view the reader was last on, so a genuine change can be told apart
+   *  from a re-run of the effect that watches it. */
+  const lastView = useRef<View>("home");
 
   const gameOpenerRef = useRef<() => void>(() => setGameOpen(true));
   const playGame = useCallback(() => gameOpenerRef.current(), []);
@@ -152,6 +167,10 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const openDeepLink = useCallback(() => {
     const v = viewFromHash();
     if (v !== "home") {
+      // not a navigation the reader made — the focus effect below has to see
+      // it as where the page started, or a deep link opens with a ring
+      // around its own heading
+      lastView.current = v;
       setView(v);
       scrollTop(false);
     }
@@ -164,13 +183,71 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     return () => removeEventListener("popstate", onPop);
   }, [goTo]);
 
+  /* Where the keyboard lands after a view change. The slats swap the page
+     under the reader; without this, focus is still on the nav button they
+     pressed and the next Tab continues through the header as though nothing
+     had happened. The first run is skipped — the page has only just loaded
+     and nobody asked for focus to move. */
+  useEffect(() => {
+    // compared, not counted: StrictMode runs this effect twice on mount, and a
+    // one-shot flag is spent by the first pass — so the second pass took it as
+    // a real navigation and put a focus ring around the hero on first paint
+    if (lastView.current === view) return;
+    lastView.current = view;
+    const id = requestAnimationFrame(() => {
+      const head = document.querySelector<HTMLElement>(
+        `#view-${view} h1, #view-${view} h2`,
+      );
+      if (!head) return;
+      head.tabIndex = -1;
+      head.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [view]);
+
   /* the tab says where you are */
   useEffect(() => {
     const label = NAV.find((n) => n.id === view)?.label;
     document.title = view === "home" ? SITE_TITLE : `${label} — Pratyush Garg`;
   }, [view]);
 
+  /**
+   * The archive turns over.
+   *
+   * A circular reveal out of whatever was pressed, using the View Transitions
+   * API — which needs the DOM to have already changed inside its callback, so
+   * the state write is flushed synchronously. Where the API is missing, or
+   * motion is turned down, it is simply the other way up on the next frame.
+   *
+   * The three plates are exclusive: cozy and CRT are recolourings of the ink
+   * plate, and there is no such thing as a warm amber lamp on white paper.
+   */
+  const flipPaper = useCallback((cx?: number, cy?: number) => {
+    const root = document.documentElement;
+    root.style.setProperty("--fx", `${cx ?? innerWidth / 2}px`);
+    root.style.setProperty("--fy", `${cy ?? innerHeight / 2}px`);
+
+    const swap = () =>
+      flushSync(() => {
+        togglePaper();
+        setCozy(false);
+        setCrt(false);
+      });
+
+    const start = document.startViewTransition?.bind(document);
+    if (!start || prefersReducedMotion()) {
+      swap();
+      return;
+    }
+    root.classList.add("is-flipping");
+    start(swap).finished.finally(() => root.classList.remove("is-flipping"));
+  }, []);
+
   /* body classes the stylesheet keys off */
+  useEffect(() => {
+    document.body.classList.toggle("is-paper", paper);
+  }, [paper]);
+
   useEffect(() => {
     document.body.classList.toggle("is-cozy", cozy);
   }, [cozy]);
@@ -180,11 +257,11 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   }, [crt]);
 
   useEffect(() => {
-    setParticleTheme(crt, cozy);
+    setParticleTheme(crt, cozy, paper);
     // the constellation reads the theme every frame; the fluid was built with
     // one palette and has to be told the plate changed colour
     refreshInk();
-  }, [crt, cozy]);
+  }, [crt, cozy, paper]);
 
   useEffect(() => () => clearTimeout(toastTimer.current), []);
 
@@ -198,6 +275,8 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       setCozy,
       crt,
       setCrt,
+      paper,
+      flipPaper,
       preview,
       openPreview: setPreview,
       lightbox,
@@ -212,7 +291,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       toastShown,
       transitionRef,
     }),
-    [view, goTo, openDeepLink, toast, playGame, cozy, crt, preview, lightbox, gameOpen, menuOpen, toastMsg, toastShown],
+    [view, goTo, openDeepLink, toast, playGame, cozy, crt, paper, flipPaper, preview, lightbox, gameOpen, menuOpen, toastMsg, toastShown],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

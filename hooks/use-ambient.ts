@@ -5,6 +5,7 @@ import type WebGLFluidEnhanced from "webgl-fluid-enhanced";
 import { findEgg } from "@/lib/eggs";
 import {
   SPRING,
+  confetti,
   hasFinePointer,
   particleTheme,
   prefersReducedMotion,
@@ -21,11 +22,17 @@ import {
  *   label   over a [data-cursor="word"]: a red plate with the verb in it
  *   blend   over the biggest type: a paper square that inverts the letters
  *           beneath it (mix-blend difference)
+ *   text    over a field: nothing at all, so the native caret is the only
+ *           cursor in the box
  *
  * The mood is recomputed on every mouseover from the thing under the pointer,
  * so it can never get stuck in a state the pointer has left. It is written to
  * body[data-cur] — not data-cursor, which the lookup itself walks up to.
  */
+/** Re-derives the square's mood from whatever it is already over. Set by
+ *  `useCursor` while it is mounted, a no-op otherwise. */
+export let refreshCursor: () => void = () => {};
+
 export function useCursor(rootRef: RefObject<HTMLDivElement | null>) {
   useEffect(() => {
     const root = rootRef.current;
@@ -35,20 +42,35 @@ export function useCursor(rootRef: RefObject<HTMLDivElement | null>) {
     const label = root.querySelector<HTMLElement>(".cursor-label");
     if (!dot || !ring || !label) return;
 
-    const STICK = "a, button, input, .nav-link, .social, .b-btn, .qchip, .b-filter, .bubble";
-    const HOVER = "a, button, [data-cursor], input, textarea, .col-item, .ach-card, .b-cell, .skill, .tl-item, .marquee";
+    const STICK = "a, button, .nav-link, .social, .b-btn, .qchip, .b-filter, .bubble";
+    const HOVER = "a, button, [data-cursor], .col-item, .ach-card, .b-cell, .skill, .tl-item, .marquee";
+    /* Text fields keep the native caret — it says where the next character
+       lands, which the square cannot. The square used to latch onto them as if
+       they were buttons, ballooning into a field-wide rectangle that lagged
+       around the caret; over a field it now stands down entirely, the same way
+       it does at the preview's edge. */
+    const TEXT = "input, textarea, [contenteditable]:not([contenteditable=\"false\"])";
 
     let mx = innerWidth / 2;
     let my = innerHeight / 2;
     let rx = mx;
     let ry = my;
+    const DOT = 5; // .cursor-dot, whose size the stylesheet owns
     let rw = 30;
     let rh = 30;
     let mode = "idle";
     let stuck: HTMLElement | null = null;
+    /* The stuck control's box, read once when the ring latches onto it rather
+       than on every frame. `follow` runs at 60fps for the whole visit, and a
+       getBoundingClientRect() in there forces a layout every frame the pointer
+       is over any button on the page. Scroll and resize invalidate it. */
+    let stuckRect: DOMRect | null = null;
     let lastTrail = 0;
     let trailCount = 0;
     let raf = 0;
+    /** False until the pointer has actually moved — see `.cursor-live`. */
+    let live = false;
+    const lamp = document.querySelector<HTMLElement>(".cozy-lamp");
 
     /* The square used to balloon on contact — a 74px plate under the pointer
        covers the very control it is labelling. It stays close to its resting
@@ -71,16 +93,22 @@ export function useCursor(rootRef: RefObject<HTMLDivElement | null>) {
       const small =
         stick && stick.offsetWidth <= 480 && stick.offsetHeight <= 140 ? stick : null;
 
-      if (blend) mode = "blend";
+      if (t?.closest(TEXT)) mode = "text";
+      else if (blend) mode = "blend";
       else if (word && word !== "blend") mode = "label";
       else if (small) mode = "stick";
       else if (t?.closest(HOVER)) mode = "hover";
       else mode = "idle";
 
-      stuck = mode === "stick" ? small : null;
+      const nextStuck = mode === "stick" ? small : null;
+      if (nextStuck !== stuck) stuckRect = nextStuck?.getBoundingClientRect() ?? null;
+      stuck = nextStuck;
       // the blended square carries its word too, so the name reads as one
       // territory rather than flickering between a plate and a square
-      const text = mode === "label" ? (word ?? "") : mode === "blend" ? (blend?.dataset.word ?? "") : "";
+      const raw2 = mode === "label" ? (word ?? "") : mode === "blend" ? (blend?.dataset.word ?? "") : "";
+      // permissions granted: for the four seconds `sudo` lasts, every verb the
+      // square can carry reads the same one
+      const text = raw2 && document.body.classList.contains("sudo-gold") ? "root" : raw2;
       if (mode === "label" || mode === "blend") label.textContent = text;
       document.body.dataset.cur = mode;
       // the stylesheet needs the verb, not just the mood: OPEN sits over the
@@ -90,10 +118,27 @@ export function useCursor(rootRef: RefObject<HTMLDivElement | null>) {
     };
 
     let lastTarget: EventTarget | null = null;
+    /* Anything that changes what the square should *say* without the pointer
+       moving — `sudo` starting and ending is the only one — recomputes through
+       here. Without it the verb stayed "root" until the pointer happened to
+       cross onto a different element. */
+    refreshCursor = () => update(lastTarget);
     const onMove = (e: MouseEvent) => {
       mx = e.clientX;
       my = e.clientY;
-      dot.style.transform = `translate(${mx}px, ${my}px)`;
+      // the square only exists once there is a pointer to justify it
+      if (!live) {
+        live = true;
+        rx = mx;
+        ry = my;
+        document.body.classList.add("cursor-live");
+      }
+      /* Position rides the `translate` property, never `transform`: the two
+         compose as translate → rotate → scale → transform, so a position in
+         `transform` gets rotated by the 45° hover and scaled by the mousedown
+         and the square flies off across the page. Centring is done here
+         because `translate: -50% -50%` would be the thing we overwrite. */
+      dot.style.translate = `${mx - DOT / 2}px ${my - DOT / 2}px`;
       // mouseover is the primary signal; this catches a pointer that lands on
       // something new without one (synthetic input, a page shifting under it)
       if (e.target !== lastTarget) {
@@ -110,7 +155,7 @@ export function useCursor(rootRef: RefObject<HTMLDivElement | null>) {
         bit.className = "trail-bit";
         const size = rand(2.5, 5.5);
         bit.style.width = bit.style.height = size + "px";
-        bit.style.transform = `translate(${mx + rand(-3, 3)}px, ${my + rand(-3, 3)}px)`;
+        bit.style.translate = `${mx + rand(-3, 3)}px ${my + rand(-3, 3)}px`;
         document.body.appendChild(bit);
         bit.animate(
           [
@@ -118,7 +163,7 @@ export function useCursor(rootRef: RefObject<HTMLDivElement | null>) {
             {
               opacity: 0,
               scale: "0.15",
-              transform: `translate(${mx + rand(-18, 18)}px, ${my + rand(-4, 22)}px)`,
+              translate: `${mx + rand(-18, 18)}px ${my + rand(-4, 22)}px`,
             },
           ],
           { duration: rand(420, 680), easing: "ease-out" },
@@ -134,8 +179,8 @@ export function useCursor(rootRef: RefObject<HTMLDivElement | null>) {
       let ty = my;
       let tw = size();
       let th = tw;
-      if (stuck) {
-        const r = stuck.getBoundingClientRect();
+      if (stuck && stuckRect) {
+        const r = stuckRect;
         // the ring holds the control, leaning a little toward the pointer
         tx = r.left + r.width / 2 + (mx - (r.left + r.width / 2)) * 0.18;
         ty = r.top + r.height / 2 + (my - (r.top + r.height / 2)) * 0.18;
@@ -147,25 +192,40 @@ export function useCursor(rootRef: RefObject<HTMLDivElement | null>) {
       ry += (ty - ry) * k;
       rw += (tw - rw) * 0.2;
       rh += (th - rh) * 0.2;
-      ring.style.transform = `translate(${rx}px, ${ry}px)`;
+      ring.style.translate = `${rx - rw / 2}px ${ry - rh / 2}px`;
       ring.style.width = rw + "px";
       ring.style.height = rh + "px";
+      /* Cozy mode's lamp rides this loop rather than a listener of its own —
+         it is a transform on one element, which costs nothing, and writing a
+         custom property onto a shared ancestor every frame would invalidate
+         the whole document (which is what made the scroll lag once already). */
+      if (lamp) lamp.style.transform = `translate(${mx}px, ${my}px)`;
       raf = requestAnimationFrame(follow);
     };
     raf = requestAnimationFrame(follow);
 
     const over = (e: MouseEvent) => update(e.target);
     const out = (e: MouseEvent) => {
-      if (!e.relatedTarget) update(null);
+      // no relatedTarget means the pointer left the window entirely
+      if (e.relatedTarget) return;
+      update(null);
+      live = false;
+      document.body.classList.remove("cursor-live");
     };
     const down = () => document.body.classList.add("cursor-down");
     const up = () => document.body.classList.remove("cursor-down");
+    // the held control moves with the page; its cached box does not
+    const remeasure = () => {
+      if (stuck) stuckRect = stuck.getBoundingClientRect();
+    };
 
     addEventListener("mousemove", onMove);
     document.addEventListener("mouseover", over);
     document.addEventListener("mouseout", out);
     addEventListener("mousedown", down);
     addEventListener("mouseup", up);
+    addEventListener("scroll", remeasure, { passive: true });
+    addEventListener("resize", remeasure);
 
     return () => {
       cancelAnimationFrame(raf);
@@ -174,6 +234,10 @@ export function useCursor(rootRef: RefObject<HTMLDivElement | null>) {
       document.removeEventListener("mouseout", out);
       removeEventListener("mousedown", down);
       removeEventListener("mouseup", up);
+      removeEventListener("scroll", remeasure);
+      removeEventListener("resize", remeasure);
+      refreshCursor = () => {};
+      document.body.classList.remove("cursor-live", "cursor-down");
       delete document.body.dataset.cur;
     };
   }, [rootRef]);
@@ -258,7 +322,14 @@ export function useInk(ref: RefObject<HTMLCanvasElement | null>) {
       // ink, not neon: the dye has to stay a red plate at full accumulation
       brightness: 0.26,
       hover: false,
-      backgroundColor: "#000000",
+      /* The untouched plate has to be the blend mode's identity, or the whole
+         sheet is veiled by it. On ink the layer is `screen`, whose identity is
+         black; on paper it is `multiply`, whose identity is white. Get this
+         the wrong way round and the simulation quietly paints a full-screen
+         rectangle over the site. */
+      backgroundColor: document.body.classList.contains("is-paper")
+        ? "#ffffff"
+        : "#000000",
       // red is a second plate, never a glow — the two effects that would make
       // it one are off
       bloom: false,
@@ -272,8 +343,14 @@ export function useInk(ref: RefObject<HTMLCanvasElement | null>) {
       plate = canvas;
       inkConfig = config;
       fluid.setConfig(config());
-      fluid.start();
-      layer.dataset.ink = "on";
+      /* A tab that was never in front has nothing to show and no reason to be
+         integrating a fluid — `visibilitychange` only fires on a change, so
+         starting unconditionally left it running in a background tab until the
+         visitor happened to look. */
+      if (!document.hidden) {
+        fluid.start();
+        layer.dataset.ink = "on";
+      }
     });
 
     /* Nothing is drawn by the pointer at all now — not by moving it and not by
@@ -432,12 +509,31 @@ export function useParticles(canvasRef: RefObject<HTMLCanvasElement | null>) {
   }, [canvasRef]);
 }
 
-/** After 60s idle the PG logo bounces around the dimmed screen. */
-export function useDvdScreensaver() {
+const CORNERS_KEY = "pg-corners";
+
+/**
+ * After 60s idle the PG logo bounces around the dimmed screen.
+ *
+ * The colours are the site's own four and nothing else — it used to cycle a
+ * six-hue rainbow, which is the one thing a two-plate archive cannot do. They
+ * are read from the live tokens, so cozy, CRT and paper all bounce in their
+ * own ink. And the thing everyone is actually waiting for is counted: a true
+ * corner is both walls on the same frame, and this browser remembers how many
+ * it has seen.
+ */
+export function useDvdScreensaver(
+  toast: (m: string, ms?: number) => void = () => {},
+  cozy = false,
+) {
   useEffect(() => {
     if (prefersReducedMotion()) return;
     const IDLE_MS = 60000;
-    const COLORS = ["#ffc705", "#4ade80", "#fbbf24", "#60a5fa", "#f87171", "#f472b6"];
+    const palette = () => {
+      const cs = getComputedStyle(document.body);
+      return ["--paper", "--red", "--red-2", "--red-deep"]
+        .map((v) => cs.getPropertyValue(v).trim())
+        .filter(Boolean);
+    };
 
     let idleTimer: ReturnType<typeof setTimeout>;
     let overlay: HTMLDivElement | null = null;
@@ -454,6 +550,7 @@ export function useDvdScreensaver() {
       requestAnimationFrame(() => node.classList.add("is-on"));
 
       const logo = node.querySelector<HTMLElement>(".dvd-logo")!;
+      const COLORS = palette();
       let ci = 0;
       logo.style.color = COLORS[ci];
       let x = rand(40, innerWidth / 2);
@@ -466,20 +563,33 @@ export function useDvdScreensaver() {
         const h = logo.offsetHeight;
         x += vx;
         y += vy;
-        let hit = false;
+        let hitX = false;
+        let hitY = false;
         if (x <= 0 || x + w >= innerWidth) {
           vx *= -1;
-          hit = true;
+          hitX = true;
           x = Math.max(0, Math.min(x, innerWidth - w));
         }
         if (y <= 0 || y + h >= innerHeight) {
           vy *= -1;
-          hit = true;
+          hitY = true;
           y = Math.max(0, Math.min(y, innerHeight - h));
         }
-        if (hit) {
+        if (hitX || hitY) {
           ci = (ci + 1) % COLORS.length;
           logo.style.color = COLORS[ci];
+        }
+        // both walls on the same frame: the thing everybody is waiting for
+        if (hitX && hitY) {
+          let n = 1;
+          try {
+            n = (Number(localStorage.getItem(CORNERS_KEY)) || 0) + 1;
+            localStorage.setItem(CORNERS_KEY, String(n));
+          } catch {
+            /* private mode: it happened, it is just not counted */
+          }
+          confetti(x + w / 2, y + h / 2, 34, cozy);
+          toast(n === 1 ? "corner. your first one." : `corner. ${n} total.`, 3200);
         }
         logo.style.transform = `translate(${x}px, ${y}px)`;
         raf = requestAnimationFrame(bounce);
@@ -511,7 +621,7 @@ export function useDvdScreensaver() {
       stop();
       events.forEach((ev) => removeEventListener(ev, poke));
     };
-  }, []);
+  }, [toast, cozy]);
 }
 
 /**

@@ -20,7 +20,7 @@ import { usePortfolio } from "@/components/portfolio-provider";
  * the look on its own.
  */
 export function Ambient({ view }: { view: View }) {
-  const { cozy } = usePortfolio();
+  const { cozy, paper } = usePortfolio();
   const particlesRef = useRef<HTMLCanvasElement | null>(null);
   const inkRef = useRef<HTMLCanvasElement | null>(null);
   useParticles(particlesRef);
@@ -31,7 +31,7 @@ export function Ambient({ view }: { view: View }) {
   return (
     <>
       <div className="bg-shader" data-view={view} aria-hidden="true">
-        {shader && <GradientBackground cozy={cozy} />}
+        {shader && <GradientBackground cozy={cozy} paper={paper} />}
       </div>
       <div className="bg-scrim" aria-hidden="true" />
       {/* the fluid sim owns this canvas; the wrapper is what carries the
@@ -44,6 +44,10 @@ export function Ambient({ view }: { view: View }) {
         </div>
       </div>
       <canvas id="particles" ref={particlesRef} aria-hidden="true" />
+      {/* cozy mode's lamp: a warm pool that follows the pointer. Always in the
+          DOM, lit only by the stylesheet — the cursor loop moves it either
+          way, and one transform on a hidden element is not worth branching on */}
+      <div className="cozy-lamp" aria-hidden="true" />
       <div className="noise" aria-hidden="true" />
     </>
   );
@@ -54,7 +58,7 @@ export function Cursor() {
   useCursor(rootRef);
 
   return (
-    <div className="cursor" ref={rootRef} aria-hidden="true">
+    <div className="cursor" ref={rootRef} aria-hidden="true" inert>
       <div className="cursor-dot" />
       <div className="cursor-ring">
         <span className="cursor-label" />

@@ -33,14 +33,48 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
-const favicon =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23090405'/%3E%3Crect x='4' y='4' width='56' height='56' fill='none' stroke='%23ff2233' stroke-width='3'/%3E%3Ctext x='32' y='44' font-family='Arial Black, Arial' font-size='28' fill='%23f2ece4' text-anchor='middle' font-weight='900'%3EPG%3C/text%3E%3C/svg%3E";
+/* Where the site actually lives, so the crawler is handed absolute URLs for
+   the share card. The workflow sets this alongside NEXT_PUBLIC_BASE_PATH;
+   locally it falls back to the Pages URL, which is still a real address. */
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://mrcreoid.github.io/portfolio-website";
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
+const DESCRIPTION =
+  "Pratyush Garg, B.Tech CS student at the Faculty of Technology, DU. I build things for the web, mostly late at night.";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: SITE_TITLE,
-  description:
-    "Pratyush Garg, B.Tech CS student at the Faculty of Technology, DU. I build things for the web, mostly late at night.",
-  icons: { icon: favicon },
+  description: DESCRIPTION,
+  icons: {
+    icon: [
+      { url: `${BASE}/favicon.svg`, type: "image/svg+xml" },
+      { url: `${BASE}/favicon.ico`, sizes: "any" },
+    ],
+    apple: `${BASE}/apple-touch-icon.png`,
+  },
+  openGraph: {
+    type: "website",
+    siteName: "Pratyush Garg — The Archive",
+    title: SITE_TITLE,
+    description: DESCRIPTION,
+    url: SITE_URL,
+    images: [
+      {
+        url: `${BASE}/og.png`,
+        width: 1200,
+        height: 630,
+        alt: "Pratyush Garg — The Archive, Portfolio 2026",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: DESCRIPTION,
+    images: [`${BASE}/og.png`],
+  },
 };
 
 export const viewport: Viewport = {
