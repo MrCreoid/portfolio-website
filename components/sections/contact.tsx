@@ -34,10 +34,16 @@ const filedAt = () =>
     .replace(",", "")
     .toUpperCase();
 
-/* Set NEXT_PUBLIC_WEB3FORMS_KEY to post the form for real. Without it the form
-   still works — it falls back to opening the visitor's mail client. The key is
-   public by design; the address it delivers to is not in this bundle. */
-const ACCESS_KEY = process.env.NEXT_PUBLIC_WEB3FORMS_KEY;
+/* Web3Forms access key. Public by design — it names the form and nothing else;
+   the address it delivers to lives in the Web3Forms dashboard, not here, and
+   the key is inlined into the client bundle on every build regardless.
+
+   It is a literal rather than an env lookup because NEXT_PUBLIC_* is resolved
+   at BUILD time: CI had no value, so `ACCESS_KEY` compiled to undefined, the
+   `!ACCESS_KEY` guard below folded to always-true, and the minifier dropped the
+   whole submit branch out of the deployed bundle. The mailto path stays as the
+   fallback for a rejected or unreachable endpoint. */
+const ACCESS_KEY = "c10f16a3-8264-4d74-a785-0d3f66d3bb16";
 
 function LinkedInIcon() {
   return (
@@ -129,16 +135,6 @@ export function Contact() {
     const msg = vals.message.trim();
     const subject = `Portfolio contact from ${name}`;
 
-    // no endpoint configured yet — hand off to the mail client so the form is
-    // never a dead end, and upgrade the moment a key exists
-    if (!ACCESS_KEY) {
-      toast("Opening your mail app");
-      location.href = `mailto:${EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
-        `${msg}\n\n— ${name} (${from})`,
-      )}`;
-      return;
-    }
-
     setStatus("sending");
     setErr("");
     try {
@@ -162,7 +158,7 @@ export function Contact() {
       setStatus("error");
       setErr("That didn't go through.");
     }
-  }, [toast, vals]);
+  }, [vals]);
 
   const submit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -439,8 +435,8 @@ export function Contact() {
             <span className="cs-no">01</span>
             <b>Filed</b>
             <span>
-              Straight into my inbox — no forms service in the middle, nothing
-              queued behind a ticket number.
+              Into my inbox the moment you press send, and you get the
+              reference number back on a receipt — so you know it landed.
             </span>
           </li>
           <li>
